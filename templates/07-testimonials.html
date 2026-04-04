@@ -1,0 +1,100 @@
+<!--
+  TEMPLATE: Testimonios / Reseñas
+  ──────────────────────────────────────────────────────────────────
+  3 tarjetas de reseña con estrellas, cita y autor.
+  REQUIERE: CSS compilado · AOS
+  IMÁGENES: Ninguna
+  PERSONALIZA:
+    - Reemplaza el texto de citas y nombres
+    - Cambia "bg-brand-gray" en <section> por "bg-brand-white" si lo prefieres blanco
+    - Para 4 reseñas: agrega una tarjeta y cambia "md:grid-cols-3" → "md:grid-cols-2 lg:grid-cols-4"
+-->
+
+<section class="py-16 md:py-24 bg-brand-gray"
+         aria-labelledby="reviews-title">
+
+  <div class="container-brand">
+
+    <div class="text-center mb-12 md:mb-16">
+      <p class="eyebrow mb-3" data-aos="fade-up">Reseñas Reales</p>
+      <h2 id="reviews-title" class="section-title" data-aos="fade-up" data-aos-delay="50">
+        Lo que Dicen<br/>Nuestros Clientes
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+
+      <!-- Reseña 1 -->
+      <blockquote class="bg-brand-white border border-brand-border p-7 md:p-8 flex flex-col"
+                  data-aos="fade-up" data-aos-delay="0">
+        <div class="flex gap-1 mb-5" aria-label="5 de 5 estrellas">
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p class="text-[0.9375rem] leading-relaxed text-brand-black/75 mb-6 flex-1 italic">
+          "Escribe aquí la reseña de tu cliente. Que sea auténtica y
+          específica — menciona el producto, la experiencia de compra
+          o el resultado obtenido."
+        </p>
+        <footer>
+          <cite class="text-[0.8125rem] font-bold uppercase tracking-button not-italic">
+            Nombre Cliente
+          </cite>
+          <p class="text-xs text-brand-black/40 mt-0.5">Ciudad, País</p>
+        </footer>
+      </blockquote>
+
+      <!-- Reseña 2 -->
+      <blockquote class="bg-brand-white border border-brand-border p-7 md:p-8 flex flex-col"
+                  data-aos="fade-up" data-aos-delay="100">
+        <div class="flex gap-1 mb-5" aria-label="5 de 5 estrellas">
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p class="text-[0.9375rem] leading-relaxed text-brand-black/75 mb-6 flex-1 italic">
+          "Segunda reseña aquí. Varía el tono — algunas pueden ser
+          sobre la entrega, otras sobre la calidad, otras sobre
+          el servicio al cliente."
+        </p>
+        <footer>
+          <cite class="text-[0.8125rem] font-bold uppercase tracking-button not-italic">
+            Nombre Cliente
+          </cite>
+          <p class="text-xs text-brand-black/40 mt-0.5">Ciudad, País</p>
+        </footer>
+      </blockquote>
+
+      <!-- Reseña 3 -->
+      <blockquote class="bg-brand-white border border-brand-border p-7 md:p-8 flex flex-col"
+                  data-aos="fade-up" data-aos-delay="200">
+        <div class="flex gap-1 mb-5" aria-label="5 de 5 estrellas">
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p class="text-[0.9375rem] leading-relaxed text-brand-black/75 mb-6 flex-1 italic">
+          "Tercera reseña. Los testimonios de clientes recurrentes
+          generan mucha confianza. Menciona cuánto tiempo llevan
+          siendo clientes si aplica."
+        </p>
+        <footer>
+          <cite class="text-[0.8125rem] font-bold uppercase tracking-button not-italic">
+            Nombre Cliente
+          </cite>
+          <p class="text-xs text-brand-black/40 mt-0.5">Ciudad, País</p>
+        </footer>
+      </blockquote>
+
+    </div>
+
+  </div>
+
+</section>

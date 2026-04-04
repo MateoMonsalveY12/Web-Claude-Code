@@ -1,0 +1,122 @@
+<!--
+  TEMPLATE: Instagram / Social Grid
+  ──────────────────────────────────────────────────────────────────
+  Grid de 6 fotos cuadradas con hover overlay e ícono de Instagram.
+  REQUIERE: CSS compilado · AOS
+  IMÁGENES: instagram-1.jpg .. instagram-6.jpg (600×600, 1:1)
+  PERSONALIZA:
+    - Actualiza "href" de cada link con la URL real de la foto en Instagram
+    - Cambia "@tumarca.co" por tu handle real
+    - En móvil se muestran 4 fotos (2×2); en tablet 6 (3×2); en desktop 6 (6×1)
+    - Para mostrar siempre 6: elimina "hidden sm:block" de instagram-5 y 6
+-->
+
+<section class="py-14 md:py-20 bg-brand-white"
+         aria-labelledby="instagram-title">
+
+  <!-- Encabezado -->
+  <div class="container-brand text-center mb-8 md:mb-10">
+    <p class="eyebrow mb-2" data-aos="fade-up">Síguenos en Instagram</p>
+    <h2 id="instagram-title" class="section-title" data-aos="fade-up" data-aos-delay="50">
+      @tumarca.co
+    </h2>
+  </div>
+
+  <!-- Grid full-width (sin container-brand para llegar a los bordes) -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-0.5 md:gap-1">
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="0" aria-label="Ver en Instagram">
+      <img src="assets/images/instagram-1.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40 opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="50" aria-label="Ver en Instagram">
+      <img src="assets/images/instagram-2.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40 opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="100" aria-label="Ver en Instagram">
+      <img src="assets/images/instagram-3.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40 opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="150" aria-label="Ver en Instagram">
+      <img src="assets/images/instagram-4.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40 opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <!-- Foto 5: oculta en móvil (2-col), visible en tablet+ -->
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray hidden sm:block"
+       data-aos="fade-up" data-aos-delay="200" aria-label="Ver en Instagram">
+      <img src="assets/images/instagram-5.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40 opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <!-- Foto 6: oculta en móvil, visible en tablet+ -->
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray hidden sm:block"
+       data-aos="fade-up" data-aos-delay="250" aria-label="Ver en Instagram">
+      <img src="assets/images/instagram-6.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40 opacity-0 group-hover:opacity-100
+                  transition-opacity duration-300 flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+  </div>
+
+</section>

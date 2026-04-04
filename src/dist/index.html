@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Moda femenina colombiana con propósito. Prendas que duran." />
+  <title>Tu Marca — Moda Femenina</title>
+
+  <!-- Favicon placeholder -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-size='20' fill='white' font-family='serif'>M</text></svg>" />
+
+  <!-- Adobe Fonts kit — kudryashev-d-contrast (display) + Ethic New (accent editorial) -->
+  <link rel="stylesheet" href="https://use.typekit.net/rue4qgd.css" />
+
+  <!-- Main entry (Vite injects CSS from main.js imports) -->
+  <script type="module" crossorigin src="/assets/index-Bco78Ld_.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Cl-HSHH-.css">
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 1 — ANNOUNCEMENT BAR
+     Barra superior negra con mensajes rotativos
+════════════════════════════════════════════════════════════════ -->
+<div id="announcement-bar"
+     class="bg-brand-black text-brand-white text-center
+            text-[0.6875rem] tracking-button uppercase
+            py-2.5 overflow-hidden"
+     role="region"
+     aria-label="Anuncios promocionales">
+  <div class="announcement-track">
+    <span class="announcement-item block px-4">
+      Envío gratis en pedidos mayores a $200.000 &nbsp;·&nbsp; Colombia
+    </span>
+    <span class="announcement-item block px-4">
+      Nuevas colecciones disponibles &nbsp;—&nbsp; <strong class="font-semibold">Ver ahora</strong>
+    </span>
+    <span class="announcement-item block px-4">
+      Devoluciones gratuitas en 30 días &nbsp;·&nbsp; Sin preguntas
+    </span>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 2 — NAVEGACIÓN
+     Sticky, transparente sobre hero → blanco al hacer scroll
+════════════════════════════════════════════════════════════════ -->
+<header id="site-nav"
+        class="fixed left-0 right-0 z-50
+               transition-[background-color,border-color,opacity] duration-300
+               border-b border-transparent"
+        style="top: 0;"
+        data-scrolled="false"
+        role="banner">
+
+  <div class="container-brand flex items-center justify-between h-14 md:h-[72px]">
+
+    <!-- Logo -->
+    <a href="/"
+       class="font-sans text-sm md:text-base tracking-[0.18em] font-semibold uppercase
+              text-white scrolled:text-brand-black
+              transition-colors duration-300 z-10"
+       aria-label="Ir al inicio">
+      TU MARCA
+    </a>
+
+    <!-- Desktop navigation links -->
+    <nav class="hidden md:flex items-center gap-7"
+         aria-label="Navegación principal">
+      <a href="#collections"
+         class="nav-link text-white scrolled:text-brand-black">Colecciones</a>
+      <a href="#products"
+         class="nav-link text-white scrolled:text-brand-black">Productos</a>
+      <a href="#about"
+         class="nav-link text-white scrolled:text-brand-black">Nosotros</a>
+      <a href="#contact"
+         class="nav-link text-white scrolled:text-brand-black">Contacto</a>
+    </nav>
+
+    <!-- Right icons: search, cart, hamburger -->
+    <div class="flex items-center gap-1">
+
+      <!-- Search icon -->
+      <button class="nav-icon-btn text-white scrolled:text-brand-black
+                     transition-colors duration-300"
+              aria-label="Buscar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+
+      <!-- Cart icon -->
+      <button class="nav-icon-btn text-white scrolled:text-brand-black
+                     transition-colors duration-300 relative"
+              aria-label="Carrito (0 artículos)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+      </button>
+
+      <!-- Mobile hamburger -->
+      <button id="menu-open"
+              class="md:hidden nav-icon-btn text-white scrolled:text-brand-black
+                     transition-colors duration-300"
+              aria-label="Abrir menú" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+  </div><!-- /container -->
+
+  <!-- Scrolled background (transparent → white) -->
+  <div class="absolute inset-0 bg-brand-white opacity-0 scrolled:opacity-100
+              transition-opacity duration-300 -z-10"
+       aria-hidden="true"></div>
+  <!-- Scrolled border -->
+  <div class="absolute bottom-0 left-0 right-0 h-px bg-brand-border
+              opacity-0 scrolled:opacity-100 transition-opacity duration-300"
+       aria-hidden="true"></div>
+
+</header><!-- /site-nav -->
+
+
+<!-- Mobile Menu Dialog -->
+<dialog id="mobile-menu" aria-label="Menú móvil">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-brand-border">
+    <span class="font-sans text-sm tracking-[0.18em] font-semibold uppercase">TU MARCA</span>
+    <button id="menu-close"
+            class="p-2 -mr-2"
+            aria-label="Cerrar menú">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <nav class="flex flex-col px-5 py-8 gap-6" aria-label="Menú principal">
+    <a href="#collections" class="text-xl font-sans font-medium tracking-button uppercase"
+       onclick="document.getElementById('mobile-menu').close()">Colecciones</a>
+    <a href="#products"    class="text-xl font-sans font-medium tracking-button uppercase"
+       onclick="document.getElementById('mobile-menu').close()">Productos</a>
+    <a href="#about"       class="text-xl font-sans font-medium tracking-button uppercase"
+       onclick="document.getElementById('mobile-menu').close()">Nosotros</a>
+    <a href="#contact"     class="text-xl font-sans font-medium tracking-button uppercase"
+       onclick="document.getElementById('mobile-menu').close()">Contacto</a>
+  </nav>
+  <div class="mt-auto px-5 pb-8">
+    <a href="#" class="btn-primary w-full text-center block">Ver Colecciones</a>
+  </div>
+</dialog>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 3 — HERO
+     Full viewport height · 2 videos en crossfade cada 7s · CTA
+════════════════════════════════════════════════════════════════ -->
+<section id="hero"
+         class="relative w-full flex items-center justify-start overflow-hidden"
+         style="height: 100svh;"
+         aria-label="Imagen principal">
+
+  <!-- Slide 1 — imagen editorial con animación Ken Burns -->
+  <div id="hero-slide-1"
+       class="hero-slide hero-slide--active absolute inset-0 overflow-hidden"
+       aria-hidden="true">
+    <img src="/assets/hero-bg-1-BEiguQTO.jpg"
+         alt=""
+         class="hero-slide-img w-full h-full object-cover object-center"
+         loading="eager" fetchpriority="high" />
+  </div>
+
+  <!-- Slide 2 — imagen editorial con animación Ken Burns -->
+  <div id="hero-slide-2"
+       class="hero-slide absolute inset-0 overflow-hidden"
+       aria-hidden="true">
+    <img src="/assets/hero-bg-2-DfKCXt89.jpg"
+         alt=""
+         class="hero-slide-img w-full h-full object-cover object-center"
+         loading="eager" fetchpriority="high" />
+  </div>
+
+  <!-- Dark overlay gradient -->
+  <div class="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent"
+       aria-hidden="true"></div>
+
+  <!-- Content -->
+  <div class="relative z-10 container-brand w-full">
+
+    <p class="eyebrow text-white/70 mb-5"
+       data-aos="fade-up" data-aos-duration="800">
+      Nueva Colección · Primavera 2026
+    </p>
+
+    <h1 class="font-display text-white leading-none mb-6 max-w-xl"
+        style="font-size: clamp(2.5rem, 6vw, 5rem);"
+        data-aos="fade-up" data-aos-delay="120" data-aos-duration="1000">
+      Elegancia<br/>Atemporal
+    </h1>
+
+    <p class="text-white/75 text-base md:text-lg mb-10 max-w-sm font-light leading-relaxed"
+       data-aos="fade-up" data-aos-delay="250" data-aos-duration="900">
+      Prendas diseñadas para durar. Confeccionadas con intención,
+      llevadas con propósito.
+    </p>
+
+    <div class="flex flex-wrap gap-4"
+         data-aos="fade-up" data-aos-delay="380" data-aos-duration="800">
+      <a href="#collections" class="btn-hero">Explorar Colección</a>
+      <a href="#products"    class="btn-ghost border-white text-white
+                                    hover:bg-white hover:text-brand-black">
+        Ver Productos
+      </a>
+    </div>
+
+  </div>
+
+  <!-- Scroll indicator — click para scroll suave a #collections -->
+  <button id="scroll-down"
+          class="scroll-indicator cursor-pointer bg-transparent border-none p-0"
+          aria-label="Ir a la siguiente sección">
+    <span class="text-[0.6rem] tracking-widest">Scroll</span>
+    <svg width="16" height="24" viewBox="0 0 16 24" fill="none"
+         stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="1" width="14" height="22" rx="7"/>
+      <circle cx="8" cy="7" r="2" fill="currentColor" stroke="none">
+        <animate attributeName="cy" values="7;15;7" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </button>
+
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     MARQUEE TICKER
+     Banda de texto continuo entre hero y colecciones
+════════════════════════════════════════════════════════════════ -->
+<div class="bg-brand-black text-brand-white overflow-hidden py-3.5 select-none"
+     aria-hidden="true">
+  <div class="marquee-track flex whitespace-nowrap">
+
+    <span class="marquee-content inline-flex items-center gap-10 pr-10 shrink-0">
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Nueva Colección</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Moda Sostenible</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Hecho en Colombia</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Envío Gratis</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Calidad Premium</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Temporada 2026</span>
+      <span class="text-brand-red leading-none">✦</span>
+    </span>
+
+    <!-- Duplicate exact para loop continuo sin salto -->
+    <span class="marquee-content inline-flex items-center gap-10 pr-10 shrink-0"
+          aria-hidden="true">
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Nueva Colección</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Moda Sostenible</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Hecho en Colombia</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Envío Gratis</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Calidad Premium</span>
+      <span class="text-brand-red leading-none">✦</span>
+      <span class="text-[0.6875rem] uppercase tracking-[0.2em] font-medium">Temporada 2026</span>
+      <span class="text-brand-red leading-none">✦</span>
+    </span>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 4 — COLECCIONES DESTACADAS
+     Grid de 3 tarjetas de colección con hover overlay
+════════════════════════════════════════════════════════════════ -->
+<section id="collections"
+         class="py-10 md:py-16 bg-brand-white"
+         aria-labelledby="collections-title">
+
+  <div class="container-brand">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between
+                gap-4 mb-7 md:mb-10">
+      <div>
+        <p class="eyebrow mb-2" data-aos="fade-right">Explora</p>
+        <h2 id="collections-title" class="section-title" data-aos="fade-right" data-aos-delay="50">
+          Nuestras Colecciones
+        </h2>
+      </div>
+      <a href="#"
+         class="text-[0.8125rem] uppercase tracking-button font-semibold
+                underline underline-offset-4 hover:opacity-50 transition-opacity
+                self-start sm:self-auto"
+         data-aos="fade-left">
+        Ver Todo
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+
+      <!-- Card 1 -->
+      <article class="group cursor-pointer"
+               data-aos="zoom-in-up" data-aos-delay="0" data-aos-duration="700">
+        <a href="#" aria-label="Ver colección Clásica">
+          <div class="relative overflow-hidden aspect-[4/5] bg-brand-gray">
+            <img src="/assets/collection-1-DmmQ6_Qm.jpg"
+                 alt="Modelo vistiendo la colección Clásica"
+                 class="w-full h-full object-cover object-top
+                        transition-transform duration-700 ease-out
+                        group-hover:scale-105"
+                 loading="lazy" />
+            <div class="absolute inset-0 bg-brand-black/30
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-400
+                        flex items-end p-6">
+              <span class="btn-hero btn-sm">Explorar</span>
+            </div>
+          </div>
+          <div class="pt-4" data-aos="fade-up" data-aos-delay="80" data-aos-duration="600">
+            <h3 class="font-display text-lg tracking-heading mb-1">Colección Clásica</h3>
+            <p class="text-sm text-brand-black/50">32 productos</p>
+          </div>
+        </a>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="group cursor-pointer"
+               data-aos="zoom-in-up" data-aos-delay="80" data-aos-duration="700">
+        <a href="#" aria-label="Ver colección Noche">
+          <div class="relative overflow-hidden aspect-[4/5] bg-brand-gray">
+            <img src="/assets/collection-2-CLeblThn.jpg"
+                 alt="Modelo vistiendo la colección Noche"
+                 class="w-full h-full object-cover object-top
+                        transition-transform duration-700 ease-out
+                        group-hover:scale-105"
+                 loading="lazy" />
+            <div class="absolute inset-0 bg-brand-black/30
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-400
+                        flex items-end p-6">
+              <span class="btn-hero btn-sm">Explorar</span>
+            </div>
+          </div>
+          <div class="pt-4" data-aos="fade-up" data-aos-delay="160" data-aos-duration="600">
+            <h3 class="font-display text-lg tracking-heading mb-1">Colección Noche</h3>
+            <p class="text-sm text-brand-black/50">18 productos</p>
+          </div>
+        </a>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="group cursor-pointer"
+               data-aos="zoom-in-up" data-aos-delay="160" data-aos-duration="700">
+        <a href="#" aria-label="Ver colección Casual">
+          <div class="relative overflow-hidden aspect-[4/5] bg-brand-gray">
+            <img src="/assets/collection-3-CcHmjg8z.jpg"
+                 alt="Modelo vistiendo la colección Casual"
+                 class="w-full h-full object-cover object-top
+                        transition-transform duration-700 ease-out
+                        group-hover:scale-105"
+                 loading="lazy" />
+            <div class="absolute inset-0 bg-brand-black/30
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-400
+                        flex items-end p-6">
+              <span class="btn-hero btn-sm">Explorar</span>
+            </div>
+          </div>
+          <div class="pt-4" data-aos="fade-up" data-aos-delay="240" data-aos-duration="600">
+            <h3 class="font-display text-lg tracking-heading mb-1">Colección Casual</h3>
+            <p class="text-sm text-brand-black/50">45 productos</p>
+          </div>
+        </a>
+      </article>
+
+    </div>
+  </div>
+
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 5 — EDITORIAL PROMOCIONAL
+     Imagen full-bleed izquierda + texto derecha
+════════════════════════════════════════════════════════════════ -->
+<section id="about"
+         class="bg-brand-gray overflow-hidden"
+         aria-labelledby="promo-title">
+
+  <div class="grid grid-cols-1 md:grid-cols-2">
+
+    <!-- Image side -->
+    <div class="relative overflow-hidden"
+         style="min-height: 420px;"
+         data-aos="fade-right" data-aos-duration="900">
+      <img src="/assets/promo-editorial-C1GEtujk.jpg"
+           alt="Detalle de tejido de lujo"
+           class="absolute inset-0 w-full h-full object-cover object-center"
+           loading="lazy" />
+    </div>
+
+    <!-- Text side -->
+    <div class="flex flex-col justify-center
+                px-6 md:px-12 lg:px-16
+                py-10 md:py-16"
+         data-aos="fade-left" data-aos-delay="150" data-aos-duration="900">
+
+      <span class="badge-promo mb-6 self-start">Edición Limitada</span>
+
+      <h2 id="promo-title" class="section-title mb-5 max-w-sm">
+        Diseñado<br/>para Durar
+      </h2>
+
+      <p class="text-brand-black/65 leading-relaxed mb-8 max-w-sm text-[0.9375rem]">
+        Cada prenda nace de materiales cuidadosamente seleccionados.
+        Creemos que la moda verdadera trasciende temporadas y cuenta
+        su propia historia con el tiempo.
+      </p>
+
+      <a href="#" class="btn-primary self-start">Ver Colección</a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 6 — GRID DE PRODUCTOS
+     4 columnas con hover slide-up "Añadir al carrito"
+════════════════════════════════════════════════════════════════ -->
+<section id="products"
+         class="py-10 md:py-16 bg-brand-white"
+         aria-labelledby="products-title">
+
+  <div class="container-brand">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between
+                gap-4 mb-7 md:mb-10">
+      <div>
+        <p class="eyebrow mb-2" data-aos="fade-right">Más Vendidos</p>
+        <h2 id="products-title" class="section-title" data-aos="fade-right" data-aos-delay="50">
+          Favoritos de Temporada
+        </h2>
+      </div>
+      <a href="#"
+         class="text-[0.8125rem] uppercase tracking-button font-semibold
+                underline underline-offset-4 hover:opacity-50 transition-opacity
+                self-start sm:self-auto"
+         data-aos="fade-left">
+        Ver Todo
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+
+      <!-- Product 1 -->
+      <article class="group" data-aos="fade-up" data-aos-delay="0" data-aos-duration="700">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="/assets/product-1-UHV4geav.jpg"
+               alt="Blusa Sedosa"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <!-- Promo badge -->
+          <span class="badge-promo absolute top-3 left-3" aria-label="20% de descuento">
+            −20%
+          </span>
+          <!-- Add to cart slide-up -->
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300"
+                  aria-label="Añadir Blusa Sedosa al carrito">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Blusa Sedosa</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$89.900</span>
+          <span class="text-xs text-brand-black/40 line-through">$112.000</span>
+        </div>
+      </article>
+
+      <!-- Product 2 -->
+      <article class="group" data-aos="fade-up" data-aos-delay="75" data-aos-duration="700">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="/assets/product-2-AB4AA3Du.jpg"
+               alt="Pantalón Wide Leg"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <span class="badge-new absolute top-3 left-3">Nuevo</span>
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300"
+                  aria-label="Añadir Pantalón Wide Leg al carrito">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Pantalón Wide Leg</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$124.900</span>
+        </div>
+      </article>
+
+      <!-- Product 3 -->
+      <article class="group" data-aos="fade-up" data-aos-delay="150" data-aos-duration="700">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="/assets/product-3-B3gS_Qcb.jpg"
+               alt="Bolso Estructurado"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300"
+                  aria-label="Añadir Bolso Estructurado al carrito">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Bolso Estructurado</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$198.000</span>
+        </div>
+      </article>
+
+      <!-- Product 4 -->
+      <article class="group" data-aos="fade-up" data-aos-delay="225" data-aos-duration="700">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="/assets/product-4-ouBiPhur.jpg"
+               alt="Cárdigan Tejido"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <span class="badge-promo absolute top-3 left-3" aria-label="15% de descuento">
+            −15%
+          </span>
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300"
+                  aria-label="Añadir Cárdigan Tejido al carrito">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Cárdigan Tejido</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$97.500</span>
+          <span class="text-xs text-brand-black/40 line-through">$115.000</span>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- CTA debajo del grid -->
+    <div class="text-center mt-12" data-aos="fade-up">
+      <a href="#" class="btn-ghost">Ver todos los productos</a>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 7 — TESTIMONIOS
+     Fondo gris, 3 tarjetas de reseña
+════════════════════════════════════════════════════════════════ -->
+<section class="py-10 md:py-16 bg-brand-gray"
+         aria-labelledby="reviews-title">
+
+  <div class="container-brand">
+
+    <div class="text-center mb-8 md:mb-12">
+      <p class="eyebrow mb-3" data-aos="fade-up">Reseñas Reales</p>
+      <h2 id="reviews-title" class="section-title" data-aos="fade-up" data-aos-delay="50">
+        Lo que Dicen<br/>Nuestras Clientas
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-6">
+
+      <!-- Review 1 -->
+      <blockquote class="bg-brand-white border border-brand-border p-7 md:p-8
+                          flex flex-col"
+                  data-aos="zoom-in" data-aos-delay="0" data-aos-duration="700">
+        <!-- Stars -->
+        <div class="flex gap-1 mb-5" aria-label="5 de 5 estrellas">
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p class="text-[0.9375rem] leading-relaxed text-brand-black/75 mb-6 flex-1 italic">
+          "La calidad de las prendas es excepcional. El tejido se siente
+          lujoso y el corte es perfecto. Definitivamente volvería a comprar."
+        </p>
+        <footer>
+          <cite class="text-[0.8125rem] font-bold uppercase tracking-button not-italic">
+            María González
+          </cite>
+          <p class="text-xs text-brand-black/40 mt-0.5">Bogotá, Colombia</p>
+        </footer>
+      </blockquote>
+
+      <!-- Review 2 -->
+      <blockquote class="bg-brand-white border border-brand-border p-7 md:p-8
+                          flex flex-col"
+                  data-aos="zoom-in" data-aos-delay="80" data-aos-duration="700">
+        <div class="flex gap-1 mb-5" aria-label="5 de 5 estrellas">
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p class="text-[0.9375rem] leading-relaxed text-brand-black/75 mb-6 flex-1 italic">
+          "Recibí mi pedido en 3 días. El empaque es hermoso y la prenda
+          superó mis expectativas. La atención al detalle es increíble."
+        </p>
+        <footer>
+          <cite class="text-[0.8125rem] font-bold uppercase tracking-button not-italic">
+            Valentina Ríos
+          </cite>
+          <p class="text-xs text-brand-black/40 mt-0.5">Medellín, Colombia</p>
+        </footer>
+      </blockquote>
+
+      <!-- Review 3 -->
+      <blockquote class="bg-brand-white border border-brand-border p-7 md:p-8
+                          flex flex-col"
+                  data-aos="zoom-in" data-aos-delay="160" data-aos-duration="700">
+        <div class="flex gap-1 mb-5" aria-label="5 de 5 estrellas">
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg class="star-filled" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <p class="text-[0.9375rem] leading-relaxed text-brand-black/75 mb-6 flex-1 italic">
+          "Llevo 3 años comprando aquí. La consistencia en la calidad y
+          el estilo es lo que me hace volver. Una marca que realmente
+          entiende a la mujer colombiana."
+        </p>
+        <footer>
+          <cite class="text-[0.8125rem] font-bold uppercase tracking-button not-italic">
+            Camila Moreno
+          </cite>
+          <p class="text-xs text-brand-black/40 mt-0.5">Cali, Colombia</p>
+        </footer>
+      </blockquote>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 8 — INSTAGRAM GRID
+     6 columnas de imágenes cuadradas con hover overlay
+════════════════════════════════════════════════════════════════ -->
+<section class="py-8 md:py-12 bg-brand-white"
+         aria-labelledby="instagram-title">
+
+  <div class="container-brand text-center mb-5 md:mb-8">
+    <p class="eyebrow mb-2" data-aos="fade-up">Síguenos en Instagram</p>
+    <h2 id="instagram-title" class="section-title" data-aos="fade-up" data-aos-delay="50">
+      @tumarca.co
+    </h2>
+  </div>
+
+  <!-- Full-width grid (no container padding) -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-0.5 md:gap-1">
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="0" data-aos-duration="600" aria-label="Ver en Instagram">
+      <img src="/assets/instagram-1-D6QwupRE.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  flex items-center justify-center">
+        <!-- Instagram icon -->
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="60" data-aos-duration="600" aria-label="Ver en Instagram">
+      <img src="/assets/instagram-2-C8PJo6EU.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="120" data-aos-duration="600" aria-label="Ver en Instagram">
+      <img src="/assets/instagram-3-Seg-GKJj.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray"
+       data-aos="fade-up" data-aos-delay="180" data-aos-duration="600" aria-label="Ver en Instagram">
+      <img src="/assets/instagram-4-_-v-LVXx.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray
+                        hidden sm:block"
+       data-aos="fade-up" data-aos-delay="240" data-aos-duration="600" aria-label="Ver en Instagram">
+      <img src="/assets/instagram-5-C54gRHsA.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+    <a href="#" class="group relative aspect-square overflow-hidden block bg-brand-gray
+                        hidden sm:block"
+       data-aos="fade-up" data-aos-delay="300" data-aos-duration="600" aria-label="Ver en Instagram">
+      <img src="/assets/instagram-6-BtdtgwI4.jpg" alt="" loading="lazy"
+           class="w-full h-full object-cover transition-transform duration-500
+                  group-hover:scale-105" />
+      <div class="absolute inset-0 bg-brand-black/40
+                  opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                  flex items-center justify-center">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="1.5">
+          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+          <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+        </svg>
+      </div>
+    </a>
+
+  </div>
+
+</section>
+
+
+<!-- ════════════════════════════════════════════════════════════════
+     SECCIÓN 9 — FOOTER
+     Fondo negro, 4 columnas, newsletter, copyright
+════════════════════════════════════════════════════════════════ -->
+<footer id="contact" class="bg-brand-black text-brand-white" role="contentinfo">
+
+  <div class="container-brand py-10 md:py-16">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
+
+      <!-- Col 1: Brand bio -->
+      <div data-aos="fade-up" data-aos-delay="0" data-aos-duration="700">
+        <p class="font-sans text-sm tracking-[0.18em] font-semibold uppercase mb-5">TU MARCA</p>
+        <p class="text-white/55 text-sm leading-relaxed mb-7 max-w-xs">
+          Moda femenina colombiana con propósito. Prendas confeccionadas
+          con materiales seleccionados que cuentan su propia historia.
+        </p>
+        <!-- Social icons -->
+        <div class="flex gap-4">
+          <!-- Instagram -->
+          <a href="#" class="text-white/50 hover:text-white transition-colors duration-300"
+             aria-label="Síguenos en Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+          <!-- TikTok -->
+          <a href="#" class="text-white/50 hover:text-white transition-colors duration-300"
+             aria-label="Síguenos en TikTok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.78a4.85 4.85 0 01-1.01-.09z"/>
+            </svg>
+          </a>
+          <!-- Pinterest -->
+          <a href="#" class="text-white/50 hover:text-white transition-colors duration-300"
+             aria-label="Síguenos en Pinterest">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 01.083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Col 2: Tienda links -->
+      <div data-aos="fade-up" data-aos-delay="80" data-aos-duration="700">
+        <h3 class="text-[0.75rem] uppercase tracking-button font-bold
+                   text-white/35 mb-5">
+          Tienda
+        </h3>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Colecciones</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Novedades</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Más Vendidos</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Ofertas</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Accesorios</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 3: Servicio al cliente -->
+      <div data-aos="fade-up" data-aos-delay="160" data-aos-duration="700">
+        <h3 class="text-[0.75rem] uppercase tracking-button font-bold
+                   text-white/35 mb-5">
+          Servicio al Cliente
+        </h3>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Preguntas Frecuentes</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Envíos y Entregas</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Devoluciones</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Guía de Tallas</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Contáctanos</a></li>
+        </ul>
+      </div>
+
+      <!-- Col 4: Newsletter -->
+      <div data-aos="fade-up" data-aos-delay="240" data-aos-duration="700">
+        <h3 class="text-[0.75rem] uppercase tracking-button font-bold
+                   text-white/35 mb-5">
+          Newsletter
+        </h3>
+        <p class="text-sm text-white/55 mb-5 leading-relaxed">
+          Recibe las últimas novedades, colecciones exclusivas y
+          ofertas especiales directamente en tu correo.
+        </p>
+        <form class="flex" aria-label="Suscribirse al newsletter">
+          <label for="newsletter-email" class="sr-only">Tu correo electrónico</label>
+          <input id="newsletter-email"
+                 type="email"
+                 placeholder="tu@correo.com"
+                 required
+                 autocomplete="email"
+                 class="input-brand-dark flex-1 text-sm" />
+          <button type="submit"
+                  class="bg-brand-white text-brand-black
+                         text-[0.75rem] font-bold uppercase tracking-button
+                         px-5 py-3 shrink-0
+                         hover:bg-brand-gray transition-colors duration-300">
+            OK
+          </button>
+        </form>
+        <p class="text-[0.6875rem] text-white/30 mt-3">
+          Sin spam. Puedes darte de baja en cualquier momento.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="divider-light">
+    <div class="container-brand py-5
+                flex flex-col sm:flex-row justify-between items-center gap-3">
+      <p class="text-[0.75rem] text-white/35 order-2 sm:order-1">
+        © 2026 Tu Marca. Todos los derechos reservados.
+      </p>
+      <div class="flex gap-5 order-1 sm:order-2">
+        <a href="#" class="text-[0.75rem] text-white/35 hover:text-white/70
+                           transition-colors uppercase tracking-button">
+          Privacidad
+        </a>
+        <a href="#" class="text-[0.75rem] text-white/35 hover:text-white/70
+                           transition-colors uppercase tracking-button">
+          Términos
+        </a>
+        <a href="#" class="text-[0.75rem] text-white/35 hover:text-white/70
+                           transition-colors uppercase tracking-button">
+          Cookies
+        </a>
+      </div>
+    </div>
+  </div>
+
+</footer>
+
+</body>
+</html>

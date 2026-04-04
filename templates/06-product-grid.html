@@ -1,0 +1,143 @@
+<!--
+  TEMPLATE: Product Grid
+  ──────────────────────────────────────────────────────────────────
+  Grid 2→4 columnas con hover "Añadir al carrito" y badges.
+  REQUIERE: CSS compilado · AOS
+  IMÁGENES: product-1.jpg .. product-4.jpg (600×750, 3:4 portrait)
+  PERSONALIZA:
+    - Cambia nombres, precios y cantidades
+    - Elimina badge-promo o badge-new si no aplica
+    - Para más productos: agrega <article> con data-aos-delay creciente
+-->
+
+<section id="products"
+         class="py-16 md:py-24 bg-brand-white"
+         aria-labelledby="products-title">
+
+  <div class="container-brand">
+
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 md:mb-14">
+      <div>
+        <p class="eyebrow mb-2" data-aos="fade-right">Más Vendidos</p>
+        <h2 id="products-title" class="section-title" data-aos="fade-right" data-aos-delay="50">
+          Favoritos de Temporada
+        </h2>
+      </div>
+      <a href="#"
+         class="text-[0.8125rem] uppercase tracking-button font-semibold
+                underline underline-offset-4 hover:opacity-50 transition-opacity
+                self-start sm:self-auto"
+         data-aos="fade-left">
+        Ver Todo
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+
+      <!-- Producto con badge de descuento -->
+      <article class="group" data-aos="fade-up" data-aos-delay="0">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="assets/images/product-1.jpg"
+               alt="Nombre del producto"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <span class="badge-promo absolute top-3 left-3">−20%</span>
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Nombre Producto</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$00.000</span>
+          <span class="text-xs text-brand-black/40 line-through">$00.000</span>
+        </div>
+      </article>
+
+      <!-- Producto con badge Nuevo -->
+      <article class="group" data-aos="fade-up" data-aos-delay="100">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="assets/images/product-2.jpg"
+               alt="Nombre del producto"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <span class="badge-new absolute top-3 left-3">Nuevo</span>
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Nombre Producto</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$00.000</span>
+        </div>
+      </article>
+
+      <!-- Producto sin badge -->
+      <article class="group" data-aos="fade-up" data-aos-delay="200">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="assets/images/product-3.jpg"
+               alt="Nombre del producto"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Nombre Producto</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$00.000</span>
+        </div>
+      </article>
+
+      <!-- Producto con descuento -->
+      <article class="group" data-aos="fade-up" data-aos-delay="300">
+        <div class="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+          <img src="assets/images/product-4.jpg"
+               alt="Nombre del producto"
+               class="w-full h-full object-cover transition-transform
+                      duration-500 group-hover:scale-105"
+               loading="lazy" />
+          <span class="badge-promo absolute top-3 left-3">−15%</span>
+          <button class="absolute bottom-0 left-0 right-0
+                         bg-brand-black text-brand-white
+                         py-3 text-center text-[0.75rem] font-bold
+                         uppercase tracking-button
+                         translate-y-full group-hover:translate-y-0
+                         transition-transform duration-300">
+            Añadir al carrito
+          </button>
+        </div>
+        <h3 class="text-sm font-medium tracking-heading mb-1.5">Nombre Producto</h3>
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-bold">$00.000</span>
+          <span class="text-xs text-brand-black/40 line-through">$00.000</span>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- CTA debajo del grid -->
+    <div class="text-center mt-12" data-aos="fade-up">
+      <a href="#" class="btn-ghost">Ver todos los productos</a>
+    </div>
+
+  </div>
+
+</section>

@@ -1,0 +1,313 @@
+/*
+ * ── TIPOGRAFÍA ──────────────────────────────────────────────────────────
+ *
+ * DISPLAY (h1, h2, h3, .section-title):
+ *   kudryashev-d-contrast — Adobe Fonts kit rue4qgd
+ *   Cargado vía <link> en el <head>: https://use.typekit.net/rue4qgd.css
+ *
+ * ACCENT editorial (.editorial-italic, blockquote):
+ *   Ethic New — Adobe Fonts kit rue4qgd (serif italic)
+ *   Si no aparece en el kit, usar Georgia como fallback.
+ *
+ * UI SANS (navbar, botones, párrafos, labels, microcopy):
+ *   Jost — Google Fonts, geométrica limpia, fiel al estilo adrissa.com.co
+ */
+@import url('https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Font tokens (CSS custom properties) ─────────────────────────────── */
+
+:root {
+  --font-display: "kudryashev-d-contrast", sans-serif; /* Adobe Fonts kit rue4qgd */
+  --font-body:    "Jost", system-ui, sans-serif;        /* Google Fonts */
+  --font-accent:  "Ethic New", Georgia, serif;          /* Adobe Fonts kit rue4qgd — editorial italics */
+}
+
+/* ─── Base layer ───────────────────────────────────────────────────────── */
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+  body {
+    @apply font-sans text-brand-black bg-brand-white antialiased;
+    overflow-x: hidden;
+  }
+
+  /* SOLO h1, h2, h3 usan la fuente display editorial */
+  h1, h2, h3 {
+    @apply font-display tracking-heading;
+  }
+
+  /* h4 y menores: siempre font-sans para mantener legibilidad */
+  h4, h5, h6 {
+    @apply font-sans;
+  }
+
+  img, video { display: block; max-width: 100%; }
+
+  :focus-visible { outline: 2px solid #000; outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+    [data-aos] { transition: none !important; transform: none !important; opacity: 1 !important; }
+  }
+}
+
+/* ─── Component layer (inlined to avoid PostCSS @import order issues) ─── */
+
+@layer components {
+
+  /* ─── Layout ──────────────────────────────────────────────────── */
+
+  .container-brand {
+    @apply max-w-container mx-auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 700px) {
+    .container-brand { padding-inline: 2rem; }
+  }
+
+  @media (min-width: 1150px) {
+    .container-brand { padding-inline: 3rem; }
+  }
+
+
+  /* ─── Buttons (siempre font-sans — nunca heredan display) ───────── */
+
+  .btn-primary {
+    @apply inline-block font-sans bg-brand-black text-brand-white
+           text-[0.8125rem] font-semibold uppercase tracking-button
+           px-8 py-3.5
+           border border-brand-black
+           transition-all duration-300
+           hover:bg-brand-white hover:text-brand-black
+           focus-visible:ring-0;
+    white-space: nowrap;
+  }
+
+  .btn-ghost {
+    @apply inline-block font-sans bg-transparent text-brand-black
+           text-[0.8125rem] font-semibold uppercase tracking-button
+           px-8 py-3.5
+           border border-brand-black
+           transition-all duration-300
+           hover:bg-brand-black hover:text-brand-white
+           focus-visible:ring-0;
+    white-space: nowrap;
+  }
+
+  .btn-hero {
+    @apply inline-block font-sans bg-brand-white text-brand-black
+           text-[0.8125rem] font-semibold uppercase tracking-button
+           px-8 py-3.5
+           border border-brand-white
+           transition-all duration-300
+           hover:bg-transparent hover:text-brand-white
+           focus-visible:ring-0;
+    white-space: nowrap;
+  }
+
+  .btn-sm {
+    @apply px-5 py-2.5 text-xs;
+  }
+
+
+  /* ─── Badges (font-sans) ─────────────────────────────────────── */
+
+  .badge-promo {
+    @apply inline-block font-sans bg-brand-red text-brand-white
+           text-[0.625rem] font-semibold uppercase tracking-button
+           px-2.5 py-1;
+  }
+
+  .badge-new {
+    @apply inline-block font-sans bg-brand-black text-brand-white
+           text-[0.625rem] font-semibold uppercase tracking-button
+           px-2.5 py-1;
+  }
+
+
+  /* ─── Typography ──────────────────────────────────────────────── */
+
+  /* Display: solo h1/h2/h3 — ver base layer */
+  .section-title {
+    @apply font-display tracking-heading text-brand-black;
+    font-size: clamp(1.75rem, 3.5vw, 3rem);
+    line-height: 1.1;
+  }
+
+  /* Accent editorial — Ethic New (Adobe Fonts kit rue4qgd)
+     Usar en: pullquotes, frases destacadas, blockquotes
+     Si Ethic New no está en el kit, cae a Georgia italic */
+  .editorial-italic {
+    font-family: var(--font-accent);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* Eyebrow: siempre sans, label de sección */
+  .eyebrow {
+    @apply font-sans text-[0.6875rem] font-semibold uppercase text-brand-black/40;
+    letter-spacing: 0.18em;
+  }
+
+
+  /* ─── Forms (font-sans) ──────────────────────────────────────── */
+
+  .input-brand {
+    @apply w-full font-sans bg-transparent border border-brand-border
+           text-brand-black placeholder:text-brand-black/30
+           text-sm px-4 py-3
+           transition-colors duration-300
+           focus:outline-none focus:border-brand-black;
+  }
+
+  .input-brand-dark {
+    @apply w-full font-sans bg-white/10 border border-white/20
+           text-white placeholder:text-white/30
+           text-sm px-4 py-3
+           transition-colors duration-300
+           focus:outline-none focus:border-white/60;
+  }
+
+
+  /* ─── Nav (siempre font-sans) ────────────────────────────────── */
+
+  .nav-link {
+    @apply font-sans text-[0.75rem] font-medium uppercase tracking-button
+           transition-opacity duration-200 hover:opacity-50;
+  }
+
+  .nav-icon-btn {
+    @apply p-1.5 transition-opacity duration-200 hover:opacity-50 cursor-pointer;
+  }
+
+
+  /* ─── Dividers ────────────────────────────────────────────────── */
+
+  .divider {
+    @apply border-t border-brand-border;
+  }
+
+  .divider-light {
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+
+
+  /* ─── Announcement bar ────────────────────────────────────────── */
+
+  .announcement-track {
+    display: flex;
+    transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .announcement-item {
+    width: 100%;
+    flex-shrink: 0;
+  }
+
+
+  /* ─── Mobile menu ─────────────────────────────────────────────── */
+
+  dialog#mobile-menu {
+    @apply fixed inset-0 w-full h-full max-w-none max-h-none m-0
+           bg-brand-white border-none p-0;
+    z-index: 100;
+  }
+
+  dialog#mobile-menu::backdrop {
+    background: rgba(0, 0, 0, 0);
+  }
+
+  dialog#mobile-menu[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+
+  /* ─── Stars ───────────────────────────────────────────────────── */
+
+  .star-filled { color: #000; }
+  .star-empty  { color: #E0E0E0; }
+
+
+  /* ─── Scroll indicator ────────────────────────────────────────── */
+
+  .scroll-indicator {
+    @apply absolute bottom-8 left-1/2 -translate-x-1/2
+           flex flex-col items-center gap-2
+           text-white/70 text-[0.6875rem] uppercase tracking-button;
+    animation: bounce-slow 2s ease-in-out infinite;
+  }
+
+  @keyframes bounce-slow {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50%       { transform: translateX(-50%) translateY(6px); }
+  }
+
+
+  /* ─── Hero — slides con Ken Burns + crossfade ──────────────── */
+
+  /* Fade entre slides */
+  .hero-slide {
+    opacity: 0;
+    transition: opacity 1.5s ease-in-out;
+    will-change: opacity;
+  }
+  .hero-slide--active {
+    opacity: 1;
+  }
+
+  /* Ken Burns: zoom suave que da sensación de movimiento cinematográfico */
+  .hero-slide-img {
+    animation: hero-ken-burns-a 14s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+  #hero-slide-1 .hero-slide-img {
+    transform-origin: 55% 50%;
+    animation-name: hero-ken-burns-a;
+  }
+  #hero-slide-2 .hero-slide-img {
+    transform-origin: 45% 55%;
+    animation-name: hero-ken-burns-b;
+  }
+  @keyframes hero-ken-burns-a {
+    from { transform: scale(1); }
+    to   { transform: scale(1.09); }
+  }
+  @keyframes hero-ken-burns-b {
+    from { transform: scale(1.06); }
+    to   { transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-slide-img { animation: none; }
+  }
+
+
+  /* ─── Marquee ticker ──────────────────────────────────────────── */
+
+  .marquee-track {
+    animation: marquee-scroll 26s linear infinite;
+    will-change: transform;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-track { animation: none; }
+  }
+
+  @keyframes marquee-scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+}
+

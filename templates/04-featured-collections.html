@@ -1,0 +1,114 @@
+<!--
+  TEMPLATE: Featured Collections Grid
+  ──────────────────────────────────────────────────────────────────
+  Grid de 3 tarjetas de colección con hover overlay y stagger AOS.
+  REQUIERE: CSS compilado · AOS
+  IMÁGENES: collection-1.jpg, collection-2.jpg, collection-3.jpg (800×1000, 4:5)
+  PERSONALIZA:
+    - Cambia títulos de tarjetas y conteo de productos
+    - Agrega/elimina tarjetas (ajusta data-aos-delay en 100ms)
+    - Para 4 columnas: cambia "sm:grid-cols-3" → "sm:grid-cols-2 md:grid-cols-4"
+-->
+
+<section id="collections"
+         class="py-16 md:py-24 bg-brand-white"
+         aria-labelledby="collections-title">
+
+  <div class="container-brand">
+
+    <!-- Encabezado de sección -->
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10 md:mb-14">
+      <div>
+        <p class="eyebrow mb-2" data-aos="fade-right">Explora</p>
+        <h2 id="collections-title" class="section-title" data-aos="fade-right" data-aos-delay="50">
+          Nuestras Colecciones
+        </h2>
+      </div>
+      <a href="#"
+         class="text-[0.8125rem] uppercase tracking-button font-semibold
+                underline underline-offset-4 hover:opacity-50 transition-opacity
+                self-start sm:self-auto"
+         data-aos="fade-left">
+        Ver Todo
+      </a>
+    </div>
+
+    <!-- Grid de colecciones -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+
+      <!-- Tarjeta 1 -->
+      <article class="group cursor-pointer" data-aos="fade-up" data-aos-delay="0">
+        <a href="#" aria-label="Ver Colección 1">
+          <div class="relative overflow-hidden aspect-[4/5] bg-brand-gray">
+            <img src="assets/images/collection-1.jpg"
+                 alt="Colección 1"
+                 class="w-full h-full object-cover object-top
+                        transition-transform duration-700 ease-out
+                        group-hover:scale-105"
+                 loading="lazy" />
+            <div class="absolute inset-0 bg-brand-black/30
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-300
+                        flex items-end p-6">
+              <span class="btn-hero btn-sm">Explorar</span>
+            </div>
+          </div>
+          <div class="pt-4">
+            <h3 class="font-display text-lg tracking-heading mb-1">Nombre Colección 1</h3>
+            <p class="text-sm text-brand-black/50">XX productos</p>
+          </div>
+        </a>
+      </article>
+
+      <!-- Tarjeta 2 -->
+      <article class="group cursor-pointer" data-aos="fade-up" data-aos-delay="100">
+        <a href="#" aria-label="Ver Colección 2">
+          <div class="relative overflow-hidden aspect-[4/5] bg-brand-gray">
+            <img src="assets/images/collection-2.jpg"
+                 alt="Colección 2"
+                 class="w-full h-full object-cover object-top
+                        transition-transform duration-700 ease-out
+                        group-hover:scale-105"
+                 loading="lazy" />
+            <div class="absolute inset-0 bg-brand-black/30
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-300
+                        flex items-end p-6">
+              <span class="btn-hero btn-sm">Explorar</span>
+            </div>
+          </div>
+          <div class="pt-4">
+            <h3 class="font-display text-lg tracking-heading mb-1">Nombre Colección 2</h3>
+            <p class="text-sm text-brand-black/50">XX productos</p>
+          </div>
+        </a>
+      </article>
+
+      <!-- Tarjeta 3 -->
+      <article class="group cursor-pointer" data-aos="fade-up" data-aos-delay="200">
+        <a href="#" aria-label="Ver Colección 3">
+          <div class="relative overflow-hidden aspect-[4/5] bg-brand-gray">
+            <img src="assets/images/collection-3.jpg"
+                 alt="Colección 3"
+                 class="w-full h-full object-cover object-top
+                        transition-transform duration-700 ease-out
+                        group-hover:scale-105"
+                 loading="lazy" />
+            <div class="absolute inset-0 bg-brand-black/30
+                        opacity-0 group-hover:opacity-100
+                        transition-opacity duration-300
+                        flex items-end p-6">
+              <span class="btn-hero btn-sm">Explorar</span>
+            </div>
+          </div>
+          <div class="pt-4">
+            <h3 class="font-display text-lg tracking-heading mb-1">Nombre Colección 3</h3>
+            <p class="text-sm text-brand-black/50">XX productos</p>
+          </div>
+        </a>
+      </article>
+
+    </div>
+  </div>
+
+</section>

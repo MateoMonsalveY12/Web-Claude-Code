@@ -1,0 +1,52 @@
+<!--
+  TEMPLATE: Promo Editorial (Split)
+  ──────────────────────────────────────────────────────────────────
+  Imagen full-bleed izquierda + texto derecha. Se apila en mobile.
+  REQUIERE: CSS compilado · AOS
+  IMÁGENES: promo-editorial.jpg (1600×900 o similar, landscape)
+  PERSONALIZA:
+    - Para imagen a la derecha: invierte el orden con "md:order-2" en img
+    - Cambia badge-promo por badge-new si no es oferta
+    - Fondo: "bg-brand-gray" → "bg-brand-white" o cualquier color
+-->
+
+<section class="bg-brand-gray overflow-hidden"
+         aria-labelledby="promo-title">
+
+  <div class="grid grid-cols-1 md:grid-cols-2">
+
+    <!-- Imagen -->
+    <div class="relative overflow-hidden"
+         style="min-height: 420px;"
+         data-aos="fade-right" data-aos-duration="900">
+      <img src="assets/images/promo-editorial.jpg"
+           alt="Descripción de la imagen editorial"
+           class="absolute inset-0 w-full h-full object-cover object-center"
+           loading="lazy" />
+    </div>
+
+    <!-- Texto -->
+    <div class="flex flex-col justify-center
+                px-6 md:px-12 lg:px-16
+                py-14 md:py-20"
+         data-aos="fade-left" data-aos-delay="150" data-aos-duration="900">
+
+      <!-- Badge opcional — elimina si no aplica -->
+      <span class="badge-promo mb-6 self-start">Edición Limitada</span>
+
+      <h2 id="promo-title" class="section-title mb-5 max-w-sm">
+        Tu Título<br/>Aquí
+      </h2>
+
+      <p class="text-brand-black/65 leading-relaxed mb-8 max-w-sm text-[0.9375rem]">
+        Tu párrafo descriptivo va aquí. Cuenta la historia de tu producto
+        o servicio en 2-3 líneas. Enfócate en el beneficio para el cliente.
+      </p>
+
+      <a href="#" class="btn-primary self-start">Ver Colección</a>
+
+    </div>
+
+  </div>
+
+</section>
