@@ -1,0 +1,124 @@
+<!--
+  TEMPLATE: Footer
+  ──────────────────────────────────────────────────────────────────
+  Footer negro de 4 columnas: bio, links tienda, links servicio, newsletter.
+  REQUIERE: CSS compilado
+  IMÁGENES: Ninguna
+  PERSONALIZA:
+    - Cambia "TU MARCA" por tu nombre de marca
+    - Actualiza los links de navegación
+    - Reemplaza "@tumarca.co" con tus handles reales en redes sociales
+    - Conecta el form de newsletter a tu proveedor (Mailchimp, etc.)
+-->
+
+<footer class="bg-brand-black text-brand-white" role="contentinfo">
+
+  <div class="container-brand py-14 md:py-20">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-12">
+
+      <!-- Columna 1: Bio de marca -->
+      <div>
+        <p class="font-display text-2xl tracking-[0.1em] mb-5">TU MARCA</p>
+        <p class="text-white/55 text-sm leading-relaxed mb-7 max-w-xs">
+          Tu descripción de marca en 2-3 líneas. Qué haces, para quién,
+          y cuál es tu propósito o diferenciador.
+        </p>
+        <!-- Redes sociales -->
+        <div class="flex gap-4">
+          <a href="#" class="text-white/50 hover:text-white transition-colors duration-300"
+             aria-label="Instagram">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </a>
+          <a href="#" class="text-white/50 hover:text-white transition-colors duration-300"
+             aria-label="TikTok">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.18 8.18 0 004.78 1.52V6.78a4.85 4.85 0 01-1.01-.09z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Columna 2: Links de tienda/navegación -->
+      <div>
+        <h3 class="text-[0.75rem] uppercase tracking-button font-bold text-white/35 mb-5">
+          Tienda
+        </h3>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Colecciones</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Novedades</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Más Vendidos</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Ofertas</a></li>
+        </ul>
+      </div>
+
+      <!-- Columna 3: Servicio al cliente -->
+      <div>
+        <h3 class="text-[0.75rem] uppercase tracking-button font-bold text-white/35 mb-5">
+          Ayuda
+        </h3>
+        <ul class="space-y-3">
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Preguntas Frecuentes</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Envíos</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Devoluciones</a></li>
+          <li><a href="#" class="text-sm text-white/65 hover:text-white transition-colors duration-300">Contacto</a></li>
+        </ul>
+      </div>
+
+      <!-- Columna 4: Newsletter -->
+      <div>
+        <h3 class="text-[0.75rem] uppercase tracking-button font-bold text-white/35 mb-5">
+          Newsletter
+        </h3>
+        <p class="text-sm text-white/55 mb-5 leading-relaxed">
+          Recibe novedades y ofertas exclusivas directamente en tu correo.
+        </p>
+        <form class="flex" aria-label="Suscripción newsletter">
+          <label for="footer-email" class="sr-only">Correo electrónico</label>
+          <input id="footer-email"
+                 type="email"
+                 placeholder="tu@correo.com"
+                 required
+                 autocomplete="email"
+                 class="input-brand-dark flex-1 text-sm" />
+          <button type="submit"
+                  class="bg-brand-white text-brand-black
+                         text-[0.75rem] font-bold uppercase tracking-button
+                         px-5 py-3 shrink-0
+                         hover:bg-brand-gray transition-colors duration-300">
+            OK
+          </button>
+        </form>
+        <p class="text-[0.6875rem] text-white/30 mt-3">
+          Sin spam. Cancela cuando quieras.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Barra inferior: copyright + links legales -->
+  <div class="divider-light">
+    <div class="container-brand py-5
+                flex flex-col sm:flex-row justify-between items-center gap-3">
+      <p class="text-[0.75rem] text-white/35 order-2 sm:order-1">
+        © 2026 Tu Marca. Todos los derechos reservados.
+      </p>
+      <div class="flex gap-5 order-1 sm:order-2">
+        <a href="#" class="text-[0.75rem] text-white/35 hover:text-white/70
+                           transition-colors uppercase tracking-button">
+          Privacidad
+        </a>
+        <a href="#" class="text-[0.75rem] text-white/35 hover:text-white/70
+                           transition-colors uppercase tracking-button">
+          Términos
+        </a>
+      </div>
+    </div>
+  </div>
+
+</footer>

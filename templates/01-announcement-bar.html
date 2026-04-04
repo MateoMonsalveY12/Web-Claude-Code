@@ -1,0 +1,27 @@
+<!--
+  TEMPLATE: Announcement Bar
+  ──────────────────────────────────────────────────────────────────
+  Barra superior negra con 3 mensajes que rotan cada 4 segundos.
+  REQUIERE: CSS compilado · JS: announcement-bar.js (o bundle completo)
+  IMÁGENES: Ninguna
+  PERSONALIZA: Edita el texto de los 3 <span class="announcement-item">
+-->
+
+<div id="announcement-bar"
+     class="bg-brand-black text-brand-white text-center
+            text-[0.6875rem] tracking-button uppercase
+            py-2.5 overflow-hidden"
+     role="region"
+     aria-label="Anuncios promocionales">
+  <div class="announcement-track">
+    <span class="announcement-item block px-4">
+      Envío gratis en pedidos mayores a $200.000 &nbsp;·&nbsp; Colombia
+    </span>
+    <span class="announcement-item block px-4">
+      Nuevas colecciones disponibles &nbsp;—&nbsp; <strong class="font-semibold">Ver ahora</strong>
+    </span>
+    <span class="announcement-item block px-4">
+      Devoluciones gratuitas en 30 días &nbsp;·&nbsp; Sin preguntas
+    </span>
+  </div>
+</div>

@@ -1,0 +1,113 @@
+<!--
+  TEMPLATE: Sticky Navigation
+  ──────────────────────────────────────────────────────────────────
+  Nav fija: transparente sobre hero → blanca al hacer scroll.
+  Incluye menú móvil con <dialog> nativo.
+  REQUIERE: CSS compilado · JS: nav.js (o bundle completo)
+  IMÁGENES: Ninguna
+  PERSONALIZA:
+    - Cambia "TU MARCA" por tu nombre
+    - Actualiza los links del <nav> y del dialog móvil
+    - Si no tienes hero oscuro: quita las clases "text-white scrolled:text-brand-black"
+      y déjalas solo como "text-brand-black"
+-->
+
+<header id="site-nav"
+        class="fixed left-0 right-0 z-50
+               transition-all duration-300
+               border-b border-transparent"
+        style="top: var(--bar-height, 0px);"
+        data-scrolled="false"
+        role="banner">
+
+  <div class="container-brand flex items-center justify-between h-14 md:h-[72px]">
+
+    <!-- Logo / Nombre de marca -->
+    <a href="/"
+       class="font-display text-xl md:text-2xl tracking-[0.1em] font-medium
+              text-white scrolled:text-brand-black
+              transition-colors duration-300 z-10">
+      TU MARCA
+    </a>
+
+    <!-- Links desktop (ocultos en móvil) -->
+    <nav class="hidden md:flex items-center gap-7"
+         aria-label="Navegación principal">
+      <a href="#collections" class="nav-link text-white scrolled:text-brand-black">Colecciones</a>
+      <a href="#products"    class="nav-link text-white scrolled:text-brand-black">Productos</a>
+      <a href="#about"       class="nav-link text-white scrolled:text-brand-black">Nosotros</a>
+      <a href="#contact"     class="nav-link text-white scrolled:text-brand-black">Contacto</a>
+    </nav>
+
+    <!-- Íconos derecha -->
+    <div class="flex items-center gap-1">
+      <!-- Búsqueda -->
+      <button class="nav-icon-btn text-white scrolled:text-brand-black transition-colors duration-300"
+              aria-label="Buscar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <!-- Carrito -->
+      <button class="nav-icon-btn text-white scrolled:text-brand-black transition-colors duration-300"
+              aria-label="Carrito">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
+      </button>
+      <!-- Hamburger (solo móvil) -->
+      <button id="menu-open"
+              class="md:hidden nav-icon-btn text-white scrolled:text-brand-black transition-colors duration-300"
+              aria-label="Abrir menú" aria-expanded="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Fondo blanco (aparece al hacer scroll) -->
+  <div class="absolute inset-0 bg-brand-white opacity-0 scrolled:opacity-100
+              transition-opacity duration-300 -z-10" aria-hidden="true"></div>
+  <!-- Borde inferior (aparece al hacer scroll) -->
+  <div class="absolute bottom-0 left-0 right-0 h-px bg-brand-border
+              opacity-0 scrolled:opacity-100 transition-opacity duration-300"
+       aria-hidden="true"></div>
+
+</header>
+
+<!-- Menú móvil (dialog nativo — accesible por defecto) -->
+<dialog id="mobile-menu" aria-label="Menú móvil">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-brand-border">
+    <span class="font-display text-xl tracking-[0.1em]">TU MARCA</span>
+    <button id="menu-close" class="p-2 -mr-2" aria-label="Cerrar menú">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <nav class="flex flex-col px-5 py-8 gap-6" aria-label="Menú principal">
+    <a href="#collections" class="text-2xl font-display tracking-heading"
+       onclick="document.getElementById('mobile-menu').close()">Colecciones</a>
+    <a href="#products"    class="text-2xl font-display tracking-heading"
+       onclick="document.getElementById('mobile-menu').close()">Productos</a>
+    <a href="#about"       class="text-2xl font-display tracking-heading"
+       onclick="document.getElementById('mobile-menu').close()">Nosotros</a>
+    <a href="#contact"     class="text-2xl font-display tracking-heading"
+       onclick="document.getElementById('mobile-menu').close()">Contacto</a>
+  </nav>
+  <div class="mt-auto px-5 pb-8">
+    <a href="#" class="btn-primary w-full text-center block">Ver Colecciones</a>
+  </div>
+</dialog>

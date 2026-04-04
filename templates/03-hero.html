@@ -1,0 +1,74 @@
+<!--
+  TEMPLATE: Hero Section
+  ──────────────────────────────────────────────────────────────────
+  Hero full-viewport con imagen de fondo, overlay y CTA.
+  REQUIERE: CSS compilado · AOS
+  IMÁGENES: hero-main.jpg (1920×1080, landscape)
+  PERSONALIZA:
+    - Cambia src= de la imagen
+    - Edita el eyebrow, h1, párrafo y links de CTA
+    - Ajusta el overlay: "from-black/60" → más/menos oscuridad
+    - "object-center" → "object-top" / "object-bottom" según composición
+-->
+
+<section id="hero"
+         class="relative w-full flex items-center justify-start overflow-hidden"
+         style="min-height: 100svh;"
+         aria-label="Imagen principal">
+
+  <!-- Imagen de fondo -->
+  <img src="assets/images/hero-main.jpg"
+       alt=""
+       class="absolute inset-0 w-full h-full object-cover object-center"
+       loading="eager"
+       fetchpriority="high"
+       aria-hidden="true" />
+
+  <!-- Overlay oscuro (ajusta la opacidad según la imagen) -->
+  <div class="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent"
+       aria-hidden="true"></div>
+
+  <!-- Contenido -->
+  <div class="relative z-10 container-brand w-full py-32">
+    <div>
+
+      <p class="eyebrow text-white/70 mb-5" data-aos="fade-up" data-aos-delay="0">
+        Nueva Colección · Primavera 2026
+      </p>
+
+      <h1 class="font-display text-white leading-none mb-6 max-w-xl"
+          style="font-size: clamp(2.5rem, 6vw, 5rem);"
+          data-aos="fade-up" data-aos-delay="100">
+        Tu Título<br/>Aquí
+      </h1>
+
+      <p class="text-white/75 text-base md:text-lg mb-10 max-w-sm font-light leading-relaxed"
+         data-aos="fade-up" data-aos-delay="200">
+        Tu subtítulo o descripción breve va aquí. Máximo 2 líneas
+        para mantener el impacto visual.
+      </p>
+
+      <div class="flex flex-wrap gap-4" data-aos="fade-up" data-aos-delay="300">
+        <a href="#" class="btn-hero">CTA Principal</a>
+        <a href="#" class="btn-ghost border-white text-white
+                           hover:bg-white hover:text-brand-black">
+          CTA Secundario
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Indicador de scroll (elimina si no quieres) -->
+  <div class="scroll-indicator" aria-hidden="true">
+    <span class="text-[0.6rem] tracking-widest">Scroll</span>
+    <svg width="16" height="24" viewBox="0 0 16 24" fill="none"
+         stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="1" width="14" height="22" rx="7"/>
+      <circle cx="8" cy="7" r="2" fill="currentColor" stroke="none">
+        <animate attributeName="cy" values="7;15;7" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  </div>
+
+</section>
