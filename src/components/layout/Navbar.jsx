@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useCart } from '../../context/CartContext'
 
 const COLLECTIONS_MENU = {
   cols: [
@@ -99,6 +100,8 @@ export default function Navbar() {
     setActiveMenu(null)
   }
 
+  const { cartCount, openCart } = useCart()
+
   const isHeroTransparent = !scrolled && location.pathname === '/'
   const textColor = isHeroTransparent ? 'text-white' : 'text-brand-black'
 
@@ -182,12 +185,23 @@ export default function Navbar() {
                 <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
             </button>
-            <button className={`nav-icon-btn transition-colors duration-300 ${textColor}`} aria-label="Carrito">
+            <button
+              onClick={openCart}
+              className={`nav-icon-btn relative transition-colors duration-300 ${textColor}`}
+              aria-label="Carrito"
+            >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
                 <line x1="3" y1="6" x2="21" y2="6"/>
                 <path d="M16 10a4 4 0 01-8 0"/>
               </svg>
+              {cartCount > 0 && (
+                <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center font-sans text-[0.55rem] font-bold leading-none ${
+                  isHeroTransparent ? 'bg-white text-brand-black' : 'bg-brand-black text-white'
+                }`}>
+                  {cartCount > 9 ? '9+' : cartCount}
+                </span>
+              )}
             </button>
             <button
               className={`md:hidden nav-icon-btn transition-colors duration-300 ${textColor}`}

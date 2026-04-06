@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useProduct } from '../hooks/useProduct.js'
 import { useProducts } from '../hooks/useProducts.js'
 import ProductCard, { SkeletonCard } from '../components/shared/ProductCard.jsx'
 import Breadcrumb from '../components/shared/Breadcrumb.jsx'
+import { useCart } from '../context/CartContext.jsx'
 
 function formatPrice(n) {
   return '$' + n.toLocaleString('es-CO')
@@ -47,6 +48,8 @@ const ACCORDION_ITEMS = [
 
 export default function ProductPage() {
   const { slug } = useParams()
+  const navigate = useNavigate()
+  const { addToCart } = useCart()
   const { product, loading, error } = useProduct(slug)
   const [activeImg, setActiveImg]   = useState(0)
   const [selectedSize, setSize]     = useState(null)
@@ -73,8 +76,16 @@ export default function ProductPage() {
   function handleAddToCart() {
     if (sizes?.length > 0 && !selectedSize) { setSizeError(true); return }
     setSizeError(false)
+    addToCart(product, selectedSize, selectedColor)
     setAdded(true)
     setTimeout(() => setAdded(false), 2500)
+  }
+
+  function handleBuyNow() {
+    if (sizes?.length > 0 && !selectedSize) { setSizeError(true); return }
+    setSizeError(false)
+    addToCart(product, selectedSize, selectedColor)
+    navigate('/checkout')
   }
 
   return (
@@ -227,7 +238,7 @@ export default function ProductPage() {
                   </span>
                 ) : 'Agregar al carrito'}
               </button>
-              <button className="btn-ghost w-full text-center">
+              <button onClick={handleBuyNow} className="btn-ghost w-full text-center">
                 Comprar ahora
               </button>
               <a
