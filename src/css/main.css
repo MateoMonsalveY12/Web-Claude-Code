@@ -18,12 +18,27 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Font tokens (CSS custom properties) ─────────────────────────────── */
+/* ─── Design tokens ────────────────────────────────────────────────────── */
 
 :root {
-  --font-display: "kudryashev-d-contrast", sans-serif; /* Adobe Fonts kit rue4qgd */
-  --font-body:    "Jost", system-ui, sans-serif;        /* Google Fonts */
-  --font-accent:  "Ethic New", Georgia, serif;          /* Adobe Fonts kit rue4qgd — editorial italics */
+  --font-display: "kudryashev-d-contrast", sans-serif;
+  --font-body:    "Jost", system-ui, sans-serif;
+  --font-accent:  "Ethic New", Georgia, serif;
+
+  /* Fixed header stack heights:
+     Announcement bar ≈ 40px  (py-2.5 + text)
+     Navbar mobile    = 56px  (h-14)
+     Total mobile     = 96px  = 6rem  */
+  --bar-h:      40px;
+  --nav-h:      56px;
+  --header-h:   96px;   /* mobile */
+}
+
+@media (min-width: 1000px) {
+  :root {
+    --nav-h:    72px;
+    --header-h: 112px;  /* desktop: 40 + 72 */
+  }
 }
 
 /* ─── Base layer ───────────────────────────────────────────────────────── */

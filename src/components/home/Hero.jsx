@@ -17,12 +17,15 @@ export default function Hero() {
   }, [])
 
   return (
+    // height: 100svh → exactly the viewport. Starts at position 0 in the
+    // document (main has no padding-top on home). The fixed header stack
+    // (AnnouncementBar + Navbar ≈ 96–112px) overlays the top of the image.
     <section
-      className="relative w-full flex items-center justify-start overflow-hidden"
+      className="relative w-full overflow-hidden"
       style={{ height: '100svh' }}
-      aria-label="Hero"
+      aria-label="Hero principal"
     >
-      {/* Slides */}
+      {/* ── Background slides ─────────────────────────────────── */}
       {SLIDES.map((slide, i) => (
         <div
           key={slide.id}
@@ -39,35 +42,76 @@ export default function Hero() {
         </div>
       ))}
 
-      {/* Dark overlay */}
-      <div className="absolute inset-0 bg-black/35 pointer-events-none" aria-hidden="true" />
+      {/* Dark overlay for text legibility */}
+      <div className="absolute inset-0 bg-black/40 pointer-events-none" aria-hidden="true" />
 
-      {/* Content */}
-      <div className="container-brand relative z-10 pt-20">
-        <p className="eyebrow text-white/60 mb-4" data-aos="fade-up">Nueva Colección 2026</p>
-        <h1
-          className="font-display text-white mb-6"
-          style={{ fontSize: 'clamp(2.5rem, 7vw, 6rem)', lineHeight: 1.0, letterSpacing: '0.02em' }}
-          data-aos="fade-up"
-          data-aos-delay="80"
-        >
-          Moda que<br />te define.
-        </h1>
-        <p
-          className="font-sans text-white/75 text-base md:text-lg mb-10 max-w-md leading-relaxed"
-          data-aos="fade-up"
-          data-aos-delay="160"
-        >
-          Prendas colombianas diseñadas para mujeres que saben lo que quieren.
-        </p>
-        <div className="flex flex-wrap gap-4" data-aos="fade-up" data-aos-delay="240">
-          <Link to="/collections/nueva-coleccion" className="btn-hero">
-            Ver Colección
-          </Link>
-          <Link to="/collections/vestidos" className="btn-ghost border-white text-white hover:bg-white hover:text-brand-black">
-            Vestidos
-          </Link>
+      {/* ── Content — LEFT aligned, offset for fixed header ────── */}
+      {/* pt-24 md:pt-28 clears the fixed announcement bar + navbar  */}
+      <div className="absolute inset-0 flex items-center">
+        <div className="container-brand w-full pt-24 md:pt-28">
+          <p
+            className="eyebrow text-white/65 mb-4"
+            data-aos="fade-up"
+          >
+            Nueva Colección 2026
+          </p>
+
+          <h1
+            className="font-display text-white text-left"
+            style={{ fontSize: 'clamp(2.75rem, 7vw, 6.5rem)', lineHeight: 1.0, letterSpacing: '0.02em', maxWidth: '14ch' }}
+            data-aos="fade-up"
+            data-aos-delay="80"
+          >
+            Moda que<br />te define.
+          </h1>
+
+          <p
+            className="font-sans text-white/75 text-base md:text-lg mt-6 mb-10 leading-relaxed text-left"
+            style={{ maxWidth: '38ch' }}
+            data-aos="fade-up"
+            data-aos-delay="160"
+          >
+            Prendas colombianas diseñadas para mujeres que saben lo que quieren.
+          </p>
+
+          <div className="flex flex-wrap gap-4 justify-start" data-aos="fade-up" data-aos-delay="240">
+            <Link to="/collections/nueva-coleccion" className="btn-hero">
+              Ver Colección
+            </Link>
+            <Link
+              to="/collections/vestidos"
+              className="btn-ghost border-white/60 text-white hover:bg-white hover:text-brand-black"
+            >
+              Vestidos
+            </Link>
+          </div>
+
+          {/* Trust microcopy */}
+          <div
+            className="flex flex-wrap items-center gap-5 mt-10"
+            data-aos="fade-up"
+            data-aos-delay="320"
+          >
+            {['Envío gratis +$200K', 'Devoluciones 30 días', 'Pago seguro'].map(t => (
+              <span key={t} className="font-sans text-[0.6875rem] text-white/50 uppercase tracking-button flex items-center gap-1.5">
+                <span className="text-white/30">✓</span> {t}
+              </span>
+            ))}
+          </div>
         </div>
+      </div>
+
+      {/* Slide dots */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">
+        {SLIDES.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setActive(i)}
+            className="carousel-dot"
+            style={{ opacity: i === active ? 1 : 0.3, width: i === active ? '24px' : '6px' }}
+            aria-label={`Slide ${i + 1}`}
+          />
+        ))}
       </div>
 
       {/* Scroll indicator */}
