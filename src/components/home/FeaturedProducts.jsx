@@ -6,7 +6,7 @@ export default function FeaturedProducts() {
   const { products, loading } = useProducts({ featured: true, limit: 4 })
 
   return (
-    <section id="products" className="py-10 md:py-16 bg-brand-gray">
+    <section id="products" className="py-16 md:py-24 bg-brand-white">
       <div className="container-brand">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 md:mb-10">
           <div>

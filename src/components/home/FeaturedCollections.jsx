@@ -5,19 +5,19 @@ const COLLECTIONS = [
     title: 'Vestidos',
     subtitle: 'Para cada ocasión',
     href: '/collections/vestidos',
-    image: '/assets/images/collection-1.jpg',
+    image: '/images/collection-1.jpg',
   },
   {
     title: 'Blusas',
     subtitle: 'Elegancia versátil',
     href: '/collections/blusas',
-    image: '/assets/images/collection-2.jpg',
+    image: '/images/collection-2.jpg',
   },
   {
     title: 'Tallas Grandes',
     subtitle: 'Moda para todas',
     href: '/collections/tallas-grandes',
-    image: '/assets/images/collection-3.jpg',
+    image: '/images/collection-3.jpg',
   },
 ]
 

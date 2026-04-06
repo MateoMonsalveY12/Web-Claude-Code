@@ -5,11 +5,11 @@ import ProductCard, { SkeletonCard } from '../components/shared/ProductCard.jsx'
 import Breadcrumb from '../components/shared/Breadcrumb.jsx'
 
 const CATEGORY_META = {
-  'vestidos':          { title: 'Vestidos',        banner: '/assets/images/banner-vestidos.jpg' },
-  'blusas':            { title: 'Blusas',           banner: '/assets/images/banner-blusas.jpg' },
-  'jeans':             { title: 'Jeans & Pantalones', banner: '/assets/images/banner-jeans.jpg' },
-  'tallas-grandes':    { title: 'Tallas Grandes',   banner: '/assets/images/banner-tallas-grandes.jpg' },
-  'nueva-coleccion':   { title: 'Nueva Colección',  banner: '/assets/images/banner-nueva-coleccion.jpg' },
+  'vestidos':          { title: 'Vestidos',        banner: '/images/banner-vestidos.jpg' },
+  'blusas':            { title: 'Blusas',           banner: '/images/banner-blusas.jpg' },
+  'jeans':             { title: 'Jeans & Pantalones', banner: '/images/banner-jeans.jpg' },
+  'tallas-grandes':    { title: 'Tallas Grandes',   banner: '/images/banner-tallas-grandes.jpg' },
+  'nueva-coleccion':   { title: 'Nueva Colección',  banner: '/images/banner-nueva-coleccion.jpg' },
 }
 
 const PRICE_RANGES = [
@@ -33,7 +33,7 @@ export default function CollectionPage({ category: propCategory }) {
   const { category: paramCategory } = useParams()
   const category = propCategory || paramCategory
 
-  const meta = CATEGORY_META[category] || { title: category, banner: '/assets/images/banner-nueva-coleccion.jpg' }
+  const meta = CATEGORY_META[category] || { title: category, banner: '/images/banner-nueva-coleccion.jpg' }
 
   // Filters state
   const [selectedSizes,  setSelectedSizes]  = useState([])

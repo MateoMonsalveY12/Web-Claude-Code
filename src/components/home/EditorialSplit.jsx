@@ -8,14 +8,14 @@ export default function EditorialSplit() {
         <div className="editorial-images-wrapper" data-aos="fade-right">
           <div className="editorial-img-main-wrap">
             <img
-              src="/assets/images/editorial-main.jpg"
+              src="/images/editorial-main.jpg"
               alt="Colección vestidos"
               loading="lazy"
             />
           </div>
           <div className="editorial-img-accent-wrap" data-aos="zoom-in" data-aos-delay="350">
             <img
-              src="/assets/images/editorial-accent.jpg"
+              src="/images/editorial-accent.jpg"
               alt="Detalle editorial"
               loading="lazy"
             />

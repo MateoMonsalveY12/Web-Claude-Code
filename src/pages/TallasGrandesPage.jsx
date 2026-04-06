@@ -11,7 +11,7 @@ export default function TallasGrandesPage() {
       {/* Hero */}
       <div className="relative w-full overflow-hidden" style={{ height: 'clamp(360px, 55vw, 680px)' }}>
         <img
-          src="/assets/images/banner-tallas-grandes.jpg"
+          src="/images/banner-tallas-grandes.jpg"
           alt="Tallas Grandes"
           className="w-full h-full object-cover object-center"
         />

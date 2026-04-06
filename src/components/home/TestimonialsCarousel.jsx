@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react'
 const REVIEWS = [
   {
     id: 1,
-    image: '/assets/images/review-product-1.jpg',
+    image: '/images/review-product-1.jpg',
     text: '"La calidad es increíble. El vestido llegó exactamente como en las fotos, el tejido es hermoso."',
     author: 'Valentina M.',
     location: 'Bogotá',
@@ -11,7 +11,7 @@ const REVIEWS = [
   },
   {
     id: 2,
-    image: '/assets/images/review-product-2.jpg',
+    image: '/images/review-product-2.jpg',
     text: '"Compré una blusa y quedé enamorada. Ya hice mi segunda compra. El envío fue rapidísimo."',
     author: 'Daniela C.',
     location: 'Medellín',
@@ -19,7 +19,7 @@ const REVIEWS = [
   },
   {
     id: 3,
-    image: '/assets/images/review-product-3.jpg',
+    image: '/images/review-product-3.jpg',
     text: '"Finalmente una marca que entiende a la mujer colombiana. Los vestidos son espectaculares."',
     author: 'Laura G.',
     location: 'Cali',
@@ -27,7 +27,7 @@ const REVIEWS = [
   },
   {
     id: 4,
-    image: '/assets/images/review-product-4.jpg',
+    image: '/images/review-product-4.jpg',
     text: '"Me encanta la atención al cliente y la calidad de las prendas. 100% recomendado."',
     author: 'Mariana R.',
     location: 'Barranquilla',
@@ -35,7 +35,7 @@ const REVIEWS = [
   },
   {
     id: 5,
-    image: '/assets/images/review-product-5.jpg',
+    image: '/images/review-product-5.jpg',
     text: '"El pantalón wide leg es perfecto. La tela cae increíble y el ajuste es exactamente el que quería."',
     author: 'Sofía P.',
     location: 'Cartagena',

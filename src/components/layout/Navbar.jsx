@@ -23,8 +23,8 @@ const COLLECTIONS_MENU = {
     },
   ],
   images: [
-    { src: '/assets/images/megamenu-campaign-1.jpg', caption: 'Nueva Temporada' },
-    { src: '/assets/images/banner-vestidos.jpg',     caption: 'Vestidos 2026' },
+    { src: '/images/megamenu-campaign-1.jpg', caption: 'Nueva Temporada' },
+    { src: '/images/banner-vestidos.jpg',     caption: 'Vestidos 2026' },
   ],
 }
 
@@ -50,8 +50,8 @@ const PRODUCTS_MENU = {
     },
   ],
   images: [
-    { src: '/assets/images/megamenu-campaign-2.jpg', caption: 'Lo más vendido' },
-    { src: '/assets/images/banner-blusas.jpg',       caption: 'Blusas 2026' },
+    { src: '/images/megamenu-campaign-2.jpg', caption: 'Lo más vendido' },
+    { src: '/images/banner-blusas.jpg',       caption: 'Blusas 2026' },
   ],
 }
 
