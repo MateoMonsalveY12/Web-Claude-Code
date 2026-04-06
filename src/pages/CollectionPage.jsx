@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useProducts } from '../hooks/useProducts.js'
 import ProductCard, { SkeletonCard } from '../components/shared/ProductCard.jsx'
 import Breadcrumb from '../components/shared/Breadcrumb.jsx'
@@ -12,22 +12,35 @@ const CATEGORY_META = {
   'nueva-coleccion': { title: 'Nueva Colección',    banner: '/images/banner-nueva-coleccion.jpg' },
 }
 
-const PRICE_RANGES = [
-  { label: 'Menos de $150.000',   min: 0,      max: 150000 },
-  { label: '$150.000 – $250.000', min: 150000, max: 250000 },
-  { label: '$250.000 – $350.000', min: 250000, max: 350000 },
-  { label: 'Más de $350.000',     min: 350000, max: null },
+const CATEGORY_LINKS = [
+  { label: 'Ropa',                 href: '/collections/vestidos' },
+  { label: 'Básicas',              href: '/collections/blusas' },
+  { label: 'Tallas Grandes',       href: '/collections/tallas-grandes' },
+  { label: 'Rebajas',              href: '/collections/nueva-coleccion' },
+  { label: 'Accesorios y Zapatos', href: '/collections/accesorios' },
+  { label: 'Uniformes',            href: '/collections/uniformes' },
+  { label: 'Bono Regalo',          href: '/collections/bono-regalo' },
 ]
 
-const ALL_SIZES  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL']
+const ALL_SIZES = ['6', '8', '10', '12', '14', '16', '18', '20']
+
 const ALL_COLORS = [
-  { label: 'Negro',  value: '#000000' },
-  { label: 'Blanco', value: '#FFFFFF' },
-  { label: 'Azul',   value: '#1B3A6B' },
-  { label: 'Rosa',   value: '#F4A7B9' },
-  { label: 'Beige',  value: '#D4B896' },
-  { label: 'Verde',  value: '#6B7C45' },
+  { label: 'Celeste',      value: '#AED6F1' },
+  { label: 'Azul marino',  value: '#1F3A5F' },
+  { label: 'Azul',         value: '#2471A3' },
+  { label: 'Marino',       value: '#1A252F' },
+  { label: 'Café',         value: '#6E2C00' },
+  { label: 'Dorado',       value: '#D4AC0D' },
+  { label: 'Crema',        value: '#FDEBD0' },
+  { label: 'Gris',         value: '#717D7E' },
+  { label: 'Marfil',       value: '#F0EAD6' },
+  { label: 'Negro',        value: '#000000' },
 ]
+
+const ALL_TELAS = ['Algodón', 'Elastano', 'Índigo', 'Licra', 'Poliéster', 'Tencel', 'Viscosa']
+
+const PRICE_MIN = 0
+const PRICE_MAX = 500000
 
 // Grid configurations: cols on mobile / cols on desktop / gap
 const GRID_CONFIGS = {
@@ -50,9 +63,13 @@ export default function CollectionPage({ category: propCategory }) {
   // Filters
   const [selectedSizes,  setSelectedSizes]  = useState([])
   const [selectedColors, setSelectedColors] = useState([])
-  const [priceRange,     setPriceRange]     = useState(null)
+  const [minPrice,       setMinPrice]       = useState(PRICE_MIN)
+  const [maxPrice,       setMaxPrice]       = useState(PRICE_MAX)
+  const [selectedTelas,  setSelectedTelas]  = useState([])
   const [sidebarOpen,    setSidebarOpen]    = useState(false)
-  const [openSection,    setOpenSection]    = useState({ sizes: true, price: true, color: true })
+  const [openSection,    setOpenSection]    = useState({
+    category: true, sizes: true, color: true, price: true, tela: true,
+  })
 
   // Grid view: '3' | '4' | '6'
   const [gridView, setGridView] = useState('3')
@@ -61,23 +78,41 @@ export default function CollectionPage({ category: propCategory }) {
     category: category === 'nueva-coleccion' ? undefined : category,
     sizes:    selectedSizes.length  ? selectedSizes  : undefined,
     colors:   selectedColors.length ? selectedColors : undefined,
-    minPrice: priceRange?.min || undefined,
-    maxPrice: priceRange?.max || undefined,
-  }), [category, selectedSizes, selectedColors, priceRange])
+    minPrice: minPrice > PRICE_MIN  ? minPrice       : undefined,
+    maxPrice: maxPrice < PRICE_MAX  ? maxPrice       : undefined,
+  }), [category, selectedSizes, selectedColors, minPrice, maxPrice])
 
   const { products, loading } = useProducts(filters)
 
   function toggleSize(s) {
     setSelectedSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
   }
-
+  function toggleTela(t) {
+    setSelectedTelas(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])
+  }
   function clearFilters() {
     setSelectedSizes([])
     setSelectedColors([])
-    setPriceRange(null)
+    setMinPrice(PRICE_MIN)
+    setMaxPrice(PRICE_MAX)
+    setSelectedTelas([])
   }
 
-  const hasFilters = selectedSizes.length > 0 || selectedColors.length > 0 || !!priceRange
+  const hasFilters = selectedSizes.length > 0 || selectedColors.length > 0 || selectedTelas.length > 0
+    || minPrice > PRICE_MIN || maxPrice < PRICE_MAX
+  const filterCount = selectedSizes.length + selectedColors.length + selectedTelas.length
+    + (minPrice > PRICE_MIN || maxPrice < PRICE_MAX ? 1 : 0)
+
+  const panelProps = {
+    openSection, setOpenSection,
+    selectedSizes, toggleSize,
+    selectedColors, setSelectedColors,
+    minPrice, setMinPrice,
+    maxPrice, setMaxPrice,
+    selectedTelas, toggleTela,
+    hasFilters, clearFilters,
+    category,
+  }
 
   return (
     <>
@@ -121,17 +156,17 @@ export default function CollectionPage({ category: propCategory }) {
             <div className="hidden md:flex items-center gap-1">
               <GridButton view="3" active={gridView === '3'} onClick={() => setGridView('3')}>
                 <svg width="14" height="14" viewBox="0 0 15 15" fill="currentColor">
-                  <rect x="0"  y="0" width="4" height="15"/>
-                  <rect x="5.5" y="0" width="4" height="15"/>
-                  <rect x="11" y="0" width="4" height="15"/>
+                  <rect x="0"   y="0" width="4"   height="15"/>
+                  <rect x="5.5" y="0" width="4"   height="15"/>
+                  <rect x="11"  y="0" width="4"   height="15"/>
                 </svg>
               </GridButton>
               <GridButton view="4" active={gridView === '4'} onClick={() => setGridView('4')}>
                 <svg width="14" height="14" viewBox="0 0 15 15" fill="currentColor">
-                  <rect x="0"   y="0" width="3" height="15"/>
-                  <rect x="4"   y="0" width="3" height="15"/>
-                  <rect x="8"   y="0" width="3" height="15"/>
-                  <rect x="12"  y="0" width="3" height="15"/>
+                  <rect x="0"  y="0" width="3" height="15"/>
+                  <rect x="4"  y="0" width="3" height="15"/>
+                  <rect x="8"  y="0" width="3" height="15"/>
+                  <rect x="12" y="0" width="3" height="15"/>
                 </svg>
               </GridButton>
               <GridButton view="6" active={gridView === '6'} onClick={() => setGridView('6')}>
@@ -156,7 +191,7 @@ export default function CollectionPage({ category: propCategory }) {
                 <line x1="8" y1="12" x2="20" y2="12"/>
                 <line x1="12" y1="18" x2="20" y2="18"/>
               </svg>
-              Filtros {hasFilters && `(${selectedSizes.length + selectedColors.length + (priceRange ? 1 : 0)})`}
+              Filtros {filterCount > 0 && `(${filterCount})`}
             </button>
           </div>
 
@@ -174,7 +209,7 @@ export default function CollectionPage({ category: propCategory }) {
               Limpiar filtros ✕
             </button>
           ) : (
-            <div className="w-28" /> /* spacer to keep count centered */
+            <div className="w-28" />
           )}
         </div>
 
@@ -184,18 +219,7 @@ export default function CollectionPage({ category: propCategory }) {
             className="hidden md:block w-60 shrink-0 self-start"
             style={{ position: 'sticky', top: 'calc(var(--nav-h) + 1.5rem)' }}
           >
-            <FiltersPanel
-              openSection={openSection}
-              setOpenSection={setOpenSection}
-              selectedSizes={selectedSizes}
-              toggleSize={toggleSize}
-              selectedColors={selectedColors}
-              setSelectedColors={setSelectedColors}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              hasFilters={hasFilters}
-              clearFilters={clearFilters}
-            />
+            <FiltersPanel {...panelProps} />
           </aside>
 
           {/* ── Product grid ── */}
@@ -234,18 +258,7 @@ export default function CollectionPage({ category: propCategory }) {
               </button>
             </div>
             <div className="flex-1 p-5">
-              <FiltersPanel
-                openSection={openSection}
-                setOpenSection={setOpenSection}
-                selectedSizes={selectedSizes}
-                toggleSize={toggleSize}
-                selectedColors={selectedColors}
-                setSelectedColors={setSelectedColors}
-                priceRange={priceRange}
-                setPriceRange={setPriceRange}
-                hasFilters={hasFilters}
-                clearFilters={clearFilters}
-              />
+              <FiltersPanel {...panelProps} />
             </div>
             <div className="p-5 border-t border-brand-border">
               <button className="btn-primary w-full" onClick={() => setSidebarOpen(false)}>
@@ -273,7 +286,7 @@ function GridButton({ active, onClick, children }) {
 }
 
 /* ── Filter section accordion ────────────────────────────────── */
-function FilterSection({ title, open, onToggle, children }) {
+function FilterSection({ title, open, onToggle, children, maxH = '400px' }) {
   return (
     <div className="border-b border-brand-border py-5">
       <button
@@ -290,8 +303,60 @@ function FilterSection({ title, open, onToggle, children }) {
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </button>
-      <div style={{ maxHeight: open ? '400px' : '0', overflow: 'hidden', transition: 'max-height 300ms ease-out' }}>
+      <div style={{ maxHeight: open ? maxH : '0', overflow: 'hidden', transition: 'max-height 300ms ease-out' }}>
         <div className="pt-4">{children}</div>
+      </div>
+    </div>
+  )
+}
+
+/* ── Dual range price slider ─────────────────────────────────── */
+function PriceRangeSlider({ minVal, maxVal, onMinChange, onMaxChange }) {
+  const minPercent = Math.round(((minVal - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100)
+  const maxPercent = Math.round(((maxVal - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100)
+
+  return (
+    <div>
+      {/* Track */}
+      <div className="relative h-px bg-brand-border rounded-full mb-5 mx-1.5" style={{ marginTop: '10px' }}>
+        <div
+          className="absolute h-px bg-brand-black"
+          style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%` }}
+        />
+        <input
+          type="range"
+          min={PRICE_MIN} max={PRICE_MAX} value={minVal} step={5000}
+          onChange={e => onMinChange(Math.min(Number(e.target.value), maxVal - 10000))}
+          className="filter-range-input"
+        />
+        <input
+          type="range"
+          min={PRICE_MIN} max={PRICE_MAX} value={maxVal} step={5000}
+          onChange={e => onMaxChange(Math.max(Number(e.target.value), minVal + 10000))}
+          className="filter-range-input"
+        />
+      </div>
+      {/* Number inputs */}
+      <div className="flex items-center gap-2 mt-1">
+        <div className="flex-1 border border-brand-border flex items-center px-2.5 py-1.5 gap-1 min-w-0">
+          <span className="font-sans text-xs text-brand-black/50">$</span>
+          <input
+            type="number"
+            min={PRICE_MIN} max={maxVal - 10000} value={minVal} step={5000}
+            onChange={e => onMinChange(Math.max(PRICE_MIN, Math.min(Number(e.target.value), maxVal - 10000)))}
+            className="w-full font-sans text-xs text-brand-black bg-transparent outline-none min-w-0"
+          />
+        </div>
+        <span className="font-sans text-xs text-brand-black/50 shrink-0">a</span>
+        <div className="flex-1 border border-brand-border flex items-center px-2.5 py-1.5 gap-1 min-w-0">
+          <span className="font-sans text-xs text-brand-black/50">$</span>
+          <input
+            type="number"
+            min={minVal + 10000} max={PRICE_MAX} value={maxVal} step={5000}
+            onChange={e => onMaxChange(Math.min(PRICE_MAX, Math.max(Number(e.target.value), minVal + 10000)))}
+            className="w-full font-sans text-xs text-brand-black bg-transparent outline-none min-w-0"
+          />
+        </div>
       </div>
     </div>
   )
@@ -302,8 +367,11 @@ function FiltersPanel({
   openSection, setOpenSection,
   selectedSizes, toggleSize,
   selectedColors, setSelectedColors,
-  priceRange, setPriceRange,
+  minPrice, setMinPrice,
+  maxPrice, setMaxPrice,
+  selectedTelas, toggleTela,
   hasFilters, clearFilters,
+  category,
 }) {
   function toggle(key) { setOpenSection(s => ({ ...s, [key]: !s[key] })) }
   function toggleColor(v) {
@@ -321,6 +389,26 @@ function FiltersPanel({
         </button>
       )}
 
+      {/* Category navigation */}
+      <FilterSection title="Ropa para mujer" open={openSection.category} onToggle={() => toggle('category')} maxH="500px">
+        <ul>
+          {CATEGORY_LINKS.map(l => (
+            <li key={l.href}>
+              <Link
+                to={l.href}
+                className={`block font-sans text-sm py-1.5 transition-colors duration-150 ${
+                  l.href.includes(category)
+                    ? 'text-brand-black font-medium'
+                    : 'text-brand-black/60 hover:text-brand-black'
+                }`}
+              >
+                {l.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </FilterSection>
+
       {/* Sizes */}
       <FilterSection title="Talla" open={openSection.sizes} onToggle={() => toggle('sizes')}>
         <div className="flex flex-wrap gap-2">
@@ -328,7 +416,7 @@ function FiltersPanel({
             <button
               key={s}
               onClick={() => toggleSize(s)}
-              className={`font-sans text-xs px-3 py-2 border transition-colors duration-150 ${
+              className={`font-sans text-sm w-10 h-10 border transition-colors duration-150 ${
                 selectedSizes.includes(s)
                   ? 'bg-brand-black text-white border-brand-black'
                   : 'border-brand-border text-brand-black hover:border-brand-black'
@@ -338,26 +426,6 @@ function FiltersPanel({
             </button>
           ))}
         </div>
-      </FilterSection>
-
-      {/* Price */}
-      <FilterSection title="Precio" open={openSection.price} onToggle={() => toggle('price')}>
-        <ul className="space-y-3">
-          {PRICE_RANGES.map(r => (
-            <li key={r.label}>
-              <label className="flex items-center gap-2.5 cursor-pointer">
-                <input
-                  type="radio"
-                  name="price"
-                  checked={priceRange?.label === r.label}
-                  onChange={() => setPriceRange(priceRange?.label === r.label ? null : r)}
-                  className="accent-brand-black"
-                />
-                <span className="font-sans text-sm text-brand-black/70">{r.label}</span>
-              </label>
-            </li>
-          ))}
-        </ul>
       </FilterSection>
 
       {/* Colors */}
@@ -370,27 +438,45 @@ function FiltersPanel({
               title={c.label}
               aria-label={c.label}
               aria-pressed={selectedColors.includes(c.value)}
-              className={`relative w-8 h-8 rounded-full transition-all duration-150 ${
+              className={`w-9 h-9 rounded-full transition-all duration-150 ${
                 selectedColors.includes(c.value)
-                  ? 'ring-2 ring-offset-2 ring-brand-black scale-110'
-                  : 'ring-1 ring-brand-border hover:ring-brand-black/40'
+                  ? 'ring-2 ring-offset-2 ring-brand-black'
+                  : 'ring-1 ring-black/10 hover:ring-brand-black/40'
               }`}
               style={{ background: c.value }}
-            >
-              {selectedColors.includes(c.value) && (
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <svg
-                    width="10" height="10" viewBox="0 0 24 24" fill="none"
-                    stroke={c.value === '#FFFFFF' ? '#000' : '#fff'}
-                    strokeWidth="3" strokeLinecap="round"
-                  >
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                </span>
-              )}
-            </button>
+            />
           ))}
         </div>
+      </FilterSection>
+
+      {/* Price range slider */}
+      <FilterSection title="Precio" open={openSection.price} onToggle={() => toggle('price')} maxH="160px">
+        <PriceRangeSlider
+          minVal={minPrice}
+          maxVal={maxPrice}
+          onMinChange={setMinPrice}
+          onMaxChange={setMaxPrice}
+        />
+      </FilterSection>
+
+      {/* Fabric */}
+      <FilterSection title="Tela" open={openSection.tela} onToggle={() => toggle('tela')} maxH="500px">
+        <ul>
+          {ALL_TELAS.map(t => (
+            <li key={t}>
+              <button
+                onClick={() => toggleTela(t)}
+                className={`block w-full text-left font-sans text-sm py-1.5 transition-colors duration-150 ${
+                  selectedTelas.includes(t)
+                    ? 'text-brand-black font-medium'
+                    : 'text-brand-black/60 hover:text-brand-black'
+                }`}
+              >
+                {t}
+              </button>
+            </li>
+          ))}
+        </ul>
       </FilterSection>
     </div>
   )
