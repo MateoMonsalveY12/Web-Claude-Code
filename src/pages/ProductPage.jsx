@@ -10,9 +10,33 @@ function formatPrice(n) {
 }
 
 const TRUST = [
-  { icon: '🚚', title: 'Envío gratis', desc: 'En pedidos +$200.000' },
-  { icon: '↩️', title: '30 días',      desc: 'Devolución sin preguntas' },
-  { icon: '🔒', title: 'Pago seguro',  desc: 'Encriptación SSL' },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+    ),
+    title: 'Envío gratis',
+    desc: 'En pedidos +$200.000',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+      </svg>
+    ),
+    title: '30 días',
+    desc: 'Devolución sin preguntas',
+  },
+  {
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+      </svg>
+    ),
+    title: 'Pago seguro',
+    desc: 'Encriptación SSL',
+  },
 ]
 
 const ACCORDION_ITEMS = [
@@ -164,8 +188,13 @@ export default function ProductPage() {
             {sizes?.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2.5">
-                  <p className={`font-sans text-xs font-semibold uppercase tracking-button ${sizeError ? 'text-brand-red' : 'text-brand-black/50'}`}>
-                    {sizeError ? '⚠ Elige una talla' : 'Talla'}
+                  <p className={`font-sans text-xs font-semibold uppercase tracking-button flex items-center gap-1 ${sizeError ? 'text-brand-red' : 'text-brand-black/50'}`}>
+                    {sizeError && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                    )}
+                    {sizeError ? 'Elige una talla' : 'Talla'}
                   </p>
                   <button className="font-sans text-xs text-brand-black/40 underline underline-offset-2 hover:text-brand-black transition-colors">
                     Guía de tallas
@@ -191,7 +220,12 @@ export default function ProductPage() {
                 onClick={handleAddToCart}
                 className={`btn-primary w-full text-center transition-all duration-300 ${added ? 'bg-green-800 border-green-800' : ''}`}
               >
-                {added ? '✓ Agregado al carrito' : 'Agregar al carrito'}
+                {added ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Agregado al carrito
+                  </span>
+                ) : 'Agregar al carrito'}
               </button>
               <button className="btn-ghost w-full text-center">
                 Comprar ahora
@@ -211,7 +245,7 @@ export default function ProductPage() {
             <div className="hidden md:grid grid-cols-3 gap-3 mb-6">
               {TRUST.map(t => (
                 <div key={t.title} className="border border-brand-border p-3 text-center">
-                  <p className="font-sans text-lg mb-1">{t.icon}</p>
+                  <span className="flex justify-center text-brand-black mb-1.5">{t.icon}</span>
                   <p className="font-sans text-[0.6875rem] font-semibold uppercase tracking-button text-brand-black">{t.title}</p>
                   <p className="font-sans text-[0.6875rem] text-brand-black/45 mt-0.5">{t.desc}</p>
                 </div>
@@ -278,7 +312,12 @@ export default function ProductPage() {
           onClick={handleAddToCart}
           className={`flex-1 btn-primary text-center ${added ? 'bg-green-800 border-green-800' : ''}`}
         >
-          {added ? '✓ Agregado' : 'Agregar al carrito'}
+          {added ? (
+            <span className="flex items-center justify-center gap-1.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Agregado
+            </span>
+          ) : 'Agregar al carrito'}
         </button>
         <a
           href="https://wa.me/573001234567"

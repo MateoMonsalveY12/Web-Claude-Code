@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import AOS from 'aos'
 
+import ScrollToTop     from './components/shared/ScrollToTop.jsx'
 import AnnouncementBar from './components/layout/AnnouncementBar.jsx'
 import Navbar          from './components/layout/Navbar.jsx'
 import Footer          from './components/layout/Footer.jsx'
@@ -40,6 +41,7 @@ export default function App() {
       {/* ── Fixed header stack ─────────────────────────────────────
           Both bars fixed together so neither overlaps the other.
           Navbar no longer declares its own position:fixed.         */}
+      <ScrollToTop />
       <div className="fixed inset-x-0 top-0 z-50">
         <AnnouncementBar />
         <Navbar />
