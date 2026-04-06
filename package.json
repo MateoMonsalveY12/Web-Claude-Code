@@ -15,6 +15,11 @@
     "vite": "^6.3.1"
   },
   "dependencies": {
-    "aos": "^2.3.4"
+    "@supabase/supabase-js": "^2.101.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "aos": "^2.3.4",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.14.0"
   }
 }

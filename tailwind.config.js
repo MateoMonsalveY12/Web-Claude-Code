@@ -3,11 +3,10 @@ const plugin = require('tailwindcss/plugin')
 
 module.exports = {
   content: [
-    './src/**/*.{html,js}',
+    './src/**/*.{html,js,jsx,ts,tsx}',
     './templates/**/*.html',
   ],
   theme: {
-    // Override defaults — brand is opinionated about these
     screens: {
       'sm':  '700px',
       'md':  '1000px',
@@ -15,11 +14,8 @@ module.exports = {
       'xl':  '1400px',
     },
     fontFamily: {
-      // UI font — nav, buttons, labels, paragraphs, microcopy
       sans:    ['Jost', 'system-ui', 'sans-serif'],
-      // Display font — h1, h2, h3 only (Adobe Fonts kit rue4qgd)
       display: ['"kudryashev-d-contrast"', 'sans-serif'],
-      // Accent editorial — italic pullquotes, editorial callouts (Adobe Fonts kit rue4qgd)
       accent:  ['"Ethic New"', 'Georgia', 'serif'],
     },
     borderRadius: {
@@ -29,7 +25,7 @@ module.exports = {
       md:      '0px',
       lg:      '0px',
       xl:      '0px',
-      full:    '9999px', // keep full for avatar circles if needed
+      full:    '9999px',
     },
     extend: {
       colors: {
@@ -59,7 +55,6 @@ module.exports = {
     },
   },
   plugins: [
-    // Variant for scroll-aware nav: [data-scrolled="true"] &
     plugin(({ addVariant }) => {
       addVariant('scrolled', '[data-scrolled="true"] &')
     }),
