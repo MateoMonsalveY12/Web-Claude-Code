@@ -61,7 +61,8 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen]     = useState(false)
   const [mobileExpanded, setMobileExpanded] = useState(null)
   const location = useLocation()
-  const closeTimer = useRef(null)
+  const closeTimer   = useRef(null)
+  const lockReopen   = useRef(false)   // prevents re-opening right after navigation
 
   // Scroll detection — for transparent→white bg on home hero
   useEffect(() => {
@@ -70,14 +71,25 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close menus on navigation
+  // Close menus on navigation and briefly lock re-opening
   useEffect(() => {
     setMobileOpen(false)
     setOpenMenu(null)
+    lockReopen.current = true
+    const t = setTimeout(() => { lockReopen.current = false }, 400)
+    return () => clearTimeout(t)
   }, [location])
 
-  function scheduleClose() { closeTimer.current = setTimeout(() => setOpenMenu(null), 180) }
-  function cancelClose()   { clearTimeout(closeTimer.current) }
+  function scheduleClose() {
+    clearTimeout(closeTimer.current)
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 280)
+  }
+  function cancelClose() { clearTimeout(closeTimer.current) }
+  function handleOpen(name) {
+    if (lockReopen.current) return
+    cancelClose()
+    setOpenMenu(name)
+  }
 
   // Transparent over hero only on the home page before scrolling
   const isHeroTransparent = !scrolled && location.pathname === '/'
@@ -115,10 +127,10 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-7" aria-label="Navegación principal">
+          <nav className="hidden md:flex self-stretch items-center gap-7" aria-label="Navegación principal">
             <div
-              className="relative"
-              onMouseEnter={() => { cancelClose(); setOpenMenu('collections') }}
+              className="self-stretch flex items-center"
+              onMouseEnter={() => handleOpen('collections')}
               onMouseLeave={scheduleClose}
             >
               <Link to="/collections" className={`nav-link transition-colors duration-300 ${textColor}`}>
@@ -127,8 +139,8 @@ export default function Navbar() {
             </div>
 
             <div
-              className="relative"
-              onMouseEnter={() => { cancelClose(); setOpenMenu('products') }}
+              className="self-stretch flex items-center"
+              onMouseEnter={() => handleOpen('products')}
               onMouseLeave={scheduleClose}
             >
               <span className={`nav-link cursor-default transition-colors duration-300 ${textColor}`}>
@@ -176,7 +188,7 @@ export default function Navbar() {
         <MegaMenu
           data={COLLECTIONS_MENU}
           open={openMenu === 'collections'}
-          onMouseEnter={() => { cancelClose(); setOpenMenu('collections') }}
+          onMouseEnter={() => handleOpen('collections')}
           onMouseLeave={scheduleClose}
         />
 
@@ -184,7 +196,7 @@ export default function Navbar() {
         <MegaMenu
           data={PRODUCTS_MENU}
           open={openMenu === 'products'}
-          onMouseEnter={() => { cancelClose(); setOpenMenu('products') }}
+          onMouseEnter={() => handleOpen('products')}
           onMouseLeave={scheduleClose}
         />
       </header>
@@ -277,12 +289,7 @@ export default function Navbar() {
 function MegaMenu({ data, open, onMouseEnter, onMouseLeave }) {
   return (
     <div
-      className="megamenu"
-      style={{
-        opacity: open ? 1 : 0,
-        pointerEvents: open ? 'auto' : 'none',
-        transform: open ? 'translateY(0)' : 'translateY(-8px)',
-      }}
+      className={`megamenu${open ? ' megamenu--open' : ''}`}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >

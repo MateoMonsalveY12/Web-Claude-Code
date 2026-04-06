@@ -1,10 +1,42 @@
 import { Link } from 'react-router-dom'
 
 const TRUST_BADGES = [
-  { icon: '🚚', title: 'Envío gratis',      desc: 'Pedidos mayores a $200.000' },
-  { icon: '↩',  title: 'Devolución fácil',  desc: '30 días sin preguntas' },
-  { icon: '🔒', title: 'Pago 100% seguro',  desc: 'SSL encriptado' },
-  { icon: '⭐', title: '+5.000 clientas',   desc: 'Satisfechas en Colombia' },
+  {
+    title: 'Envío gratis',
+    desc: 'Pedidos mayores a $200.000',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>
+      </svg>
+    ),
+  },
+  {
+    title: 'Devolución fácil',
+    desc: '30 días sin preguntas',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+      </svg>
+    ),
+  },
+  {
+    title: 'Pago 100% seguro',
+    desc: 'SSL encriptado',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>
+      </svg>
+    ),
+  },
+  {
+    title: '+5.000 clientas',
+    desc: 'Satisfechas en Colombia',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+  },
 ]
 
 export default function Footer() {
@@ -17,7 +49,7 @@ export default function Footer() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {TRUST_BADGES.map(b => (
               <div key={b.title} className="flex items-start gap-3">
-                <span className="text-2xl leading-none">{b.icon}</span>
+                <span className="text-white/60 flex-shrink-0 mt-0.5">{b.icon}</span>
                 <div>
                   <p className="font-sans text-xs font-semibold uppercase tracking-button text-white mb-0.5">{b.title}</p>
                   <p className="font-sans text-xs text-white/45">{b.desc}</p>

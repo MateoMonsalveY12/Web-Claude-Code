@@ -22,6 +22,8 @@ export const HEADER_H = { mobile: 96, desktop: 112 }
 export default function App() {
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  // Pages with their own full-bleed hero that handles header clearance internally
+  const isFullBleedHero = isHome || pathname === '/collections/tallas-grandes'
 
   useEffect(() => {
     AOS.init({
@@ -47,7 +49,7 @@ export default function App() {
           Home: no padding-top → hero covers full viewport behind
                 the fixed header stack.
           All other pages: pad down to clear the header.           */}
-      <main className={isHome ? '' : 'pt-24 md:pt-28'}>
+      <main className={isFullBleedHero ? '' : 'pt-24 md:pt-28'}>
         <Routes>
           <Route path="/"                        element={<Home />} />
           <Route path="/collections"             element={<Navigate to="/collections/nueva-coleccion" replace />} />

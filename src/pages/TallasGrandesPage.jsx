@@ -8,15 +8,18 @@ export default function TallasGrandesPage() {
 
   return (
     <>
-      {/* Hero */}
-      <div className="relative w-full overflow-hidden" style={{ height: 'clamp(360px, 55vw, 680px)' }}>
+      {/* Hero — full-bleed, clears fixed header internally */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{ height: 'clamp(420px, 60vw, 720px)', marginTop: 0 }}
+      >
         <img
           src="/images/banner-tallas-grandes.jpg"
           alt="Tallas Grandes"
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-black/35" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6" style={{ paddingTop: 'var(--header-h)' }}>
           <p className="eyebrow text-white/60 mb-4">Tallas S a 4XL</p>
           <h1
             className="font-display text-white tracking-heading mb-5"
