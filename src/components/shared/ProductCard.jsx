@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../../context/CartContext.jsx'
 
@@ -9,13 +10,20 @@ export default function ProductCard({ product, aosDelay = 0 }) {
   const { name, slug, price, compare_price, images, badge, colors, sizes } = product
   const img = images?.[0] || '/images/product-1.jpg'
   const { addToCart } = useCart()
+  const [hoverSize, setHoverSize] = useState(null)
 
   function handleQuickAdd(e) {
     e.preventDefault()
     e.stopPropagation()
-    const size  = sizes?.[0]  || null
+    const size  = hoverSize || sizes?.[0] || null
     const color = colors?.[0] || null
     addToCart(product, size, color)
+  }
+
+  function handleSizeClick(e, s) {
+    e.preventDefault()
+    e.stopPropagation()
+    setHoverSize(s)
   }
 
   return (
@@ -23,6 +31,7 @@ export default function ProductCard({ product, aosDelay = 0 }) {
       data-aos="fade-up"
       data-aos-delay={aosDelay}
       className="group"
+      onMouseLeave={() => setHoverSize(null)}
     >
       {/* Image + hover overlay */}
       <div className="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
@@ -42,25 +51,47 @@ export default function ProductCard({ product, aosDelay = 0 }) {
           </span>
         )}
 
-        {/* Hover overlay — slides up from bottom */}
-        <div
-          className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
-        >
-          {/* Añadir al carrito */}
-          <button
-            onClick={handleQuickAdd}
-            className="w-full bg-brand-black text-brand-white py-3 text-center text-[0.75rem] font-sans font-bold uppercase tracking-button hover:bg-brand-black/85 transition-colors duration-150"
-          >
-            Añadir al carrito
-          </button>
-          {/* Ver producto */}
-          <Link
-            to={`/products/${slug}`}
-            className="block w-full bg-brand-white text-brand-black py-2.5 text-center text-[0.7rem] font-sans font-semibold uppercase tracking-button border-t border-brand-border hover:bg-brand-gray transition-colors duration-150"
-          >
-            Ver producto
-          </Link>
-        </div>
+        {/* Size chips — slides up from bottom on hover */}
+        {sizes?.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+            <div className="bg-white/96 px-2 pt-2 pb-2 flex flex-wrap gap-1 items-end">
+              <div className="flex flex-wrap gap-1 flex-1">
+                {sizes.map(s => (
+                  <button
+                    key={s}
+                    onClick={e => handleSizeClick(e, s)}
+                    className={`font-sans text-[0.6rem] font-medium px-1.5 py-1 border min-w-[1.625rem] text-center transition-colors duration-100 ${
+                      hoverSize === s
+                        ? 'bg-brand-black text-white border-brand-black'
+                        : 'bg-white text-brand-black border-brand-border hover:border-brand-black'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={handleQuickAdd}
+                className="flex-shrink-0 w-7 h-7 flex items-center justify-center bg-white border border-brand-border hover:bg-brand-black hover:text-white hover:border-brand-black transition-colors duration-150 font-sans text-base leading-none ml-1"
+                aria-label="Añadir al carrito"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Fallback quick-add if no sizes */}
+        {(!sizes || sizes.length === 0) && (
+          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
+            <button
+              onClick={handleQuickAdd}
+              className="w-full bg-brand-black text-brand-white py-3 text-center text-[0.75rem] font-sans font-bold uppercase tracking-button hover:bg-brand-black/85 transition-colors duration-150"
+            >
+              Añadir al carrito
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Info */}

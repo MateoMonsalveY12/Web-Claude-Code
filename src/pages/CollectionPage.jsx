@@ -104,7 +104,7 @@ export default function CollectionPage({ category: propCategory }) {
         </div>
       </div>
 
-      <div className="container-brand">
+      <div className="px-4 sm:px-5 md:px-8 xl:px-12">
         <Breadcrumb items={[
           { label: 'Inicio', href: '/' },
           { label: 'Tienda', href: '/collections' },
@@ -112,7 +112,7 @@ export default function CollectionPage({ category: propCategory }) {
         ]} />
       </div>
 
-      <div className="container-brand pb-16">
+      <div className="w-full px-4 sm:px-5 md:px-8 xl:px-12 pb-16 max-w-[1800px] mx-auto">
         {/* ── Toolbar ── */}
         <div className="flex items-center justify-between py-4 border-b border-brand-border mb-8 gap-4">
           {/* Left: grid toggles + filter button (mobile) */}
@@ -180,7 +180,10 @@ export default function CollectionPage({ category: propCategory }) {
 
         <div className="flex gap-8">
           {/* ── Sidebar filters (desktop) ── */}
-          <aside className="hidden md:block w-56 shrink-0">
+          <aside
+            className="hidden md:block w-60 shrink-0 self-start"
+            style={{ position: 'sticky', top: 'calc(var(--nav-h) + 1.5rem)' }}
+          >
             <FiltersPanel
               openSection={openSection}
               setOpenSection={setOpenSection}
@@ -272,7 +275,7 @@ function GridButton({ active, onClick, children }) {
 /* ── Filter section accordion ────────────────────────────────── */
 function FilterSection({ title, open, onToggle, children }) {
   return (
-    <div className="border-b border-brand-border py-4">
+    <div className="border-b border-brand-border py-5">
       <button
         className="flex items-center justify-between w-full font-sans text-xs font-semibold uppercase tracking-button text-brand-black"
         onClick={onToggle}
@@ -325,7 +328,7 @@ function FiltersPanel({
             <button
               key={s}
               onClick={() => toggleSize(s)}
-              className={`font-sans text-xs px-3 py-1.5 border transition-colors duration-150 ${
+              className={`font-sans text-xs px-3 py-2 border transition-colors duration-150 ${
                 selectedSizes.includes(s)
                   ? 'bg-brand-black text-white border-brand-black'
                   : 'border-brand-border text-brand-black hover:border-brand-black'
@@ -339,7 +342,7 @@ function FiltersPanel({
 
       {/* Price */}
       <FilterSection title="Precio" open={openSection.price} onToggle={() => toggle('price')}>
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {PRICE_RANGES.map(r => (
             <li key={r.label}>
               <label className="flex items-center gap-2.5 cursor-pointer">
@@ -359,7 +362,7 @@ function FiltersPanel({
 
       {/* Colors */}
       <FilterSection title="Color" open={openSection.color} onToggle={() => toggle('color')}>
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap gap-3">
           {ALL_COLORS.map(c => (
             <button
               key={c.value}
@@ -367,9 +370,9 @@ function FiltersPanel({
               title={c.label}
               aria-label={c.label}
               aria-pressed={selectedColors.includes(c.value)}
-              className={`relative w-7 h-7 rounded-full transition-all duration-150 ${
+              className={`relative w-8 h-8 rounded-full transition-all duration-150 ${
                 selectedColors.includes(c.value)
-                  ? 'ring-2 ring-offset-1 ring-brand-black scale-110'
+                  ? 'ring-2 ring-offset-2 ring-brand-black scale-110'
                   : 'ring-1 ring-brand-border hover:ring-brand-black/40'
               }`}
               style={{ background: c.value }}
