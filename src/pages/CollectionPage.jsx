@@ -65,15 +65,25 @@ export default function CollectionPage({ category: propCategory }) {
 
   return (
     <>
-      {/* Collection banner */}
-      <div className="relative w-full overflow-hidden" style={{ height: 'clamp(220px, 30vw, 360px)' }}>
+      {/* Collection banner — negative margin-top cancels main's pt-24/pt-28,
+          extra height compensates, content padded down below the navbar */}
+      <div
+        className="relative w-full overflow-hidden"
+        style={{
+          marginTop: 'calc(-1 * var(--header-h))',
+          height: 'calc(clamp(220px, 30vw, 360px) + var(--header-h))',
+        }}
+      >
         <img
           src={meta.banner}
           alt={meta.title}
           className="w-full h-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-black/30" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center text-center"
+          style={{ paddingTop: 'var(--header-h)' }}
+        >
           <h1
             className="font-display text-white tracking-heading"
             style={{ fontSize: 'clamp(2rem, 5vw, 4rem)', lineHeight: 1.05 }}

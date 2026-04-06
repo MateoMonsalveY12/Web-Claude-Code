@@ -86,18 +86,6 @@ export default function Hero() {
             </Link>
           </div>
 
-          {/* Trust microcopy */}
-          <div
-            className="flex flex-wrap items-center gap-5 mt-10"
-            data-aos="fade-up"
-            data-aos-delay="320"
-          >
-            {['Envío gratis +$200K', 'Devoluciones 30 días', 'Pago seguro'].map(t => (
-              <span key={t} className="font-sans text-[0.6875rem] text-white/50 uppercase tracking-button flex items-center gap-1.5">
-                <span className="text-white/30">✓</span> {t}
-              </span>
-            ))}
-          </div>
         </div>
       </div>
 

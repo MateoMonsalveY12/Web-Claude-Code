@@ -138,21 +138,22 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex self-stretch items-center gap-7" aria-label="Navegación principal">
-            {/* Items WITH megamenu — open on enter */}
-            <div
-              className="self-stretch flex items-center"
-              onMouseEnter={() => openSubmenu('collections')}
-            >
-              <Link to="/collections" className={`nav-link transition-colors duration-300 ${textColor}`}>
+            {/* Items WITH megamenu — open only when cursor is on the text */}
+            <div className="self-stretch flex items-center">
+              <Link
+                to="/collections"
+                className={`nav-link transition-colors duration-300 ${textColor}`}
+                onMouseEnter={() => openSubmenu('collections')}
+              >
                 Colecciones
               </Link>
             </div>
 
-            <div
-              className="self-stretch flex items-center"
-              onMouseEnter={() => openSubmenu('products')}
-            >
-              <span className={`nav-link cursor-default transition-colors duration-300 ${textColor}`}>
+            <div className="self-stretch flex items-center">
+              <span
+                className={`nav-link cursor-default transition-colors duration-300 ${textColor}`}
+                onMouseEnter={() => openSubmenu('products')}
+              >
                 Productos
               </span>
             </div>
