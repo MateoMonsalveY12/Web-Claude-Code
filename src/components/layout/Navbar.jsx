@@ -6,10 +6,10 @@ const COLLECTIONS_MENU = {
     {
       heading: 'Por tipo',
       links: [
-        { label: 'Vestidos',         href: '/collections/vestidos' },
-        { label: 'Blusas',           href: '/collections/blusas' },
+        { label: 'Vestidos',           href: '/collections/vestidos' },
+        { label: 'Blusas',             href: '/collections/blusas' },
         { label: 'Jeans & Pantalones', href: '/collections/jeans' },
-        { label: 'Tallas Grandes',   href: '/collections/tallas-grandes' },
+        { label: 'Tallas Grandes',     href: '/collections/tallas-grandes' },
       ],
     },
     {
@@ -42,10 +42,10 @@ const PRODUCTS_MENU = {
     {
       heading: 'Más categorías',
       links: [
-        { label: 'Blusas Elegantes', href: '/collections/blusas' },
+        { label: 'Blusas Elegantes',   href: '/collections/blusas' },
         { label: 'Jeans & Pantalones', href: '/collections/jeans' },
-        { label: 'Tallas Grandes',   href: '/collections/tallas-grandes' },
-        { label: 'Ver todo →',       href: '/collections' },
+        { label: 'Tallas Grandes',     href: '/collections/tallas-grandes' },
+        { label: 'Ver todo →',         href: '/collections' },
       ],
     },
   ],
@@ -56,60 +56,70 @@ const PRODUCTS_MENU = {
 }
 
 export default function Navbar() {
-  const [scrolled, setScrolled]         = useState(false)
-  const [openMenu, setOpenMenu]         = useState(null)
-  const [mobileOpen, setMobileOpen]     = useState(false)
+  const [scrolled, setScrolled]             = useState(false)
+  const [activeMenu, setActiveMenu]         = useState(null)
+  const [mobileOpen, setMobileOpen]         = useState(false)
   const [mobileExpanded, setMobileExpanded] = useState(null)
-  const location = useLocation()
-  const closeTimer   = useRef(null)
-  const lockReopen   = useRef(false)   // prevents re-opening right after navigation
+  const location   = useLocation()
+  const closeTimer = useRef(null)
 
-  // Scroll detection — for transparent→white bg on home hero
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close menus on navigation and briefly lock re-opening
+  // Close on every navigation — no lock needed with the new hover logic
   useEffect(() => {
     setMobileOpen(false)
-    setOpenMenu(null)
-    lockReopen.current = true
-    const t = setTimeout(() => { lockReopen.current = false }, 400)
-    return () => clearTimeout(t)
+    setActiveMenu(null)
   }, [location])
+
+  // ── Hover helpers ─────────────────────────────────────────────────────────
+  // The header element wraps BOTH the nav items and the megamenus.
+  // onMouseLeave on the header is the ONLY place scheduleClose fires,
+  // so gaps between nav items never accidentally trigger a close.
 
   function scheduleClose() {
     clearTimeout(closeTimer.current)
-    closeTimer.current = setTimeout(() => setOpenMenu(null), 280)
-  }
-  function cancelClose() { clearTimeout(closeTimer.current) }
-  function handleOpen(name) {
-    if (lockReopen.current) return
-    cancelClose()
-    setOpenMenu(name)
+    closeTimer.current = setTimeout(() => setActiveMenu(null), 200)
   }
 
-  // Transparent over hero only on the home page before scrolling
+  function cancelClose() {
+    clearTimeout(closeTimer.current)
+  }
+
+  function openSubmenu(name) {
+    cancelClose()
+    setActiveMenu(name)
+  }
+
+  function closeSubmenu() {
+    cancelClose()
+    setActiveMenu(null)
+  }
+
   const isHeroTransparent = !scrolled && location.pathname === '/'
   const textColor = isHeroTransparent ? 'text-white' : 'text-brand-black'
 
   return (
     <>
-      {/* ── Nav bar ──────────────────────────────────────────────────
-          No position:fixed here — parent fixed wrapper handles it.  */}
+      {/* ── Nav bar ────────────────────────────────────────────────────────
+          The header is the single hover container for nav + megamenus.
+          onMouseLeave fires only when the cursor exits the whole header
+          (including the megamenu, which is position:absolute inside it). */}
       <header
         className="relative left-0 right-0 border-b border-transparent transition-[background-color,border-color] duration-300"
+        onMouseLeave={scheduleClose}
         data-scrolled={String(scrolled)}
       >
-        {/* Scrolled white background */}
+        {/* White background layer (fades in when scrolled / off home) */}
         <div
           className="absolute inset-0 bg-brand-white -z-10 transition-opacity duration-300"
           style={{ opacity: scrolled || location.pathname !== '/' ? 1 : 0 }}
           aria-hidden="true"
         />
-        {/* Scrolled bottom border */}
+        {/* Bottom border */}
         <div
           className="absolute bottom-0 left-0 right-0 h-px bg-brand-border transition-opacity duration-300"
           style={{ opacity: scrolled || location.pathname !== '/' ? 1 : 0 }}
@@ -128,10 +138,10 @@ export default function Navbar() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex self-stretch items-center gap-7" aria-label="Navegación principal">
+            {/* Items WITH megamenu — open on enter */}
             <div
               className="self-stretch flex items-center"
-              onMouseEnter={() => handleOpen('collections')}
-              onMouseLeave={scheduleClose}
+              onMouseEnter={() => openSubmenu('collections')}
             >
               <Link to="/collections" className={`nav-link transition-colors duration-300 ${textColor}`}>
                 Colecciones
@@ -140,18 +150,26 @@ export default function Navbar() {
 
             <div
               className="self-stretch flex items-center"
-              onMouseEnter={() => handleOpen('products')}
-              onMouseLeave={scheduleClose}
+              onMouseEnter={() => openSubmenu('products')}
             >
               <span className={`nav-link cursor-default transition-colors duration-300 ${textColor}`}>
                 Productos
               </span>
             </div>
 
-            <Link to="/collections/tallas-grandes" className={`nav-link transition-colors duration-300 ${textColor}`}>
+            {/* Items WITHOUT megamenu — close any open menu on enter */}
+            <Link
+              to="/collections/tallas-grandes"
+              className={`nav-link transition-colors duration-300 ${textColor}`}
+              onMouseEnter={closeSubmenu}
+            >
               Tallas Grandes
             </Link>
-            <a href="#footer-contact" className={`nav-link transition-colors duration-300 ${textColor}`}>
+            <a
+              href="#footer-contact"
+              className={`nav-link transition-colors duration-300 ${textColor}`}
+              onMouseEnter={closeSubmenu}
+            >
               Contacto
             </a>
           </nav>
@@ -184,36 +202,31 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Megamenu: Colecciones */}
+        {/* Megamenus — inside the header so onMouseLeave on header covers them */}
         <MegaMenu
           data={COLLECTIONS_MENU}
-          open={openMenu === 'collections'}
-          onMouseEnter={() => handleOpen('collections')}
-          onMouseLeave={scheduleClose}
+          open={activeMenu === 'collections'}
+          onMouseEnter={cancelClose}
         />
-
-        {/* Megamenu: Productos */}
         <MegaMenu
           data={PRODUCTS_MENU}
-          open={openMenu === 'products'}
-          onMouseEnter={() => handleOpen('products')}
-          onMouseLeave={scheduleClose}
+          open={activeMenu === 'products'}
+          onMouseEnter={cancelClose}
         />
       </header>
 
-      {/* Megamenu backdrop */}
+      {/* Backdrop — purely visual, pointer-events: none so it never intercepts events */}
       <div
         className="fixed inset-0 bg-black/20 transition-opacity duration-200"
         style={{
-          opacity: openMenu ? 1 : 0,
-          pointerEvents: openMenu ? 'auto' : 'none',
+          opacity: activeMenu ? 1 : 0,
+          pointerEvents: 'none',
           zIndex: 45,
         }}
-        onClick={() => setOpenMenu(null)}
         aria-hidden="true"
       />
 
-      {/* ── Mobile menu (full-screen drawer) ────────────────────────── */}
+      {/* ── Mobile menu ─────────────────────────────────────────────────── */}
       <div
         className="fixed inset-0 bg-brand-white flex flex-col overflow-y-auto transition-transform duration-300 md:hidden"
         style={{ transform: mobileOpen ? 'translateX(0)' : 'translateX(100%)', zIndex: 100 }}
@@ -273,7 +286,6 @@ export default function Navbar() {
           </a>
         </div>
 
-        {/* Mobile nav footer */}
         <div className="px-5 pb-8 pt-4 border-t border-brand-border space-y-3">
           <p className="font-sans text-xs text-brand-black/40 uppercase tracking-button mb-3">Atención al cliente</p>
           <a href="https://wa.me/573001234567" className="flex items-center gap-2 font-sans text-sm text-brand-black">
@@ -286,12 +298,11 @@ export default function Navbar() {
   )
 }
 
-function MegaMenu({ data, open, onMouseEnter, onMouseLeave }) {
+function MegaMenu({ data, open, onMouseEnter }) {
   return (
     <div
       className={`megamenu${open ? ' megamenu--open' : ''}`}
       onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
     >
       <div className="container-brand py-8 md:py-10">
         <div className="grid grid-cols-4 gap-8">
