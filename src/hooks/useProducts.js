@@ -32,6 +32,9 @@ export function useProducts(filters = {}) {
           if (filters.sizes?.length) {
             query = query.overlaps('sizes', filters.sizes)
           }
+          if (filters.colors?.length) {
+            query = query.overlaps('colors', filters.colors)
+          }
 
           query = query.order('created_at', { ascending: false })
 
@@ -56,6 +59,8 @@ export function useProducts(filters = {}) {
             result = result.filter(p => p.price <= filters.maxPrice)
           if (filters.sizes?.length)
             result = result.filter(p => filters.sizes.some(s => p.sizes.includes(s)))
+          if (filters.colors?.length)
+            result = result.filter(p => filters.colors.some(c => p.colors.includes(c)))
           if (filters.limit)
             result = result.slice(0, filters.limit)
 
@@ -78,6 +83,7 @@ export function useProducts(filters = {}) {
     filters.maxPrice,
     filters.limit,
     filters.sizes?.join(','),
+    filters.colors?.join(','),
   ])
 
   return { products, loading, error }

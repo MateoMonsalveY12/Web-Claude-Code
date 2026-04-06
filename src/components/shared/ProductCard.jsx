@@ -1,12 +1,22 @@
 import { Link } from 'react-router-dom'
+import { useCart } from '../../context/CartContext.jsx'
 
 function formatPrice(n) {
   return '$' + n.toLocaleString('es-CO')
 }
 
 export default function ProductCard({ product, aosDelay = 0 }) {
-  const { name, slug, price, compare_price, images, badge, colors } = product
+  const { name, slug, price, compare_price, images, badge, colors, sizes } = product
   const img = images?.[0] || '/images/product-1.jpg'
+  const { addToCart } = useCart()
+
+  function handleQuickAdd(e) {
+    e.preventDefault()
+    e.stopPropagation()
+    const size  = sizes?.[0]  || null
+    const color = colors?.[0] || null
+    addToCart(product, size, color)
+  }
 
   return (
     <article
@@ -14,36 +24,44 @@ export default function ProductCard({ product, aosDelay = 0 }) {
       data-aos-delay={aosDelay}
       className="group"
     >
-      <Link to={`/products/${slug}`} className="block" tabIndex={-1} aria-hidden="true">
-        {/* Image + hover button */}
-        <div className="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+      {/* Image + hover overlay */}
+      <div className="relative overflow-hidden aspect-[3/4] bg-brand-gray mb-3">
+        <Link to={`/products/${slug}`} className="block w-full h-full" tabIndex={-1} aria-hidden="true">
           <img
             src={img}
             alt={name}
             loading="lazy"
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
+        </Link>
 
-          {/* Badge */}
-          {badge && (
-            <span className={`absolute top-3 left-3 ${badge.startsWith('REBAJAS') ? 'badge-promo' : 'badge-new'}`}>
-              {badge}
-            </span>
-          )}
+        {/* Badge */}
+        {badge && (
+          <span className={`absolute top-3 left-3 ${badge.startsWith('REBAJAS') ? 'badge-promo' : 'badge-new'}`}>
+            {badge}
+          </span>
+        )}
 
-          {/* Ver producto — slides up from bottom on hover */}
-          <span
-            className="absolute bottom-0 left-0 right-0
-                       bg-brand-black text-brand-white
-                       py-3 text-center text-[0.75rem] font-bold font-sans
-                       uppercase tracking-button
-                       translate-y-full group-hover:translate-y-0
-                       transition-transform duration-300"
+        {/* Hover overlay — slides up from bottom */}
+        <div
+          className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"
+        >
+          {/* Añadir al carrito */}
+          <button
+            onClick={handleQuickAdd}
+            className="w-full bg-brand-black text-brand-white py-3 text-center text-[0.75rem] font-sans font-bold uppercase tracking-button hover:bg-brand-black/85 transition-colors duration-150"
+          >
+            Añadir al carrito
+          </button>
+          {/* Ver producto */}
+          <Link
+            to={`/products/${slug}`}
+            className="block w-full bg-brand-white text-brand-black py-2.5 text-center text-[0.7rem] font-sans font-semibold uppercase tracking-button border-t border-brand-border hover:bg-brand-gray transition-colors duration-150"
           >
             Ver producto
-          </span>
+          </Link>
         </div>
-      </Link>
+      </div>
 
       {/* Info */}
       <Link to={`/products/${slug}`} className="block">

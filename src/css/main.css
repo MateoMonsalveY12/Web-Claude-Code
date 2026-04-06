@@ -361,7 +361,7 @@
     pointer-events: auto;
   }
   .megamenu-heading {
-    @apply font-display text-[0.75rem] uppercase tracking-[0.14em] text-brand-black mb-4;
+    @apply font-sans font-semibold text-[0.75rem] uppercase tracking-[0.14em] text-brand-black mb-4;
   }
   .megamenu-list {
     @apply space-y-2.5;
@@ -377,8 +377,9 @@
     text-underline-offset: 3px;
   }
   .megamenu-ver-todo {
-    @apply font-sans text-[0.75rem] font-semibold uppercase tracking-button
-           text-brand-black;
+    @apply font-sans text-[0.8125rem] font-bold uppercase tracking-button
+           text-brand-black underline underline-offset-4 decoration-brand-black/30
+           hover:decoration-brand-black transition-all duration-150;
   }
   .megamenu-caption {
     @apply font-sans text-[0.6875rem] uppercase tracking-[0.16em]

@@ -326,7 +326,14 @@ function MegaMenu({ data, open, onMouseEnter }) {
               <p className="megamenu-heading">{col.heading}</p>
               <ul className="megamenu-list">
                 {col.links.map((l, j) => (
-                  <li key={j}><Link to={l.href}>{l.label}</Link></li>
+                  <li key={j}>
+                    <Link
+                      to={l.href}
+                      className={l.label.startsWith('Ver todo') ? 'megamenu-ver-todo' : ''}
+                    >
+                      {l.label}
+                    </Link>
+                  </li>
                 ))}
               </ul>
             </div>

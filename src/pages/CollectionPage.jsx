@@ -1,33 +1,45 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useParams, useLocation } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
 import { useProducts } from '../hooks/useProducts.js'
 import ProductCard, { SkeletonCard } from '../components/shared/ProductCard.jsx'
 import Breadcrumb from '../components/shared/Breadcrumb.jsx'
 
 const CATEGORY_META = {
-  'vestidos':          { title: 'Vestidos',        banner: '/images/banner-vestidos.jpg' },
-  'blusas':            { title: 'Blusas',           banner: '/images/banner-blusas.jpg' },
-  'jeans':             { title: 'Jeans & Pantalones', banner: '/images/banner-jeans.jpg' },
-  'tallas-grandes':    { title: 'Tallas Grandes',   banner: '/images/banner-tallas-grandes.jpg' },
-  'nueva-coleccion':   { title: 'Nueva Colección',  banner: '/images/banner-nueva-coleccion.jpg' },
+  'vestidos':        { title: 'Vestidos',           banner: '/images/banner-vestidos.jpg' },
+  'blusas':          { title: 'Blusas',             banner: '/images/banner-blusas.jpg' },
+  'jeans':           { title: 'Jeans & Pantalones', banner: '/images/banner-jeans.jpg' },
+  'tallas-grandes':  { title: 'Tallas Grandes',     banner: '/images/banner-tallas-grandes.jpg' },
+  'nueva-coleccion': { title: 'Nueva Colección',    banner: '/images/banner-nueva-coleccion.jpg' },
 }
 
 const PRICE_RANGES = [
-  { label: 'Menos de $150.000',           min: 0,      max: 150000 },
-  { label: '$150.000 – $250.000',         min: 150000, max: 250000 },
-  { label: '$250.000 – $350.000',         min: 250000, max: 350000 },
-  { label: 'Más de $350.000',             min: 350000, max: null },
+  { label: 'Menos de $150.000',   min: 0,      max: 150000 },
+  { label: '$150.000 – $250.000', min: 150000, max: 250000 },
+  { label: '$250.000 – $350.000', min: 250000, max: 350000 },
+  { label: 'Más de $350.000',     min: 350000, max: null },
 ]
 
-const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL']
+const ALL_SIZES  = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL', '4XL']
 const ALL_COLORS = [
-  { label: 'Negro',   value: '#000000' },
-  { label: 'Blanco',  value: '#FFFFFF' },
-  { label: 'Azul',    value: '#1B3A6B' },
-  { label: 'Rosa',    value: '#F4A7B9' },
-  { label: 'Beige',   value: '#D4B896' },
-  { label: 'Verde',   value: '#6B7C45' },
+  { label: 'Negro',  value: '#000000' },
+  { label: 'Blanco', value: '#FFFFFF' },
+  { label: 'Azul',   value: '#1B3A6B' },
+  { label: 'Rosa',   value: '#F4A7B9' },
+  { label: 'Beige',  value: '#D4B896' },
+  { label: 'Verde',  value: '#6B7C45' },
 ]
+
+// Grid configurations: cols on mobile / cols on desktop / gap
+const GRID_CONFIGS = {
+  '3': { mobile: 2, desktop: 3, gap: 'gap-4 md:gap-5' },
+  '4': { mobile: 2, desktop: 4, gap: 'gap-3 md:gap-4' },
+  '6': { mobile: 2, desktop: 6, gap: 'gap-2 md:gap-3' },
+}
+
+function gridClass(view) {
+  const { mobile, desktop, gap } = GRID_CONFIGS[view]
+  return `grid grid-cols-${mobile} md:grid-cols-${desktop} ${gap}`
+}
 
 export default function CollectionPage({ category: propCategory }) {
   const { category: paramCategory } = useParams()
@@ -35,19 +47,23 @@ export default function CollectionPage({ category: propCategory }) {
 
   const meta = CATEGORY_META[category] || { title: category, banner: '/images/banner-nueva-coleccion.jpg' }
 
-  // Filters state
+  // Filters
   const [selectedSizes,  setSelectedSizes]  = useState([])
   const [selectedColors, setSelectedColors] = useState([])
   const [priceRange,     setPriceRange]     = useState(null)
   const [sidebarOpen,    setSidebarOpen]    = useState(false)
   const [openSection,    setOpenSection]    = useState({ sizes: true, price: true, color: true })
 
+  // Grid view: '3' | '4' | '6'
+  const [gridView, setGridView] = useState('3')
+
   const filters = useMemo(() => ({
     category: category === 'nueva-coleccion' ? undefined : category,
-    sizes: selectedSizes.length ? selectedSizes : undefined,
+    sizes:    selectedSizes.length  ? selectedSizes  : undefined,
+    colors:   selectedColors.length ? selectedColors : undefined,
     minPrice: priceRange?.min || undefined,
     maxPrice: priceRange?.max || undefined,
-  }), [category, selectedSizes, priceRange])
+  }), [category, selectedSizes, selectedColors, priceRange])
 
   const { products, loading } = useProducts(filters)
 
@@ -61,12 +77,11 @@ export default function CollectionPage({ category: propCategory }) {
     setPriceRange(null)
   }
 
-  const hasFilters = selectedSizes.length > 0 || selectedColors.length > 0 || priceRange
+  const hasFilters = selectedSizes.length > 0 || selectedColors.length > 0 || !!priceRange
 
   return (
     <>
-      {/* Collection banner — negative margin-top cancels main's pt-24/pt-28,
-          extra height compensates, content padded down below the navbar */}
+      {/* Collection banner */}
       <div
         className="relative w-full overflow-hidden"
         style={{
@@ -74,11 +89,7 @@ export default function CollectionPage({ category: propCategory }) {
           height: 'calc(clamp(220px, 30vw, 360px) + var(--header-h))',
         }}
       >
-        <img
-          src={meta.banner}
-          alt={meta.title}
-          className="w-full h-full object-cover object-center"
-        />
+        <img src={meta.banner} alt={meta.title} className="w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-black/30" />
         <div
           className="absolute inset-0 flex flex-col items-center justify-center text-center"
@@ -101,29 +112,74 @@ export default function CollectionPage({ category: propCategory }) {
         ]} />
       </div>
 
-      {/* Main layout */}
       <div className="container-brand pb-16">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between py-4 border-b border-brand-border mb-8">
+        {/* ── Toolbar ── */}
+        <div className="flex items-center justify-between py-4 border-b border-brand-border mb-8 gap-4">
+          {/* Left: grid toggles + filter button (mobile) */}
+          <div className="flex items-center gap-3">
+            {/* Grid view toggle — desktop only */}
+            <div className="hidden md:flex items-center gap-1">
+              <GridButton view="3" active={gridView === '3'} onClick={() => setGridView('3')}>
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="currentColor">
+                  <rect x="0"  y="0" width="4" height="15"/>
+                  <rect x="5.5" y="0" width="4" height="15"/>
+                  <rect x="11" y="0" width="4" height="15"/>
+                </svg>
+              </GridButton>
+              <GridButton view="4" active={gridView === '4'} onClick={() => setGridView('4')}>
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="currentColor">
+                  <rect x="0"   y="0" width="3" height="15"/>
+                  <rect x="4"   y="0" width="3" height="15"/>
+                  <rect x="8"   y="0" width="3" height="15"/>
+                  <rect x="12"  y="0" width="3" height="15"/>
+                </svg>
+              </GridButton>
+              <GridButton view="6" active={gridView === '6'} onClick={() => setGridView('6')}>
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="currentColor">
+                  <rect x="0"    y="0" width="1.8" height="15"/>
+                  <rect x="2.6"  y="0" width="1.8" height="15"/>
+                  <rect x="5.2"  y="0" width="1.8" height="15"/>
+                  <rect x="7.8"  y="0" width="1.8" height="15"/>
+                  <rect x="10.4" y="0" width="1.8" height="15"/>
+                  <rect x="13"   y="0" width="1.8" height="15"/>
+                </svg>
+              </GridButton>
+            </div>
+
+            {/* Filters button — mobile */}
+            <button
+              className="md:hidden font-sans text-xs uppercase tracking-button font-semibold flex items-center gap-2"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" y1="6" x2="20" y2="6"/>
+                <line x1="8" y1="12" x2="20" y2="12"/>
+                <line x1="12" y1="18" x2="20" y2="18"/>
+              </svg>
+              Filtros {hasFilters && `(${selectedSizes.length + selectedColors.length + (priceRange ? 1 : 0)})`}
+            </button>
+          </div>
+
+          {/* Center: product count */}
           <span className="font-sans text-sm text-brand-black/50">
             {loading ? '…' : `${products.length} productos`}
           </span>
-          <button
-            className="md:hidden font-sans text-xs uppercase tracking-button font-semibold flex items-center gap-2"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
-            Filtros {hasFilters && `(${selectedSizes.length + (priceRange ? 1 : 0)})`}
-          </button>
-          {hasFilters && (
-            <button onClick={clearFilters} className="hidden md:block font-sans text-xs uppercase tracking-button text-brand-black/40 hover:text-brand-black transition-colors">
+
+          {/* Right: clear filters */}
+          {hasFilters ? (
+            <button
+              onClick={clearFilters}
+              className="font-sans text-xs uppercase tracking-button text-brand-black/40 hover:text-brand-black transition-colors"
+            >
               Limpiar filtros ✕
             </button>
+          ) : (
+            <div className="w-28" /> /* spacer to keep count centered */
           )}
         </div>
 
         <div className="flex gap-8">
-          {/* ── Sidebar filters (desktop) ──────────────────────── */}
+          {/* ── Sidebar filters (desktop) ── */}
           <aside className="hidden md:block w-56 shrink-0">
             <FiltersPanel
               openSection={openSection}
@@ -139,10 +195,10 @@ export default function CollectionPage({ category: propCategory }) {
             />
           </aside>
 
-          {/* ── Product grid ───────────────────────────────────── */}
-          <div className="flex-1">
+          {/* ── Product grid ── */}
+          <div className="flex-1 min-w-0">
             {loading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+              <div className={gridClass(gridView)}>
                 {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
               </div>
             ) : products.length === 0 ? (
@@ -151,7 +207,7 @@ export default function CollectionPage({ category: propCategory }) {
                 <button onClick={clearFilters} className="btn-ghost btn-sm">Limpiar filtros</button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-5">
+              <div className={gridClass(gridView)}>
                 {products.map((p, i) => (
                   <ProductCard key={p.id} product={p} aosDelay={i * 40} />
                 ))}
@@ -161,7 +217,7 @@ export default function CollectionPage({ category: propCategory }) {
         </div>
       </div>
 
-      {/* ── Mobile filter drawer ─────────────────────────────── */}
+      {/* ── Mobile filter drawer ── */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
@@ -200,11 +256,25 @@ export default function CollectionPage({ category: propCategory }) {
   )
 }
 
+/* ── Grid toggle button ──────────────────────────────────────── */
+function GridButton({ active, onClick, children }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`p-1.5 transition-opacity duration-150 ${active ? 'opacity-100' : 'opacity-25 hover:opacity-60'}`}
+      aria-pressed={active}
+    >
+      {children}
+    </button>
+  )
+}
+
+/* ── Filter section accordion ────────────────────────────────── */
 function FilterSection({ title, open, onToggle, children }) {
   return (
     <div className="border-b border-brand-border py-4">
       <button
-        className="flex items-center justify-between w-full font-sans text-xs font-semibold uppercase tracking-button text-brand-black mb-0"
+        className="flex items-center justify-between w-full font-sans text-xs font-semibold uppercase tracking-button text-brand-black"
         onClick={onToggle}
         aria-expanded={open}
       >
@@ -212,32 +282,38 @@ function FilterSection({ title, open, onToggle, children }) {
         <svg
           width="14" height="14" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" strokeWidth="2"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 200ms' }}
+          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 200ms', flexShrink: 0 }}
         >
           <polyline points="6 9 12 15 18 9"/>
         </svg>
       </button>
-      <div
-        style={{
-          maxHeight: open ? '400px' : '0',
-          overflow: 'hidden',
-          transition: 'max-height 300ms ease-out',
-        }}
-      >
+      <div style={{ maxHeight: open ? '400px' : '0', overflow: 'hidden', transition: 'max-height 300ms ease-out' }}>
         <div className="pt-4">{children}</div>
       </div>
     </div>
   )
 }
 
-function FiltersPanel({ openSection, setOpenSection, selectedSizes, toggleSize, selectedColors, setSelectedColors, priceRange, setPriceRange, hasFilters, clearFilters }) {
+/* ── Filters panel ───────────────────────────────────────────── */
+function FiltersPanel({
+  openSection, setOpenSection,
+  selectedSizes, toggleSize,
+  selectedColors, setSelectedColors,
+  priceRange, setPriceRange,
+  hasFilters, clearFilters,
+}) {
   function toggle(key) { setOpenSection(s => ({ ...s, [key]: !s[key] })) }
-  function toggleColor(v) { setSelectedColors(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]) }
+  function toggleColor(v) {
+    setSelectedColors(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
+  }
 
   return (
     <div>
       {hasFilters && (
-        <button onClick={clearFilters} className="font-sans text-xs uppercase tracking-button text-brand-black/40 hover:text-brand-black transition-colors mb-3">
+        <button
+          onClick={clearFilters}
+          className="font-sans text-xs uppercase tracking-button text-brand-black/40 hover:text-brand-black transition-colors mb-3"
+        >
           Limpiar filtros ✕
         </button>
       )}
@@ -249,7 +325,11 @@ function FiltersPanel({ openSection, setOpenSection, selectedSizes, toggleSize, 
             <button
               key={s}
               onClick={() => toggleSize(s)}
-              className={`font-sans text-xs px-3 py-1.5 border transition-colors duration-150 ${selectedSizes.includes(s) ? 'bg-brand-black text-white border-brand-black' : 'border-brand-border text-brand-black hover:border-brand-black'}`}
+              className={`font-sans text-xs px-3 py-1.5 border transition-colors duration-150 ${
+                selectedSizes.includes(s)
+                  ? 'bg-brand-black text-white border-brand-black'
+                  : 'border-brand-border text-brand-black hover:border-brand-black'
+              }`}
             >
               {s}
             </button>
@@ -279,17 +359,33 @@ function FiltersPanel({ openSection, setOpenSection, selectedSizes, toggleSize, 
 
       {/* Colors */}
       <FilterSection title="Color" open={openSection.color} onToggle={() => toggle('color')}>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2.5">
           {ALL_COLORS.map(c => (
             <button
               key={c.value}
               onClick={() => toggleColor(c.value)}
               title={c.label}
-              className={`w-7 h-7 rounded-full border-2 transition-all duration-150 ${selectedColors.includes(c.value) ? 'border-brand-black scale-110' : 'border-brand-border'}`}
-              style={{ background: c.value }}
               aria-label={c.label}
               aria-pressed={selectedColors.includes(c.value)}
-            />
+              className={`relative w-7 h-7 rounded-full transition-all duration-150 ${
+                selectedColors.includes(c.value)
+                  ? 'ring-2 ring-offset-1 ring-brand-black scale-110'
+                  : 'ring-1 ring-brand-border hover:ring-brand-black/40'
+              }`}
+              style={{ background: c.value }}
+            >
+              {selectedColors.includes(c.value) && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <svg
+                    width="10" height="10" viewBox="0 0 24 24" fill="none"
+                    stroke={c.value === '#FFFFFF' ? '#000' : '#fff'}
+                    strokeWidth="3" strokeLinecap="round"
+                  >
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </span>
+              )}
+            </button>
           ))}
         </div>
       </FilterSection>
