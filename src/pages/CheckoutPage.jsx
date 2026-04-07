@@ -82,6 +82,10 @@ export default function CheckoutPage() {
   const [discount,    setDiscount]    = useState('')
   const [processing,  setProcessing]  = useState(false)
 
+  /* ── Inline field validation errors ── */
+  const [errors, setErrors] = useState({})
+  const clearErr = key => setErrors(prev => ({ ...prev, [key]: '' }))
+
   /* Credit card sub-form */
   const [cardNum,     setCardNum]     = useState('')
   const [cardExpiry,  setCardExpiry]  = useState('')
@@ -97,20 +101,24 @@ export default function CheckoutPage() {
   async function handlePayment(e) {
     e.preventDefault()
 
-    // Basic field validation
-    const missing = []
-    if (!email.trim())     missing.push('correo electrónico')
-    if (!firstName.trim()) missing.push('nombre')
-    if (!lastName.trim())  missing.push('apellidos')
-    if (!address.trim())   missing.push('dirección')
-    if (!city.trim())      missing.push('ciudad')
-    if (!phone.trim())     missing.push('teléfono')
-    if (missing.length) {
-      alert(`Por favor completa: ${missing.join(', ')}.`)
-      return
-    }
-    if (cedulaErr) {
-      alert('Por favor corrige los errores del formulario.')
+    // ── Inline field validation (no alert boxes) ──────────────────
+    const newErrors = {}
+    if (!email.trim())     newErrors.email     = 'Ingresa tu correo electrónico'
+    if (!firstName.trim()) newErrors.firstName = 'Este campo es obligatorio'
+    if (!lastName.trim())  newErrors.lastName  = 'Este campo es obligatorio'
+    if (cedulaErr)         newErrors.cedula    = cedulaErr
+    if (!address.trim())   newErrors.address   = 'Ingresa tu dirección de envío'
+    if (!city.trim())      newErrors.city      = 'Ingresa tu ciudad'
+    if (!phone.trim())     newErrors.phone     = 'Ingresa tu número de teléfono'
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
+      // Scroll to first red field automatically
+      setTimeout(() => {
+        document.querySelector('[data-field-error="true"]')?.scrollIntoView({
+          behavior: 'smooth', block: 'center',
+        })
+      }, 50)
       return
     }
 
@@ -118,10 +126,24 @@ export default function CheckoutPage() {
 
     // Unique order reference
     const reference = `BIALY-${Date.now()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`
-    // Wompi uses centavos (COP × 100)
+    // Wompi requires amount in COP centavos (COP × 100)
     const amountInCents = Math.round(total * 100)
 
-    // Persist order for confirmation page (before redirect — Wompi may clear state)
+    // Debug logs — confirm values before sending to Wompi
+    console.log('[Wompi] Public key:', import.meta.env.VITE_WOMPI_PUBLIC_KEY)
+    console.log('[Wompi] Amount in cents:', amountInCents)
+    console.log('[Wompi] Reference:', reference)
+
+    // Guard: public key must be set
+    const publicKey = import.meta.env.VITE_WOMPI_PUBLIC_KEY
+    if (!publicKey) {
+      console.error('[Wompi] VITE_WOMPI_PUBLIC_KEY is not set. Add it to your .env file.')
+      setErrors({ _global: 'Error de configuración de pago. Contacta al administrador.' })
+      setProcessing(false)
+      return
+    }
+
+    // Persist order for confirmation page (before redirect — Wompi clears React state)
     localStorage.setItem('bialy-pending-order', JSON.stringify({
       reference,
       items: items.map(i => ({ ...i })),
@@ -142,10 +164,11 @@ export default function CheckoutPage() {
     }))
 
     try {
+      // Signature: SHA256(reference + amountInCents + "COP" + secret)
+      // Computed server-side via /api/wompi-signature (fallback: client-side in dev)
       const signature = await getWompiSignature(reference, amountInCents)
 
       const wompiBase  = 'https://checkout.wompi.co/p/'
-      const publicKey  = import.meta.env.VITE_WOMPI_PUBLIC_KEY || 'pub_stagtest_g2ttJGLph6sMwFXd2Nqd2b4R1gCFBGxJ'
       const redirectTo = `${window.location.origin}/order-confirmation`
 
       const params = new URLSearchParams()
@@ -159,10 +182,11 @@ export default function CheckoutPage() {
       params.set('customer-data:email',     email.trim())
       params.set('customer-data:phone-number', `57${phone.replace(/\D/g, '').slice(-10)}`)
 
+      console.log('[Wompi] Redirecting to:', `${wompiBase}?public-key=${publicKey}&amount-in-cents=${amountInCents}&reference=${reference}`)
       window.location.href = `${wompiBase}?${params.toString()}`
     } catch (err) {
-      console.error('Error al iniciar pago Wompi:', err)
-      alert('Hubo un error al iniciar el pago. Verifica tu conexión e intenta de nuevo.')
+      console.error('[Wompi] Error al iniciar pago:', err)
+      setErrors({ _global: 'Hubo un error al iniciar el pago. Verifica tu conexión e intenta de nuevo.' })
       setProcessing(false)
     }
   }
@@ -170,8 +194,10 @@ export default function CheckoutPage() {
   function handleCedula(val) {
     if (val && !/^\d*$/.test(val)) {
       setCedulaErr('Este campo solo puede contener números.')
+      setErrors(prev => ({ ...prev, cedula: 'Este campo solo puede contener números.' }))
     } else {
       setCedulaErr('')
+      clearErr('cedula')
     }
     setCedula(val)
   }
@@ -231,13 +257,16 @@ export default function CheckoutPage() {
                   Iniciar sesión
                 </Link>
               </div>
-              <input
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="input-brand mb-3"
-              />
+              <div data-field-error={!!errors.email || undefined}>
+                <input
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); clearErr('email') }}
+                  className={`input-brand ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
+                />
+                {errors.email && <p className="font-sans text-xs text-red-500 mt-1">{errors.email}</p>}
+              </div>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -259,45 +288,61 @@ export default function CheckoutPage() {
                   <option value="CO">Colombia</option>
                 </select>
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="text" placeholder="Nombre"
-                    value={firstName} onChange={e => setFirstName(e.target.value)}
-                    className="input-brand"
-                  />
-                  <input
-                    type="text" placeholder="Apellidos"
-                    value={lastName} onChange={e => setLastName(e.target.value)}
-                    className="input-brand"
-                  />
+                  <div data-field-error={!!errors.firstName || undefined}>
+                    <input
+                      type="text" placeholder="Nombre"
+                      value={firstName}
+                      onChange={e => { setFirstName(e.target.value); clearErr('firstName') }}
+                      className={`input-brand ${errors.firstName ? 'border-red-500 focus:border-red-500' : ''}`}
+                    />
+                    {errors.firstName && <p className="font-sans text-xs text-red-500 mt-1">{errors.firstName}</p>}
+                  </div>
+                  <div data-field-error={!!errors.lastName || undefined}>
+                    <input
+                      type="text" placeholder="Apellidos"
+                      value={lastName}
+                      onChange={e => { setLastName(e.target.value); clearErr('lastName') }}
+                      className={`input-brand ${errors.lastName ? 'border-red-500 focus:border-red-500' : ''}`}
+                    />
+                    {errors.lastName && <p className="font-sans text-xs text-red-500 mt-1">{errors.lastName}</p>}
+                  </div>
                 </div>
-                <div>
+                <div data-field-error={!!errors.cedula || undefined}>
                   <input
                     type="text"
                     placeholder="Cédula / NIT"
                     value={cedula}
                     onChange={e => handleCedula(e.target.value)}
-                    className={`input-brand ${cedulaErr ? 'border-red-500 focus:border-red-500' : ''}`}
+                    className={`input-brand ${errors.cedula ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
-                  {cedulaErr && (
-                    <p className="font-sans text-xs text-red-500 mt-1">{cedulaErr}</p>
+                  {errors.cedula && (
+                    <p className="font-sans text-xs text-red-500 mt-1">{errors.cedula}</p>
                   )}
                 </div>
-                <input
-                  type="text" placeholder="Dirección"
-                  value={address} onChange={e => setAddress(e.target.value)}
-                  className="input-brand"
-                />
+                <div data-field-error={!!errors.address || undefined}>
+                  <input
+                    type="text" placeholder="Dirección"
+                    value={address}
+                    onChange={e => { setAddress(e.target.value); clearErr('address') }}
+                    className={`input-brand ${errors.address ? 'border-red-500 focus:border-red-500' : ''}`}
+                  />
+                  {errors.address && <p className="font-sans text-xs text-red-500 mt-1">{errors.address}</p>}
+                </div>
                 <input
                   type="text" placeholder="Casa, apartamento, etc. (opcional)"
                   value={apt} onChange={e => setApt(e.target.value)}
                   className="input-brand"
                 />
-                <div className="grid grid-cols-3 gap-3">
-                  <input
-                    type="text" placeholder="Ciudad"
-                    value={city} onChange={e => setCity(e.target.value)}
-                    className="input-brand"
-                  />
+                <div className="grid grid-cols-3 gap-3 items-start">
+                  <div data-field-error={!!errors.city || undefined}>
+                    <input
+                      type="text" placeholder="Ciudad"
+                      value={city}
+                      onChange={e => { setCity(e.target.value); clearErr('city') }}
+                      className={`input-brand ${errors.city ? 'border-red-500 focus:border-red-500' : ''}`}
+                    />
+                    {errors.city && <p className="font-sans text-xs text-red-500 mt-1">{errors.city}</p>}
+                  </div>
                   <div className="relative">
                     <select
                       className="input-brand appearance-none pr-8"
@@ -317,17 +362,21 @@ export default function CheckoutPage() {
                     className="input-brand"
                   />
                 </div>
-                <div className="relative">
-                  <input
-                    type="tel" placeholder="Teléfono"
-                    value={phone} onChange={e => setPhone(e.target.value)}
-                    className="input-brand pr-10"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/30">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                    </svg>
-                  </span>
+                <div data-field-error={!!errors.phone || undefined}>
+                  <div className="relative">
+                    <input
+                      type="tel" placeholder="Teléfono"
+                      value={phone}
+                      onChange={e => { setPhone(e.target.value); clearErr('phone') }}
+                      className={`input-brand pr-10 ${errors.phone ? 'border-red-500 focus:border-red-500' : ''}`}
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/30">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                      </svg>
+                    </span>
+                  </div>
+                  {errors.phone && <p className="font-sans text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -542,6 +591,13 @@ export default function CheckoutPage() {
                 Usar la dirección de envío como dirección de facturación
               </span>
             </label>
+
+            {/* Global error (e.g. Wompi config missing) */}
+            {errors._global && (
+              <div className="bg-red-50 border border-red-200 px-4 py-3">
+                <p className="font-sans text-sm text-red-700">{errors._global}</p>
+              </div>
+            )}
 
             {/* Pay button */}
             <button

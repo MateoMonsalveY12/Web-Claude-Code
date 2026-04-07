@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../../context/CartContext.jsx'
 
@@ -12,8 +12,18 @@ export default function ProductCard({ product, aosDelay = 0 }) {
   const img2 = images?.[1] || null
 
   const { addToCart } = useCart()
-  const [hoverSize, setHoverSize] = useState(null)
-  const [imgHovered, setImgHovered] = useState(false)
+  const [hoverSize,      setHoverSize]      = useState(null)
+  const [imgHovered,     setImgHovered]     = useState(false)
+  const [hasSecondImage, setHasSecondImage] = useState(false)
+
+  // Preload second image to confirm it actually exists before activating crossfade
+  useEffect(() => {
+    if (!img2) { setHasSecondImage(false); return }
+    const preload = new window.Image()
+    preload.onload  = () => setHasSecondImage(true)
+    preload.onerror = () => setHasSecondImage(false)
+    preload.src = img2
+  }, [img2])
 
   function handleQuickAdd(e) {
     e.preventDefault()
@@ -46,14 +56,13 @@ export default function ProductCard({ product, aosDelay = 0 }) {
             alt={name}
             loading="lazy"
             className="absolute inset-0 w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.04]"
-            style={{ opacity: imgHovered && img2 ? 0 : 1 }}
+            style={{ opacity: imgHovered && hasSecondImage ? 0 : 1 }}
           />
-          {/* Secondary image (hover crossfade) — preloaded when card mounts */}
-          {img2 && (
+          {/* Secondary image — only shown if it successfully loaded */}
+          {hasSecondImage && (
             <img
               src={img2}
               alt={name}
-              loading="lazy"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
               style={{ opacity: imgHovered ? 1 : 0 }}
             />
