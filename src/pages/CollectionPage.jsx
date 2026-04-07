@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useProducts } from '../hooks/useProducts.js'
 import ProductCard, { SkeletonCard } from '../components/shared/ProductCard.jsx'
@@ -10,6 +10,10 @@ const CATEGORY_META = {
   'jeans':           { title: 'Jeans & Pantalones', banner: '/images/banner-jeans.jpg' },
   'tallas-grandes':  { title: 'Tallas Grandes',     banner: '/images/banner-tallas-grandes.jpg' },
   'nueva-coleccion': { title: 'Nueva Colección',    banner: '/images/banner-nueva-coleccion.jpg' },
+  'rebajas':         { title: 'Rebajas',            banner: '/images/banner-nueva-coleccion.jpg' },
+  'accesorios':      { title: 'Accesorios y Zapatos', banner: '/images/banner-nueva-coleccion.jpg' },
+  'uniformes':       { title: 'Uniformes',          banner: '/images/banner-nueva-coleccion.jpg' },
+  'bono-regalo':     { title: 'Bono Regalo',        banner: '/images/banner-nueva-coleccion.jpg' },
 }
 
 const CATEGORY_LINKS = [
@@ -22,7 +26,7 @@ const CATEGORY_LINKS = [
   { label: 'Bono Regalo',          href: '/collections/bono-regalo' },
 ]
 
-const ALL_SIZES = ['6', '8', '10', '12', '14', '16', '18', '20']
+const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
 
 const ALL_COLORS = [
   { label: 'Celeste',      value: '#AED6F1' },
@@ -83,6 +87,9 @@ export default function CollectionPage({ category: propCategory }) {
   }), [category, selectedSizes, selectedColors, minPrice, maxPrice])
 
   const { products, loading } = useProducts(filters)
+
+  // SEO title
+  useEffect(() => { document.title = `${meta.title} | Bialy` }, [meta.title])
 
   function toggleSize(s) {
     setSelectedSizes(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
@@ -216,8 +223,15 @@ export default function CollectionPage({ category: propCategory }) {
         <div className="flex gap-8">
           {/* ── Sidebar filters (desktop) ── */}
           <aside
-            className="hidden md:block w-60 shrink-0 self-start"
-            style={{ position: 'sticky', top: 'calc(var(--nav-h) + 1.5rem)' }}
+            className="hidden md:block w-60 shrink-0"
+            style={{
+              position: 'sticky',
+              top: 'calc(var(--nav-h) + 1rem)',
+              maxHeight: 'calc(100vh - var(--nav-h) - 2rem)',
+              overflowY: 'auto',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#E0E0E0 transparent',
+            }}
           >
             <FiltersPanel {...panelProps} />
           </aside>

@@ -1,6 +1,39 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+
+/**
+ * Wompi integrity signature helper.
+ *
+ * 1. Tries the Vercel serverless function /api/wompi-signature (production).
+ * 2. Falls back to client-side SHA-256 using VITE_WOMPI_INTEGRITY_SECRET
+ *    (sandbox / local dev — that env var is safe to expose for test keys only).
+ *
+ * TO SWITCH TO PRODUCTION:
+ *   - Set VITE_WOMPI_PUBLIC_KEY  = pub_prod_...
+ *   - Set WOMPI_INTEGRITY_SECRET = prod_integrity_... (server-only Vercel env var)
+ *   - Remove VITE_WOMPI_INTEGRITY_SECRET from production env vars
+ */
+async function getWompiSignature(reference, amountInCents) {
+  try {
+    const res = await fetch('/api/wompi-signature', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference, amountInCents: String(amountInCents), currency: 'COP' }),
+    })
+    if (res.ok) {
+      const { signature } = await res.json()
+      return signature
+    }
+  } catch { /* fall through */ }
+
+  // Client-side fallback for sandbox / local dev
+  const secret = import.meta.env.VITE_WOMPI_INTEGRITY_SECRET
+  if (!secret) throw new Error('Wompi integrity secret not available. Set VITE_WOMPI_INTEGRITY_SECRET in .env for local dev.')
+  const msg = `${reference}${amountInCents}COP${secret}`
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg))
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+}
 
 const DEPARTMENTS = [
   'Amazonas','Antioquia','Arauca','Atlántico','Bolívar','Boyacá','Caldas',
@@ -24,6 +57,9 @@ function fmt(n) {
 
 export default function CheckoutPage() {
   const { items, subtotal, cartCount } = useCart()
+  const navigate = useNavigate()
+
+  useEffect(() => { document.title = 'Checkout | Bialy' }, [])
 
   /* ── Form state ── */
   const [email,      setEmail]      = useState('')
@@ -43,7 +79,8 @@ export default function CheckoutPage() {
 
   const [shipping,   setShipping]   = useState('fabrica')
   const [payment,    setPayment]    = useState('credit')
-  const [discount,   setDiscount]   = useState('')
+  const [discount,    setDiscount]    = useState('')
+  const [processing,  setProcessing]  = useState(false)
 
   /* Credit card sub-form */
   const [cardNum,     setCardNum]     = useState('')
@@ -56,6 +93,79 @@ export default function CheckoutPage() {
 
   const shippingCost = SHIPPING_OPTIONS.find(o => o.id === shipping)?.price ?? 0
   const total = subtotal + shippingCost
+
+  async function handlePayment(e) {
+    e.preventDefault()
+
+    // Basic field validation
+    const missing = []
+    if (!email.trim())     missing.push('correo electrónico')
+    if (!firstName.trim()) missing.push('nombre')
+    if (!lastName.trim())  missing.push('apellidos')
+    if (!address.trim())   missing.push('dirección')
+    if (!city.trim())      missing.push('ciudad')
+    if (!phone.trim())     missing.push('teléfono')
+    if (missing.length) {
+      alert(`Por favor completa: ${missing.join(', ')}.`)
+      return
+    }
+    if (cedulaErr) {
+      alert('Por favor corrige los errores del formulario.')
+      return
+    }
+
+    setProcessing(true)
+
+    // Unique order reference
+    const reference = `BIALY-${Date.now()}-${Math.random().toString(36).slice(2,6).toUpperCase()}`
+    // Wompi uses centavos (COP × 100)
+    const amountInCents = Math.round(total * 100)
+
+    // Persist order for confirmation page (before redirect — Wompi may clear state)
+    localStorage.setItem('bialy-pending-order', JSON.stringify({
+      reference,
+      items: items.map(i => ({ ...i })),
+      subtotal,
+      shippingCost,
+      total,
+      shipping,
+      shippingLabel: SHIPPING_OPTIONS.find(o => o.id === shipping)?.label,
+      email: email.trim(),
+      firstName: firstName.trim(),
+      lastName:  lastName.trim(),
+      address:   address.trim(),
+      apt:       apt.trim(),
+      city:      city.trim(),
+      state,
+      phone:     phone.trim(),
+      createdAt: new Date().toISOString(),
+    }))
+
+    try {
+      const signature = await getWompiSignature(reference, amountInCents)
+
+      const wompiBase  = 'https://checkout.wompi.co/p/'
+      const publicKey  = import.meta.env.VITE_WOMPI_PUBLIC_KEY || 'pub_stagtest_g2ttJGLph6sMwFXd2Nqd2b4R1gCFBGxJ'
+      const redirectTo = `${window.location.origin}/order-confirmation`
+
+      const params = new URLSearchParams()
+      params.set('public-key',              publicKey)
+      params.set('currency',                'COP')
+      params.set('amount-in-cents',         String(amountInCents))
+      params.set('reference',               reference)
+      params.set('signature:integrity',     signature)
+      params.set('redirect-url',            redirectTo)
+      params.set('customer-data:full-name', `${firstName.trim()} ${lastName.trim()}`)
+      params.set('customer-data:email',     email.trim())
+      params.set('customer-data:phone-number', `57${phone.replace(/\D/g, '').slice(-10)}`)
+
+      window.location.href = `${wompiBase}?${params.toString()}`
+    } catch (err) {
+      console.error('Error al iniciar pago Wompi:', err)
+      alert('Hubo un error al iniciar el pago. Verifica tu conexión e intenta de nuevo.')
+      setProcessing(false)
+    }
+  }
 
   function handleCedula(val) {
     if (val && !/^\d*$/.test(val)) {
@@ -434,8 +544,12 @@ export default function CheckoutPage() {
             </label>
 
             {/* Pay button */}
-            <button className="btn-primary w-full text-center py-4 text-base">
-              Pagar ahora
+            <button
+              onClick={handlePayment}
+              disabled={processing}
+              className="btn-primary w-full text-center py-4 text-base disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {processing ? 'Redirigiendo a Wompi…' : 'Pagar ahora'}
             </button>
 
             {/* Footer links */}

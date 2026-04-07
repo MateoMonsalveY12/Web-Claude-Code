@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useProducts } from '../hooks/useProducts'
@@ -17,6 +17,7 @@ function fmt(n) {
 }
 
 export default function CartPage() {
+  useEffect(() => { document.title = 'Tu Carrito | Bialy' }, [])
   const {
     items, removeFromCart, updateQuantity,
     subtotal, progressPercent, freeShippingRemaining,

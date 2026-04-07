@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useProduct } from '../hooks/useProduct.js'
 import { useProducts } from '../hooks/useProducts.js'
@@ -59,6 +59,12 @@ export default function ProductPage() {
   const [sizeError, setSizeError]   = useState(false)
 
   const { products: related } = useProducts({ category: product?.category, limit: 5 })
+
+  // SEO title
+  useEffect(() => {
+    if (product?.name) document.title = `${product.name} | Bialy`
+    return () => { document.title = 'Bialy | Moda Femenina Colombiana' }
+  }, [product?.name])
 
   if (loading) return <ProductPageSkeleton />
 

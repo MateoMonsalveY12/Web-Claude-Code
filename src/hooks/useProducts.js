@@ -4,7 +4,25 @@ import { MOCK_PRODUCTS } from '../lib/mockData.js'
 
 /**
  * useProducts({ category, subcategory, sizes, colors, minPrice, maxPrice, limit, featured })
- * Falls back to mock data when Supabase is not configured.
+ *
+ * Uses Supabase when VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY are set,
+ * otherwise falls back to mockData.js (demo mode — no .env required).
+ *
+ * ─── HOW TO CONNECT SUPABASE ─────────────────────────────────────────────────
+ * 1. Create a project at supabase.com → copy URL + anon key.
+ * 2. Copy .env.example → .env and fill in VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY.
+ * 3. In Supabase, create a "products" table with columns:
+ *      id (uuid, pk), name (text), slug (text, unique), price (int8),
+ *      compare_price (int8, nullable), description (text),
+ *      category (text), subcategory (text, nullable),
+ *      sizes (text[]), colors (text[]), images (text[]),
+ *      badge (text, nullable), is_new (bool), is_featured (bool),
+ *      created_at (timestamptz, default now())
+ * 4. Enable RLS: CREATE POLICY "public read" ON products FOR SELECT USING (true);
+ * 5. Upload products → the site will automatically switch to Supabase.
+ *
+ * Supported categories: vestidos, blusas, jeans, tallas-grandes, nueva-coleccion,
+ *   rebajas, accesorios, uniformes, bono-regalo
  */
 export function useProducts(filters = {}) {
   const [products, setProducts] = useState([])
