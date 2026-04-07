@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import AuthModal from '../components/AuthModal'
 
 // ─── Wompi environment ─────────────────────────────────────────────────────
 // VITE_WOMPI_ENV controls which environment is active: "sandbox" | "production"
@@ -67,9 +69,30 @@ function fmt(n) {
 
 export default function CheckoutPage() {
   const { items, subtotal, cartCount } = useCart()
+  const { user, getCustomer } = useAuth()
   const navigate = useNavigate()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   useEffect(() => { document.title = 'Checkout | Bialy' }, [])
+
+  // Pre-fill form from customer profile when user is logged in
+  useEffect(() => {
+    if (!user) return
+    getCustomer().then(customer => {
+      if (!customer) return
+      if (customer.full_name) {
+        const parts = customer.full_name.trim().split(' ')
+        setFirstName(parts[0] ?? '')
+        setLastName(parts.slice(1).join(' ') || '')
+      }
+      if (customer.phone)           setPhone(customer.phone)
+      if (customer.document_type)   setDocType(customer.document_type)
+      if (customer.document_number) setDocNumber(customer.document_number)
+    })
+    // also pre-fill email from auth user
+    if (user.email) setEmail(user.email)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   /* ── Form state ── */
   const [email,      setEmail]      = useState('')
@@ -162,6 +185,12 @@ export default function CheckoutPage() {
 
     console.log(`[Wompi] env=${WOMPI_ENV} | key=${publicKey.slice(0, 20)}... | amount=${amountInCents} | ref=${reference}`)
 
+    // Fetch customer_id if logged in (best-effort — doesn't block payment)
+    let customerId = null
+    if (user) {
+      try { const c = await getCustomer(); customerId = c?.id ?? null } catch { /* ignore */ }
+    }
+
     // Persist order for confirmation page (before redirect — Wompi clears React state)
     localStorage.setItem('bialy-pending-order', JSON.stringify({
       reference,
@@ -179,6 +208,7 @@ export default function CheckoutPage() {
       city:      city.trim(),
       state,
       phone:     phone.trim(),
+      customerId,
       createdAt: new Date().toISOString(),
     }))
 
@@ -222,6 +252,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
       {/* ── Clean checkout header ── */}
       <header className="border-b border-brand-border">
@@ -262,9 +293,15 @@ export default function CheckoutPage() {
             <section>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-sans text-base font-bold">Contacto</h2>
-                <Link to="/" className="font-sans text-xs underline underline-offset-2 text-brand-black hover:opacity-60 transition-opacity">
-                  Iniciar sesión
-                </Link>
+                {!user && (
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalOpen(true)}
+                    className="font-sans text-xs underline underline-offset-2 text-brand-black hover:opacity-60 transition-opacity"
+                  >
+                    Iniciar sesión
+                  </button>
+                )}
               </div>
               <div data-field-error={!!errors.email || undefined}>
                 <input
@@ -276,6 +313,18 @@ export default function CheckoutPage() {
                 />
                 {errors.email && <p className="font-sans text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
+              {!user && (
+                <p className="font-sans text-xs text-brand-black/50 -mt-1 mb-1">
+                  ¿Ya tienes cuenta?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setAuthModalOpen(true)}
+                    className="underline text-brand-black hover:opacity-60"
+                  >
+                    Inicia sesión para autocompletar tus datos
+                  </button>
+                </p>
+              )}
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"

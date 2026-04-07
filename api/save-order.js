@@ -75,7 +75,7 @@ export default async function handler(req, res) {
 
   const {
     wompi_transaction_id, wompi_reference, status, total_amount,
-    customer_name, customer_email, customer_phone,
+    customer_name, customer_email, customer_phone, customer_id,
     shipping_address, shipping_option, items = [],
   } = body
 
@@ -106,6 +106,7 @@ export default async function handler(req, res) {
       customer_phone,
       shipping_address: shipping_address ?? {},
       shipping_option,
+      ...(customer_id ? { customer_id } : {}),
     }
     const orderRes = await supabaseRequest('POST', '/orders', orderPayload, serviceKey, supabaseUrl)
 
