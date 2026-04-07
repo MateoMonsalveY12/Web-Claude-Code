@@ -45,7 +45,7 @@ export default function AccountOrdersPage() {
     // Fetch orders by email (covers orders before and after registration)
     supabase
       .from('orders')
-      .select('id, reference, status, total_amount, created_at, shipping_option, shipping_address, customer_name')
+      .select('id, wompi_reference, status, total_amount, created_at, shipping_option, shipping_address, customer_name')
       .eq('customer_email', user.email)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
@@ -113,7 +113,7 @@ export default function AccountOrdersPage() {
                   <div className="flex items-start justify-between gap-4 flex-wrap">
                     <div>
                       <p className="font-sans text-xs text-brand-black/40 uppercase tracking-button mb-0.5">
-                        Pedido #{order.reference?.split('-').slice(-1)[0] ?? order.id.slice(0,8).toUpperCase()}
+                        Pedido #{order.wompi_reference?.split('-').slice(-1)[0] ?? order.id.slice(0,8).toUpperCase()}
                       </p>
                       <p className="font-sans text-sm font-semibold">{fmt(order.total_amount)}</p>
                     </div>
