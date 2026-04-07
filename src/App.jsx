@@ -16,6 +16,7 @@ import ProductPage          from './pages/ProductPage.jsx'
 import CartPage             from './pages/CartPage.jsx'
 import CheckoutPage         from './pages/CheckoutPage.jsx'
 import OrderConfirmationPage from './pages/OrderConfirmationPage.jsx'
+import AccountOrdersPage    from './pages/AccountOrdersPage.jsx'
 
 export const HEADER_H = { mobile: 96, desktop: 112 }
 
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/cart"                          element={<CartPage />} />
           <Route path="/checkout"                      element={<CheckoutPage />} />
           <Route path="/order-confirmation"            element={<OrderConfirmationPage />} />
+          <Route path="/mi-cuenta/pedidos"             element={<AccountOrdersPage />} />
         </Routes>
       </main>
 

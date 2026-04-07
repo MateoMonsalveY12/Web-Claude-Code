@@ -39,18 +39,27 @@ export function AuthProvider({ children }) {
   async function signUp(email, password, profile) {
     if (!supabase) throw new Error('Supabase no está configurado')
 
-    const { data, error } = await supabase.auth.signUp({ email, password })
+    // Pass full_name as user metadata — picked up by the DB trigger handle_new_user()
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: profile?.full_name ?? '' } },
+    })
     if (error) throw error
 
-    // Create customer record immediately
+    // Also try a direct upsert as belt-and-suspenders (trigger is the primary path)
     if (data.user) {
-      await supabase.from('customers').upsert({
+      const { error: upsertErr } = await supabase.from('customers').upsert({
         email,
         full_name:       profile?.full_name       ?? '',
         phone:           profile?.phone           ?? '',
         document_type:   profile?.document_type   ?? '',
         document_number: profile?.document_number ?? '',
       }, { onConflict: 'email', ignoreDuplicates: false })
+      if (upsertErr) {
+        // Non-fatal: trigger already handled the insert
+        console.warn('[AuthContext] customers upsert warning (non-fatal):', upsertErr.message)
+      }
     }
 
     return data

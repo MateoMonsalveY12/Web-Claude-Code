@@ -314,7 +314,7 @@ export default function CheckoutPage() {
                 {errors.email && <p className="font-sans text-xs text-red-500 mt-1">{errors.email}</p>}
               </div>
               {!user && (
-                <p className="font-sans text-xs text-brand-black/50 -mt-1 mb-1">
+                <p className="font-sans text-xs text-brand-black/50 mt-2 mb-1">
                   ¿Ya tienes cuenta?{' '}
                   <button
                     type="button"
