@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
 
@@ -148,6 +148,56 @@ export default function OrderConfirmationPage() {
   // 'loading' | 'APPROVED' | 'DECLINED' | 'PENDING' | 'VOIDED' | 'ERROR' | 'no_id'
   const [status,  setStatus]  = useState('loading')
   const [txData,  setTxData]  = useState(null)
+  const savedRef = useRef(false) // prevents duplicate Supabase saves on re-render
+
+  // ── Save order to Supabase (fire-and-forget, never blocks UX) ─────────────
+  async function persistOrder(tx, localOrder) {
+    if (savedRef.current) return
+    savedRef.current = true
+
+    try {
+      const body = {
+        wompi_transaction_id: tx?.id       ?? transactionId,
+        wompi_reference:      tx?.reference ?? localOrder?.reference ?? '',
+        status:               tx?.status   ?? 'APPROVED',
+        total_amount:         tx?.amount_in_cents
+                                ? tx.amount_in_cents / 100
+                                : localOrder?.total ?? 0,
+        customer_name:  localOrder ? `${localOrder.firstName ?? ''} ${localOrder.lastName ?? ''}`.trim() : '',
+        customer_email: localOrder?.email ?? '',
+        customer_phone: localOrder?.phone ?? '',
+        shipping_address: {
+          address: localOrder?.address ?? '',
+          apt:     localOrder?.apt     ?? '',
+          city:    localOrder?.city    ?? '',
+          state:   localOrder?.state   ?? '',
+        },
+        shipping_option: localOrder?.shippingLabel ?? localOrder?.shipping ?? '',
+        items: (localOrder?.items ?? []).map(i => ({
+          name:       i.name,
+          slug:       i.slug,
+          size:       i.size,
+          color:      i.color,
+          quantity:   i.quantity,
+          price:      i.price,
+        })),
+      }
+
+      const res = await fetch('/api/save-order', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      })
+      const json = await res.json()
+      if (res.ok) {
+        console.log('[OrderConfirmation] Orden guardada en Supabase:', json.order_id)
+      } else {
+        console.warn('[OrderConfirmation] No se pudo guardar en Supabase:', json.error)
+      }
+    } catch (err) {
+      console.warn('[OrderConfirmation] Supabase save error (non-blocking):', err.message)
+    }
+  }
 
   useEffect(() => {
     document.title = 'Confirmación de pedido | Bialy'
@@ -157,8 +207,13 @@ export default function OrderConfirmationPage() {
 
     // No Wompi transaction ID → can't verify; assume success if order data exists
     if (!transactionId) {
-      if (order) { clearCart(); setStatus('APPROVED') }
-      else        { setStatus('no_id') }
+      if (order) {
+        clearCart()
+        setStatus('APPROVED')
+        persistOrder(null, order)
+      } else {
+        setStatus('no_id')
+      }
       return
     }
 
@@ -179,13 +234,21 @@ export default function OrderConfirmationPage() {
         const txStatus = tx?.status ?? 'ERROR'
         setStatus(txStatus)
 
-        // Clear cart on successful or pending payment (transaction was submitted)
-        if (txStatus === 'APPROVED' || txStatus === 'PENDING') clearCart()
+        // Clear cart and persist to Supabase on confirmed payments
+        if (txStatus === 'APPROVED' || txStatus === 'PENDING') {
+          clearCart()
+          persistOrder(tx, order)
+        }
       } catch (err) {
         console.error('[OrderConfirmation] Error al consultar transacción:', err.message)
         // Graceful fallback: if we have local order data, show approved
-        if (order) { clearCart(); setStatus('APPROVED') }
-        else        { setStatus('ERROR') }
+        if (order) {
+          clearCart()
+          setStatus('APPROVED')
+          persistOrder(null, order)
+        } else {
+          setStatus('ERROR')
+        }
       }
     }
 
