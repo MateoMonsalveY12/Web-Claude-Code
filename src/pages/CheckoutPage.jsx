@@ -194,6 +194,7 @@ export default function CheckoutPage() {
       const signature = await getWompiSignature(reference, amountInCents)
 
       const wompiBase  = 'https://checkout.wompi.co/p/'
+      // redirectTo must be a clean URL with NO query params — Wompi appends ?id=... on return
       const redirectTo = `${window.location.origin}/order-confirmation`
 
       const params = new URLSearchParams()
