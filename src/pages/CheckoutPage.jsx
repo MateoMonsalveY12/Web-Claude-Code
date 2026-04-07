@@ -150,10 +150,11 @@ export default function CheckoutPage() {
     }
 
     // Validate key prefix matches declared environment (prevents accidental cross-env calls)
-    const isSandboxKey = publicKey.startsWith('pub_stagtest_')
+    // Wompi sandbox keys start with pub_test_ or pub_stagtest_; production keys with pub_prod_
+    const isSandboxKey = publicKey.startsWith('pub_test_') || publicKey.startsWith('pub_stagtest_')
     const isProdKey    = publicKey.startsWith('pub_prod_')
     if (WOMPI_ENV === 'sandbox' && !isSandboxKey) {
-      console.warn('[Wompi] ADVERTENCIA: VITE_WOMPI_ENV=sandbox pero la llave no comienza con pub_stagtest_')
+      console.warn('[Wompi] ADVERTENCIA: VITE_WOMPI_ENV=sandbox pero la llave no comienza con pub_test_ ni pub_stagtest_')
     }
     if (WOMPI_ENV === 'production' && !isProdKey) {
       console.warn('[Wompi] ADVERTENCIA: VITE_WOMPI_ENV=production pero la llave no comienza con pub_prod_')
