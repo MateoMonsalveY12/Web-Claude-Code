@@ -3,36 +3,38 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
 /**
- * Wompi integrity signature helper.
+ * Wompi integrity signature — ALWAYS via Vercel serverless /api/wompi-signature.
  *
- * 1. Tries the Vercel serverless function /api/wompi-signature (production).
- * 2. Falls back to client-side SHA-256 using VITE_WOMPI_INTEGRITY_SECRET
- *    (sandbox / local dev — that env var is safe to expose for test keys only).
+ * The backend reads process.env.WOMPI_INTEGRITY_SECRET (no VITE_ prefix).
+ * The secret never reaches the browser.
  *
- * TO SWITCH TO PRODUCTION:
- *   - Set VITE_WOMPI_PUBLIC_KEY  = pub_prod_...
- *   - Set WOMPI_INTEGRITY_SECRET = prod_integrity_... (server-only Vercel env var)
- *   - Remove VITE_WOMPI_INTEGRITY_SECRET from production env vars
+ * Formula (computed server-side):
+ *   SHA256(reference + amountInCents + "COP" + WOMPI_INTEGRITY_SECRET)
+ *
+ * Required env vars:
+ *   Vercel → WOMPI_INTEGRITY_SECRET   (server-only, no VITE_ prefix)
+ *   Vercel → VITE_WOMPI_PUBLIC_KEY    (public, safe for browser)
+ *
+ * To switch sandbox → production:
+ *   1. Get prod keys from wompi.co → Dashboard → Desarrolladores → Llaves
+ *   2. Update Vercel env vars: VITE_WOMPI_PUBLIC_KEY + WOMPI_INTEGRITY_SECRET
+ *   3. Re-deploy — no code changes needed
  */
 async function getWompiSignature(reference, amountInCents) {
-  try {
-    const res = await fetch('/api/wompi-signature', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reference, amountInCents: String(amountInCents), currency: 'COP' }),
-    })
-    if (res.ok) {
-      const { signature } = await res.json()
-      return signature
-    }
-  } catch { /* fall through */ }
+  const res = await fetch('/api/wompi-signature', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference, amountInCents: String(amountInCents), currency: 'COP' }),
+  })
 
-  // Client-side fallback for sandbox / local dev
-  const secret = import.meta.env.VITE_WOMPI_INTEGRITY_SECRET
-  if (!secret) throw new Error('Wompi integrity secret not available. Set VITE_WOMPI_INTEGRITY_SECRET in .env for local dev.')
-  const msg = `${reference}${amountInCents}COP${secret}`
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('')
+  if (!res.ok) {
+    let msg = `HTTP ${res.status}`
+    try { msg = (await res.json()).error || msg } catch { /* ignore */ }
+    throw new Error(`/api/wompi-signature falló: ${msg}`)
+  }
+
+  const { signature } = await res.json()
+  return signature
 }
 
 const DEPARTMENTS = [
