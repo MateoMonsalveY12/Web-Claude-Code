@@ -4,29 +4,28 @@
  * Computes the Wompi integrity signature (SHA-256) server-side
  * so the WOMPI_INTEGRITY_SECRET is never exposed to the browser.
  *
- * Formula: SHA256(reference + amountInCents + currency + integritySecret)
+ * Formula (exactly):
+ *   SHA256( reference + amountInCents + currency + integritySecret )
+ *   — all values concatenated with NO separators, as strings
  *
- * ─── ENV VARS REQUIRED (Vercel dashboard → Settings → Environment Variables) ───
+ * ─── ENV VARS REQUIRED ──────────────────────────────────────────────────────
+ *   WOMPI_INTEGRITY_SECRET   (Vercel dashboard → Settings → Environment Variables)
+ *     Sandbox:    test_integrity_...
+ *     Production: prod_integrity_...
  *
- *   WOMPI_INTEGRITY_SECRET   — get from Wompi dashboard → Developers → Keys
- *                              Sandbox:    stagtest_integrity_nAIBuqayW70XpUqJS4qf4STYiISd89Fp
- *                              Production: starts with "prod_integrity_"
- *
- * ─── TO SWITCH FROM SANDBOX TO PRODUCTION ───────────────────────────────────────
- *   1. In Wompi dashboard, get your PRODUCTION public key (pub_prod_...) and
- *      integrity secret (prod_integrity_...)
- *   2. Update in Vercel env vars:
+ * ─── TO SWITCH FROM SANDBOX TO PRODUCTION ───────────────────────────────────
+ *   1. In Wompi dashboard → Developers → Keys, copy PRODUCTION keys.
+ *   2. In Vercel dashboard update:
  *      - WOMPI_INTEGRITY_SECRET → prod_integrity_...
- *   3. Update in .env (or Vercel):
  *      - VITE_WOMPI_PUBLIC_KEY  → pub_prod_...
  *      - VITE_WOMPI_ENV         → production
- *   4. Re-deploy — no code changes needed.
+ *   3. Redeploy — no code changes needed.
  */
 
 import crypto from 'node:crypto'
 
-export default function handler(req, res) {
-  // CORS headers (allow requests from own domain)
+export default async function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
@@ -37,21 +36,36 @@ export default function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  const { reference, amountInCents, currency } = req.body ?? {}
+  // ── Body parsing (explicit, handles pre-parsed object OR raw string) ──────
+  let body = req.body
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body) } catch { body = {} }
+  }
+  if (!body || typeof body !== 'object') body = {}
+
+  const { reference, amountInCents, currency } = body
 
   if (!reference || !amountInCents || !currency) {
-    return res.status(400).json({ error: 'Missing: reference, amountInCents, currency' })
+    console.error('[wompi-signature] Missing fields:', { reference, amountInCents, currency })
+    return res.status(400).json({ error: 'Missing required fields: reference, amountInCents, currency' })
   }
 
   const secret = process.env.WOMPI_INTEGRITY_SECRET
   if (!secret) {
-    return res.status(500).json({ error: 'WOMPI_INTEGRITY_SECRET not configured in server environment' })
+    console.error('[wompi-signature] WOMPI_INTEGRITY_SECRET is not set in server environment')
+    return res.status(500).json({ error: 'WOMPI_INTEGRITY_SECRET not configured. Set it in Vercel → Settings → Environment Variables.' })
   }
+
+  // ── Integrity string: reference + amountInCents + currency + secret ────────
+  // All values as strings, NO separators — exactly as Wompi specifies.
+  const integrityString = `${reference}${amountInCents}${currency}${secret}`
 
   const signature = crypto
     .createHash('sha256')
-    .update(`${reference}${amountInCents}${currency}${secret}`)
+    .update(integrityString)
     .digest('hex')
+
+  console.log(`[wompi-signature] OK | ref=${reference} | amount=${amountInCents} | currency=${currency} | sig=${signature.slice(0, 12)}...`)
 
   return res.status(200).json({ signature })
 }
