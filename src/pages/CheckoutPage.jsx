@@ -76,34 +76,24 @@ export default function CheckoutPage() {
   const [newsletter, setNewsletter] = useState(false)
   const [firstName,  setFirstName]  = useState('')
   const [lastName,   setLastName]   = useState('')
-  const [cedula,     setCedula]     = useState('')
-  const [cedulaErr,  setCedulaErr]  = useState('')
+  const [docType,    setDocType]    = useState('CC')
+  const [docNumber,  setDocNumber]  = useState('')
   const [address,    setAddress]    = useState('')
   const [apt,        setApt]        = useState('')
   const [city,       setCity]       = useState('')
-  const [state,      setState]      = useState('Antioquia')
+  const [state,      setState]      = useState('')
   const [postal,     setPostal]     = useState('')
   const [phone,      setPhone]      = useState('')
   const [saveInfo,   setSaveInfo]   = useState(false)
   const [billing,    setBilling]    = useState(true)
 
   const [shipping,   setShipping]   = useState('fabrica')
-  const [payment,    setPayment]    = useState('credit')
   const [discount,    setDiscount]    = useState('')
   const [processing,  setProcessing]  = useState(false)
 
   /* ── Inline field validation errors ── */
   const [errors, setErrors] = useState({})
   const clearErr = key => setErrors(prev => ({ ...prev, [key]: '' }))
-
-  /* Credit card sub-form */
-  const [cardNum,     setCardNum]     = useState('')
-  const [cardExpiry,  setCardExpiry]  = useState('')
-  const [cardCvv,     setCardCvv]     = useState('')
-  const [cardHolder,  setCardHolder]  = useState('')
-  const [docType,     setDocType]     = useState('C.C.')
-  const [docNumber,   setDocNumber]   = useState('')
-  const [installments,setInstallments]= useState('')
 
   const shippingCost = SHIPPING_OPTIONS.find(o => o.id === shipping)?.price ?? 0
   const total = subtotal + shippingCost
@@ -112,14 +102,18 @@ export default function CheckoutPage() {
     e.preventDefault()
 
     // ── Inline field validation (no alert boxes) ──────────────────
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     const newErrors = {}
-    if (!email.trim())     newErrors.email     = 'Ingresa tu correo electrónico'
-    if (!firstName.trim()) newErrors.firstName = 'Este campo es obligatorio'
-    if (!lastName.trim())  newErrors.lastName  = 'Este campo es obligatorio'
-    if (cedulaErr)         newErrors.cedula    = cedulaErr
-    if (!address.trim())   newErrors.address   = 'Ingresa tu dirección de envío'
-    if (!city.trim())      newErrors.city      = 'Ingresa tu ciudad'
-    if (!phone.trim())     newErrors.phone     = 'Ingresa tu número de teléfono'
+    if (!email.trim())                       newErrors.email     = 'Ingresa tu correo electrónico'
+    else if (!emailRegex.test(email.trim())) newErrors.email     = 'Ingresa un correo electrónico válido'
+    if (!firstName.trim())                   newErrors.firstName = 'Este campo es obligatorio'
+    if (!lastName.trim())                    newErrors.lastName  = 'Este campo es obligatorio'
+    if (!docType)                            newErrors.docType   = 'Este campo es obligatorio'
+    if (!docNumber.trim())                   newErrors.docNumber = 'Este campo es obligatorio'
+    if (!address.trim())                     newErrors.address   = 'Ingresa tu dirección de envío'
+    if (!city.trim())                        newErrors.city      = 'Ingresa tu ciudad'
+    if (!state)                              newErrors.state     = 'Este campo es obligatorio'
+    if (!phone.trim())                       newErrors.phone     = 'Ingresa tu número de teléfono'
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
@@ -217,17 +211,6 @@ export default function CheckoutPage() {
     }
   }
 
-  function handleCedula(val) {
-    if (val && !/^\d*$/.test(val)) {
-      setCedulaErr('Este campo solo puede contener números.')
-      setErrors(prev => ({ ...prev, cedula: 'Este campo solo puede contener números.' }))
-    } else {
-      setCedulaErr('')
-      clearErr('cedula')
-    }
-    setCedula(val)
-  }
-
   if (items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
@@ -239,15 +222,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white">
-
-      {/* ── Sandbox mode banner ── */}
-      {WOMPI_ENV === 'sandbox' && (
-        <div className="bg-amber-50 border-b border-amber-200 text-center py-1.5 px-4">
-          <p className="font-sans text-[0.7rem] font-semibold text-amber-700 uppercase tracking-wide">
-            🧪 Modo prueba (Sandbox) — No se realizarán cargos reales
-          </p>
-        </div>
-      )}
 
       {/* ── Clean checkout header ── */}
       <header className="border-b border-brand-border">
@@ -342,17 +316,35 @@ export default function CheckoutPage() {
                     {errors.lastName && <p className="font-sans text-xs text-red-500 mt-1">{errors.lastName}</p>}
                   </div>
                 </div>
-                <div data-field-error={!!errors.cedula || undefined}>
-                  <input
-                    type="text"
-                    placeholder="Cédula / NIT"
-                    value={cedula}
-                    onChange={e => handleCedula(e.target.value)}
-                    className={`input-brand ${errors.cedula ? 'border-red-500 focus:border-red-500' : ''}`}
-                  />
-                  {errors.cedula && (
-                    <p className="font-sans text-xs text-red-500 mt-1">{errors.cedula}</p>
-                  )}
+                <div className="grid grid-cols-2 gap-3 items-start">
+                  <div data-field-error={!!errors.docType || undefined}>
+                    <div className="relative">
+                      <select
+                        className={`input-brand appearance-none pr-8 ${errors.docType ? 'border-red-500 focus:border-red-500' : ''}`}
+                        value={docType}
+                        onChange={e => { setDocType(e.target.value); clearErr('docType') }}
+                      >
+                        <option value="CC">C.C.</option>
+                        <option value="NIT">NIT</option>
+                        <option value="CE">C.E.</option>
+                        <option value="PAS">Pasaporte</option>
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                      </span>
+                    </div>
+                    {errors.docType && <p className="font-sans text-xs text-red-500 mt-1">{errors.docType}</p>}
+                  </div>
+                  <div data-field-error={!!errors.docNumber || undefined}>
+                    <input
+                      type="text"
+                      placeholder="Número de documento"
+                      value={docNumber}
+                      onChange={e => { setDocNumber(e.target.value); clearErr('docNumber') }}
+                      className={`input-brand ${errors.docNumber ? 'border-red-500 focus:border-red-500' : ''}`}
+                    />
+                    {errors.docNumber && <p className="font-sans text-xs text-red-500 mt-1">{errors.docNumber}</p>}
+                  </div>
                 </div>
                 <div data-field-error={!!errors.address || undefined}>
                   <input
@@ -378,18 +370,21 @@ export default function CheckoutPage() {
                     />
                     {errors.city && <p className="font-sans text-xs text-red-500 mt-1">{errors.city}</p>}
                   </div>
-                  <div className="relative">
-                    <select
-                      className="input-brand appearance-none pr-8"
-                      value={state}
-                      onChange={e => setState(e.target.value)}
-                    >
-                      <option value="">Provincia / Estado</option>
-                      {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
-                    </select>
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-                    </span>
+                  <div data-field-error={!!errors.state || undefined}>
+                    <div className="relative">
+                      <select
+                        className={`input-brand appearance-none pr-8 ${errors.state ? 'border-red-500 focus:border-red-500' : ''}`}
+                        value={state}
+                        onChange={e => { setState(e.target.value); clearErr('state') }}
+                      >
+                        <option value="">Departamento</option>
+                        {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                      </span>
+                    </div>
+                    {errors.state && <p className="font-sans text-xs text-red-500 mt-1">{errors.state}</p>}
                   </div>
                   <input
                     type="text" placeholder="Código postal (opci...)"
@@ -472,145 +467,25 @@ export default function CheckoutPage() {
               <p className="font-sans text-xs text-brand-black/50 mb-4">
                 Todas las transacciones son seguras y están encriptadas.
               </p>
-              <div className="border border-brand-border divide-y divide-brand-border">
-
-                {/* Tarjeta de crédito */}
-                <div>
-                  <label className={`flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${payment === 'credit' ? 'bg-brand-gray' : 'hover:bg-brand-gray/50'}`}>
-                    <div className="flex items-center gap-3">
-                      <RadioDot active={payment === 'credit'} />
-                      <span className="font-sans text-sm">Tarjeta de crédito</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 ml-4">
-                      <CardBadge>VISA</CardBadge>
-                      <CardBadge>MC</CardBadge>
-                      <CardBadge>AMEX</CardBadge>
-                      <CardBadge>DINERS</CardBadge>
-                    </div>
-                    <input type="radio" name="payment" value="credit" checked={payment === 'credit'} onChange={() => setPayment('credit')} className="sr-only" />
-                  </label>
-                  {payment === 'credit' && (
-                    <div className="bg-brand-gray px-4 pb-5 pt-3 space-y-3">
-                      <div className="relative">
-                        <input
-                          type="text" placeholder="Número de tarjeta"
-                          value={cardNum} onChange={e => setCardNum(e.target.value)}
-                          className="input-brand pr-10"
-                        />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/30">
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-                          </svg>
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <input
-                          type="text" placeholder="Fecha de vencimiento (MM / AA)"
-                          value={cardExpiry} onChange={e => setCardExpiry(e.target.value)}
-                          className="input-brand"
-                        />
-                        <div className="relative">
-                          <input
-                            type="text" placeholder="Código de seguridad"
-                            value={cardCvv} onChange={e => setCardCvv(e.target.value)}
-                            className="input-brand pr-10"
-                          />
-                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/30">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                              <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                            </svg>
-                          </span>
-                        </div>
-                      </div>
-                      <input
-                        type="text" placeholder="Nombre del titular"
-                        value={cardHolder} onChange={e => setCardHolder(e.target.value)}
-                        className="input-brand"
-                      />
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="relative">
-                          <select
-                            className="input-brand appearance-none pr-8"
-                            value={docType} onChange={e => setDocType(e.target.value)}
-                          >
-                            <option>C.C.</option><option>NIT</option>
-                            <option>C.E.</option><option>Pasaporte</option>
-                          </select>
-                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-                          </span>
-                        </div>
-                        <input
-                          type="text" placeholder="Número de documento"
-                          value={docNumber} onChange={e => setDocNumber(e.target.value)}
-                          className="input-brand"
-                        />
-                      </div>
-                      <div className="relative">
-                        <select
-                          className="input-brand appearance-none pr-8"
-                          value={installments} onChange={e => setInstallments(e.target.value)}
-                        >
-                          <option value="">Cuotas</option>
-                          {[1,2,3,6,12,18,24,36].map(n => (
-                            <option key={n} value={n}>{n} {n === 1 ? 'cuota' : 'cuotas'}</option>
-                          ))}
-                        </select>
-                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-brand-black/40">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-                        </span>
-                      </div>
-                      <p className="font-sans text-xs text-brand-black/40">
-                        Si hay intereses, los aplicará y cobrará tu banco.
-                      </p>
-                    </div>
-                  )}
+              <div className="border border-brand-border px-4 py-5">
+                <div className="flex items-center gap-3 mb-4">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="text-brand-black/50 flex-shrink-0">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                  <span className="font-sans text-sm text-brand-black/70">
+                    Serás redirigido a Wompi para completar tu pago de forma segura.
+                  </span>
                 </div>
-
-                {/* PSE */}
-                <label className={`flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${payment === 'pse' ? 'bg-brand-gray' : 'hover:bg-brand-gray/50'}`}>
-                  <div className="flex items-center gap-3">
-                    <RadioDot active={payment === 'pse'} />
-                    <span className="font-sans text-sm">Paga con PSE, Tarjetas o en Efectivo</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 ml-4">
-                    <CardBadge>PSE</CardBadge>
-                    <span className="font-sans text-xs text-brand-black/40">+2</span>
-                  </div>
-                  <input type="radio" name="payment" value="pse" checked={payment === 'pse'} onChange={() => setPayment('pse')} className="sr-only" />
-                </label>
-
-                {/* Sistecredito */}
-                <label className={`flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${payment === 'sistecredito' ? 'bg-brand-gray' : 'hover:bg-brand-gray/50'}`}>
-                  <div className="flex items-center gap-3">
-                    <RadioDot active={payment === 'sistecredito'} />
-                    <span className="font-sans text-sm">Sistecredito</span>
-                  </div>
-                  <span className="font-sans text-xs text-brand-black/50 ml-4 border border-brand-border px-2 py-0.5">sistecredito</span>
-                  <input type="radio" name="payment" value="sistecredito" checked={payment === 'sistecredito'} onChange={() => setPayment('sistecredito')} className="sr-only" />
-                </label>
-
-                {/* Addi */}
-                <label className={`flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${payment === 'addi' ? 'bg-brand-gray' : 'hover:bg-brand-gray/50'}`}>
-                  <div className="flex items-center gap-3">
-                    <RadioDot active={payment === 'addi'} />
-                    <span className="font-sans text-sm">Addi</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 ml-4">
-                    <CardBadge dark>Addi</CardBadge>
-                    <CardBadge>PSE</CardBadge>
-                  </div>
-                  <input type="radio" name="payment" value="addi" checked={payment === 'addi'} onChange={() => setPayment('addi')} className="sr-only" />
-                </label>
-
-                {/* Transferencia */}
-                <label className={`flex items-center px-4 py-3.5 cursor-pointer transition-colors ${payment === 'transfer' ? 'bg-brand-gray' : 'hover:bg-brand-gray/50'}`}>
-                  <div className="flex items-center gap-3">
-                    <RadioDot active={payment === 'transfer'} />
-                    <span className="font-sans text-sm">Pago por transferencia bancaria</span>
-                  </div>
-                  <input type="radio" name="payment" value="transfer" checked={payment === 'transfer'} onChange={() => setPayment('transfer')} className="sr-only" />
-                </label>
+                <div className="flex flex-wrap gap-2">
+                  <CardBadge>VISA</CardBadge>
+                  <CardBadge>MC</CardBadge>
+                  <CardBadge>AMEX</CardBadge>
+                  <CardBadge>DINERS</CardBadge>
+                  <CardBadge>PSE</CardBadge>
+                  <CardBadge>Nequi</CardBadge>
+                  <CardBadge>Bancolombia</CardBadge>
+                  <CardBadge>Efecty</CardBadge>
+                </div>
               </div>
             </section>
 
@@ -755,14 +630,6 @@ export default function CheckoutPage() {
 }
 
 /* ── Small helpers ─────────────────────────────────────────── */
-
-function RadioDot({ active }) {
-  return (
-    <div className="w-4 h-4 rounded-full border-2 border-brand-black flex items-center justify-center flex-shrink-0">
-      {active && <div className="w-2 h-2 rounded-full bg-brand-black" />}
-    </div>
-  )
-}
 
 function CardBadge({ children, dark }) {
   return (
