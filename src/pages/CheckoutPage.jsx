@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
+// ─── Wompi environment ─────────────────────────────────────────────────────
+// VITE_WOMPI_ENV controls which environment is active: "sandbox" | "production"
+// VITE_WOMPI_PUBLIC_KEY must match the environment:
+//   sandbox    → pub_stagtest_...
+//   production → pub_prod_...
+const WOMPI_PUBLIC_KEY = import.meta.env.VITE_WOMPI_PUBLIC_KEY ?? ''
+const WOMPI_ENV        = import.meta.env.VITE_WOMPI_ENV ?? 'sandbox'
+
 /**
  * Wompi integrity signature — ALWAYS via Vercel serverless /api/wompi-signature.
  *
@@ -131,19 +139,33 @@ export default function CheckoutPage() {
     // Wompi requires amount in COP centavos (COP × 100)
     const amountInCents = Math.round(total * 100)
 
-    // Debug logs — confirm values before sending to Wompi
-    console.log('[Wompi] Public key:', import.meta.env.VITE_WOMPI_PUBLIC_KEY)
-    console.log('[Wompi] Amount in cents:', amountInCents)
-    console.log('[Wompi] Reference:', reference)
+    // ── Wompi environment guard ──────────────────────────────────────────────
+    const publicKey = WOMPI_PUBLIC_KEY
 
-    // Guard: public key must be set
-    const publicKey = import.meta.env.VITE_WOMPI_PUBLIC_KEY
     if (!publicKey) {
-      console.error('[Wompi] VITE_WOMPI_PUBLIC_KEY is not set. Add it to your .env file.')
+      console.error('[Wompi] VITE_WOMPI_PUBLIC_KEY no está configurada. Agrega VITE_WOMPI_PUBLIC_KEY al archivo .env')
       setErrors({ _global: 'Error de configuración de pago. Contacta al administrador.' })
       setProcessing(false)
       return
     }
+
+    // Validate key prefix matches declared environment (prevents accidental cross-env calls)
+    const isSandboxKey = publicKey.startsWith('pub_stagtest_')
+    const isProdKey    = publicKey.startsWith('pub_prod_')
+    if (WOMPI_ENV === 'sandbox' && !isSandboxKey) {
+      console.warn('[Wompi] ADVERTENCIA: VITE_WOMPI_ENV=sandbox pero la llave no comienza con pub_stagtest_')
+    }
+    if (WOMPI_ENV === 'production' && !isProdKey) {
+      console.warn('[Wompi] ADVERTENCIA: VITE_WOMPI_ENV=production pero la llave no comienza con pub_prod_')
+    }
+    if (!isSandboxKey && !isProdKey) {
+      console.error('[Wompi] Llave pública inválida — debe comenzar con pub_stagtest_ o pub_prod_')
+      setErrors({ _global: 'Llave de pago inválida. Contacta al administrador.' })
+      setProcessing(false)
+      return
+    }
+
+    console.log(`[Wompi] env=${WOMPI_ENV} | key=${publicKey.slice(0, 20)}... | amount=${amountInCents} | ref=${reference}`)
 
     // Persist order for confirmation page (before redirect — Wompi clears React state)
     localStorage.setItem('bialy-pending-order', JSON.stringify({
@@ -184,7 +206,7 @@ export default function CheckoutPage() {
       params.set('customer-data:email',     email.trim())
       params.set('customer-data:phone-number', `57${phone.replace(/\D/g, '').slice(-10)}`)
 
-      console.log('[Wompi] Redirecting to:', `${wompiBase}?public-key=${publicKey}&amount-in-cents=${amountInCents}&reference=${reference}`)
+      console.log(`[Wompi] Redirigiendo → ${wompiBase}?public-key=${publicKey.slice(0,20)}...&amount-in-cents=${amountInCents}&reference=${reference}`)
       window.location.href = `${wompiBase}?${params.toString()}`
     } catch (err) {
       console.error('[Wompi] Error al iniciar pago:', err)
@@ -215,6 +237,15 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white">
+
+      {/* ── Sandbox mode banner ── */}
+      {WOMPI_ENV === 'sandbox' && (
+        <div className="bg-amber-50 border-b border-amber-200 text-center py-1.5 px-4">
+          <p className="font-sans text-[0.7rem] font-semibold text-amber-700 uppercase tracking-wide">
+            🧪 Modo prueba (Sandbox) — No se realizarán cargos reales
+          </p>
+        </div>
+      )}
 
       {/* ── Clean checkout header ── */}
       <header className="border-b border-brand-border">
