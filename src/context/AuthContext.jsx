@@ -19,27 +19,49 @@ export function AuthProvider({ children }) {
     })
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+
+      // On first sign-in (Magic Link or OAuth), ensure customer record exists
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user) {
+        const u = session.user
+        supabase.from('customers').upsert({
+          email:     u.email,
+          full_name: u.user_metadata?.full_name ?? u.user_metadata?.name ?? '',
+        }, { onConflict: 'email', ignoreDuplicates: true })
+          .then(({ error }) => {
+            if (error) console.warn('[AuthContext] customers upsert:', error.message)
+          })
+      }
     })
 
     return () => subscription.unsubscribe()
   }, [])
 
-  // ── Sign In ──────────────────────────────────────────────────────────────
-  async function signIn(email, password) {
+  // ── Magic Link (passwordless) ────────────────────────────────────────────
+  async function signInWithMagicLink(email) {
     if (!supabase) throw new Error('Supabase no está configurado')
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/cuenta/callback` },
+    })
     if (error) throw error
-    return data
   }
 
-  // ── Sign Up ──────────────────────────────────────────────────────────────
+  // ── Google OAuth ─────────────────────────────────────────────────────────
+  async function signInWithGoogle() {
+    if (!supabase) throw new Error('Supabase no está configurado')
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/cuenta/callback` },
+    })
+    if (error) throw error
+  }
+
+  // ── Sign Up (kept for compatibility — primary flow is Magic Link) ────────
   async function signUp(email, password, profile) {
     if (!supabase) throw new Error('Supabase no está configurado')
-
-    // Pass full_name as user metadata — picked up by the DB trigger handle_new_user()
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -47,7 +69,6 @@ export function AuthProvider({ children }) {
     })
     if (error) throw error
 
-    // Also try a direct upsert as belt-and-suspenders (trigger is the primary path)
     if (data.user) {
       const { error: upsertErr } = await supabase.from('customers').upsert({
         email,
@@ -56,12 +77,8 @@ export function AuthProvider({ children }) {
         document_type:   profile?.document_type   ?? '',
         document_number: profile?.document_number ?? '',
       }, { onConflict: 'email', ignoreDuplicates: false })
-      if (upsertErr) {
-        // Non-fatal: trigger already handled the insert
-        console.warn('[AuthContext] customers upsert warning (non-fatal):', upsertErr.message)
-      }
+      if (upsertErr) console.warn('[AuthContext] customers upsert:', upsertErr.message)
     }
-
     return data
   }
 
@@ -83,7 +100,10 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut, getCustomer }}>
+    <AuthContext.Provider value={{
+      user, session, loading,
+      signInWithMagicLink, signInWithGoogle, signUp, signOut, getCustomer,
+    }}>
       {children}
     </AuthContext.Provider>
   )

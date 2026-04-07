@@ -121,14 +121,16 @@ export default async function handler(req, res) {
     // ── Check if order already exists ────────────────────────────────────
     const existing = await supabaseFetch(
       'GET',
-      `/orders?wompi_transaction_id=eq.${encodeURIComponent(wompiTxId)}&select=id,status`,
+      `/orders?wompi_transaction_id=eq.${encodeURIComponent(wompiTxId)}&select=id,status,stock_decremented`,
       null, serviceKey, supabaseUrl
     )
 
     if (existing.status === 200 && Array.isArray(existing.data) && existing.data.length > 0) {
-      // Order exists — update status only
-      const orderId    = existing.data[0].id
-      const prevStatus = existing.data[0].status
+      // Order exists — update status
+      const orderId           = existing.data[0].id
+      const prevStatus        = existing.data[0].status
+      const alreadyDecremented = existing.data[0].stock_decremented
+
       if (prevStatus !== status) {
         await supabaseFetch(
           'PATCH',
@@ -137,8 +139,27 @@ export default async function handler(req, res) {
           serviceKey, supabaseUrl
         )
         console.log(`[wompi-webhook] Updated order ${orderId}: ${prevStatus} → ${status}`)
-      } else {
-        console.log(`[wompi-webhook] Order ${orderId} already has status ${status} — no-op`)
+      }
+
+      // Decrement stock if APPROVED and not already done by save-order
+      if (status === 'APPROVED' && !alreadyDecremented) {
+        // Fetch order_items to know what to decrement
+        const itemsRes = await supabaseFetch(
+          'GET',
+          `/order_items?order_id=eq.${orderId}&select=product_slug,quantity`,
+          null, serviceKey, supabaseUrl
+        )
+        const orderItems = Array.isArray(itemsRes.data) ? itemsRes.data : []
+        for (const item of orderItems) {
+          if (!item.product_slug) continue
+          await supabaseFetch(
+            'POST', '/rpc/decrement_stock',
+            { p_product_slug: item.product_slug, p_quantity: item.quantity ?? 1 },
+            serviceKey, supabaseUrl
+          )
+        }
+        await supabaseFetch('PATCH', `/orders?id=eq.${orderId}`, { stock_decremented: true }, serviceKey, supabaseUrl)
+        console.log(`[wompi-webhook] Stock decremented for order ${orderId}`)
       }
     } else {
       // No order found — create minimal record from event data

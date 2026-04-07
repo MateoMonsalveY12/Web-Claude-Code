@@ -249,9 +249,17 @@ export default function CollectionPage({ category: propCategory }) {
               </div>
             ) : (
               <div className={gridClass(gridView)}>
-                {products.map((p, i) => (
-                  <ProductCard key={p.id} product={p} aosDelay={i * 40} />
-                ))}
+                {[...products]
+                  .sort((a, b) => {
+                    // Available products first, sold-out last
+                    const aOut = a.is_available === false
+                    const bOut = b.is_available === false
+                    if (aOut === bOut) return 0
+                    return aOut ? 1 : -1
+                  })
+                  .map((p, i) => (
+                    <ProductCard key={p.id} product={p} aosDelay={i * 40} />
+                  ))}
               </div>
             )}
           </div>

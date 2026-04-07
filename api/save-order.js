@@ -53,6 +53,31 @@ function supabaseRequest(method, path, body, serviceKey, supabaseUrl) {
   })
 }
 
+// ── Atomically decrement stock for each item via RPC, then mark order ────────
+async function decrementStock(items, orderId, serviceKey, supabaseUrl) {
+  try {
+    // Call decrement_stock RPC for each unique product slug
+    for (const item of items) {
+      if (!item.slug) continue
+      const qty = item.quantity ?? 1
+      await supabaseRequest(
+        'POST', '/rpc/decrement_stock',
+        { p_product_slug: item.slug, p_quantity: qty },
+        serviceKey, supabaseUrl
+      )
+    }
+    // Mark order as stock-decremented to prevent double decrement from webhook
+    await supabaseRequest(
+      'PATCH', `/orders?id=eq.${orderId}`,
+      { stock_decremented: true },
+      serviceKey, supabaseUrl
+    )
+    console.log(`[save-order] Stock decremented for order ${orderId}`)
+  } catch (err) {
+    console.warn('[save-order] Stock decrement warning (non-fatal):', err.message)
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
@@ -133,6 +158,11 @@ export default async function handler(req, res) {
       if (itemsRes.status !== 201) {
         console.warn('[save-order] order_items insert warning:', JSON.stringify(itemsRes.data))
       }
+    }
+
+    // ── Decrement stock on APPROVED orders (idempotent via stock_decremented flag) ──
+    if (status === 'APPROVED' && items.length > 0) {
+      await decrementStock(items, orderId, serviceKey, supabaseUrl)
     }
 
     console.log(`[save-order] Saved order ${orderId} | tx: ${wompi_transaction_id}`)

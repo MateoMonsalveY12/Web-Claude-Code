@@ -7,7 +7,8 @@ function fmt(n) {
 }
 
 export default function ProductCard({ product, aosDelay = 0 }) {
-  const { name, slug, price, compare_price, images, badge, colors, sizes } = product
+  const { name, slug, price, compare_price, images, badge, colors, sizes, is_available } = product
+  const soldOut = is_available === false
   const img  = images?.[0] || '/images/product-1.jpg'
   const img2 = images?.[1] || null
 
@@ -28,6 +29,7 @@ export default function ProductCard({ product, aosDelay = 0 }) {
   function handleQuickAdd(e) {
     e.preventDefault()
     e.stopPropagation()
+    if (soldOut) return
     addToCart(product, hoverSize || sizes?.[0] || null, colors?.[0] || null)
   }
 
@@ -69,15 +71,24 @@ export default function ProductCard({ product, aosDelay = 0 }) {
           )}
         </Link>
 
+        {/* Sold out overlay */}
+        {soldOut && (
+          <div className="absolute inset-0 z-20 bg-white/60 flex items-center justify-center pointer-events-none">
+            <span className="font-sans text-[0.65rem] font-bold uppercase tracking-widest text-brand-black/50 bg-white/90 px-3 py-1 border border-brand-border">
+              AGOTADO
+            </span>
+          </div>
+        )}
+
         {/* Badge */}
-        {badge && (
+        {badge && !soldOut && (
           <span className={`absolute top-3 left-3 z-10 ${badge.startsWith('REBAJAS') ? 'badge-promo' : 'badge-new'}`}>
             {badge}
           </span>
         )}
 
-        {/* Size chips — slide up from bottom on hover */}
-        {sizes?.length > 0 && (
+        {/* Size chips — slide up from bottom on hover (hidden when sold out) */}
+        {sizes?.length > 0 && !soldOut && (
           <div className="absolute bottom-0 left-0 right-0 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
             <div className="bg-white/96 px-2 pt-2 pb-2 flex gap-1 items-end">
               <div className="flex flex-wrap gap-1 flex-1">
@@ -106,8 +117,8 @@ export default function ProductCard({ product, aosDelay = 0 }) {
           </div>
         )}
 
-        {/* Fallback when no sizes */}
-        {(!sizes || sizes.length === 0) && (
+        {/* Fallback when no sizes (hidden when sold out) */}
+        {(!sizes || sizes.length === 0) && !soldOut && (
           <div className="absolute bottom-0 left-0 right-0 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out">
             <button
               onClick={handleQuickAdd}

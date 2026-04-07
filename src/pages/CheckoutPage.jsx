@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
-import AuthModal from '../components/AuthModal'
 
 // ─── Wompi environment ─────────────────────────────────────────────────────
 // VITE_WOMPI_ENV controls which environment is active: "sandbox" | "production"
@@ -71,7 +70,6 @@ export default function CheckoutPage() {
   const { items, subtotal, cartCount } = useCart()
   const { user, getCustomer } = useAuth()
   const navigate = useNavigate()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   useEffect(() => { document.title = 'Checkout | Bialy' }, [])
 
@@ -252,7 +250,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
       {/* ── Clean checkout header ── */}
       <header className="border-b border-brand-border">
@@ -296,7 +293,7 @@ export default function CheckoutPage() {
                 {!user && (
                   <button
                     type="button"
-                    onClick={() => setAuthModalOpen(true)}
+                    onClick={() => navigate('/cuenta/login', { state: { from: '/checkout' } })}
                     className="font-sans text-xs underline underline-offset-2 text-brand-black hover:opacity-60 transition-opacity"
                   >
                     Iniciar sesión
@@ -318,7 +315,7 @@ export default function CheckoutPage() {
                   ¿Ya tienes cuenta?{' '}
                   <button
                     type="button"
-                    onClick={() => setAuthModalOpen(true)}
+                    onClick={() => navigate('/cuenta/login', { state: { from: '/checkout' } })}
                     className="underline text-brand-black hover:opacity-60"
                   >
                     Inicia sesión para autocompletar tus datos

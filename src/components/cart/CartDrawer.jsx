@@ -43,9 +43,16 @@ export default function CartDrawer() {
       >
         {/* ── Header ── */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-brand-border flex-shrink-0">
-          <h2 className="font-display tracking-heading text-xl">
-            Carrito ({cartCount})
-          </h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="font-sans text-[0.7rem] font-semibold uppercase tracking-widest">
+              CARRITO
+            </h2>
+            {cartCount > 0 && (
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-brand-black text-white font-sans text-[0.6rem] font-bold leading-none">
+                {cartCount}
+              </span>
+            )}
+          </div>
           <button
             onClick={closeCart}
             className="nav-icon-btn text-brand-black"

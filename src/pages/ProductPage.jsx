@@ -75,11 +75,13 @@ export default function ProductPage() {
     </div>
   )
 
-  const { name, price, compare_price, images, sizes, colors, badge, category, description } = product
+  const { name, price, compare_price, images, sizes, colors, badge, category, description, is_available } = product
+  const soldOut  = is_available === false
   const discount = compare_price ? Math.round((1 - price / compare_price) * 100) : null
   const relatedFiltered = related.filter(p => p.slug !== slug).slice(0, 4)
 
   function handleAddToCart() {
+    if (soldOut) return
     if (sizes?.length > 0 && !selectedSize) { setSizeError(true); return }
     setSizeError(false)
     addToCart(product, selectedSize, selectedColor)
@@ -88,6 +90,7 @@ export default function ProductPage() {
   }
 
   function handleBuyNow() {
+    if (soldOut) return
     if (sizes?.length > 0 && !selectedSize) { setSizeError(true); return }
     setSizeError(false)
     addToCart(product, selectedSize, selectedColor)
@@ -233,6 +236,11 @@ export default function ProductPage() {
 
             {/* CTAs — desktop */}
             <div className="hidden md:flex flex-col gap-3 mb-6">
+              {soldOut ? (
+                <div className="w-full py-3.5 text-center font-sans text-sm font-semibold uppercase tracking-button bg-brand-gray text-brand-black/40 border border-brand-border cursor-not-allowed">
+                  Producto agotado
+                </div>
+              ) : (
               <button
                 onClick={handleAddToCart}
                 className={`btn-primary w-full text-center transition-all duration-300 ${added ? 'bg-green-800 border-green-800' : ''}`}
@@ -244,9 +252,12 @@ export default function ProductPage() {
                   </span>
                 ) : 'Agregar al carrito'}
               </button>
+              )}
+              {!soldOut && (
               <button onClick={handleBuyNow} className="btn-ghost w-full text-center">
                 Comprar ahora
               </button>
+              )}
               <a
                 href="https://wa.me/573001234567"
                 target="_blank"
@@ -325,17 +336,23 @@ export default function ProductPage() {
 
       {/* ── Sticky mobile CTA ────────────────────────────────────────── */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-brand-border px-4 py-3 flex gap-3 md:hidden">
-        <button
-          onClick={handleAddToCart}
-          className={`flex-1 btn-primary text-center ${added ? 'bg-green-800 border-green-800' : ''}`}
-        >
-          {added ? (
-            <span className="flex items-center justify-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Agregado
-            </span>
-          ) : 'Agregar al carrito'}
-        </button>
+        {soldOut ? (
+          <div className="flex-1 py-3 text-center font-sans text-sm font-semibold uppercase tracking-button bg-brand-gray text-brand-black/40 border border-brand-border cursor-not-allowed">
+            Producto agotado
+          </div>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            className={`flex-1 btn-primary text-center ${added ? 'bg-green-800 border-green-800' : ''}`}
+          >
+            {added ? (
+              <span className="flex items-center justify-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Agregado
+              </span>
+            ) : 'Agregar al carrito'}
+          </button>
+        )}
         <a
           href="https://wa.me/573001234567"
           target="_blank"

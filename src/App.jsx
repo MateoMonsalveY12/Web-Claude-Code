@@ -14,9 +14,12 @@ import CollectionPage       from './pages/CollectionPage.jsx'
 import TallasGrandesPage    from './pages/TallasGrandesPage.jsx'
 import ProductPage          from './pages/ProductPage.jsx'
 import CartPage             from './pages/CartPage.jsx'
-import CheckoutPage         from './pages/CheckoutPage.jsx'
-import OrderConfirmationPage from './pages/OrderConfirmationPage.jsx'
-import AccountOrdersPage    from './pages/AccountOrdersPage.jsx'
+import CheckoutPage                from './pages/CheckoutPage.jsx'
+import OrderConfirmationPage       from './pages/OrderConfirmationPage.jsx'
+import AccountOrdersPage          from './pages/AccountOrdersPage.jsx'
+import AccountLoginPage           from './pages/AccountLoginPage.jsx'
+import AccountCallbackPage        from './pages/AccountCallbackPage.jsx'
+import AccountCompleteProfilePage from './pages/AccountCompleteProfilePage.jsx'
 
 export const HEADER_H = { mobile: 96, desktop: 112 }
 
@@ -96,6 +99,9 @@ export default function App() {
           <Route path="/checkout"                      element={<CheckoutPage />} />
           <Route path="/order-confirmation"            element={<OrderConfirmationPage />} />
           <Route path="/mi-cuenta/pedidos"             element={<AccountOrdersPage />} />
+          <Route path="/cuenta/login"                  element={<AccountLoginPage />} />
+          <Route path="/cuenta/callback"               element={<AccountCallbackPage />} />
+          <Route path="/cuenta/completar-perfil"       element={<AccountCompleteProfilePage />} />
         </Routes>
       </main>
 

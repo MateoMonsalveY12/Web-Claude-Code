@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
-import AuthModal from '../AuthModal'
 
 const COLLECTIONS_MENU = {
   cols: [
@@ -104,8 +103,8 @@ export default function Navbar() {
 
   const { cartCount, openCart } = useCart()
   const { user, signOut } = useAuth()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [userMenuOpen,  setUserMenuOpen]  = useState(false)
+  const navigate = useNavigate()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef(null)
 
   // Close user dropdown on outside click
@@ -239,7 +238,7 @@ export default function Navbar() {
                 </>
               ) : (
                 <button
-                  onClick={() => setAuthModalOpen(true)}
+                  onClick={() => navigate('/cuenta/login')}
                   className={`nav-icon-btn transition-colors duration-300 ${textColor}`}
                   aria-label="Iniciar sesión"
                 >
@@ -293,8 +292,6 @@ export default function Navbar() {
           onMouseEnter={cancelClose}
         />
       </header>
-
-      <AuthModal open={authModalOpen} onClose={() => setAuthModalOpen(false)} />
 
       {/* Backdrop — purely visual, pointer-events: none so it never intercepts events */}
       <div
@@ -380,7 +377,7 @@ export default function Navbar() {
             </div>
           ) : (
             <button
-              onClick={() => { setMobileOpen(false); setAuthModalOpen(true) }}
+              onClick={() => { setMobileOpen(false); navigate('/cuenta/login') }}
               className="btn-primary w-full text-center py-3 text-sm"
             >
               Iniciar sesión
