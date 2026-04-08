@@ -21,14 +21,20 @@ import AccountLoginPage           from './pages/AccountLoginPage.jsx'
 import AccountCallbackPage        from './pages/AccountCallbackPage.jsx'
 import AccountCompleteProfilePage from './pages/AccountCompleteProfilePage.jsx'
 
+import AdminLoginPage    from './pages/admin/AdminLoginPage.jsx'
+import AdminOrdersPage   from './pages/admin/AdminOrdersPage.jsx'
+import AdminProductsPage from './pages/admin/AdminProductsPage.jsx'
+import AdminReviewsPage  from './pages/admin/AdminReviewsPage.jsx'
+
 export const HEADER_H = { mobile: 96, desktop: 112 }
 
 export default function App() {
   const { pathname } = useLocation()
+  const isAdmin              = pathname.startsWith('/admin')
   const isHome               = pathname === '/'
   const isCheckout           = pathname === '/checkout'
   const isOrderConfirmation  = pathname === '/order-confirmation'
-  const isMinimalHeader      = isCheckout || isOrderConfirmation
+  const isMinimalHeader      = isAdmin || isCheckout || isOrderConfirmation
 
   // Pages with their own full-bleed hero that handle header clearance internally
   const isFullBleedHero = !isMinimalHeader && (isHome || pathname === '/collections/tallas-grandes')
@@ -56,10 +62,10 @@ export default function App() {
     <>
       <ScrollToTop />
 
-      {/* Global cart drawer — available on every page */}
-      <CartDrawer />
+      {/* Global cart drawer — not rendered in admin */}
+      {!isAdmin && <CartDrawer />}
 
-      {/* Fixed header — minimal-header pages manage their own header */}
+      {/* Fixed header — admin + minimal-header pages manage their own header */}
       {!isMinimalHeader && (
         <div className="fixed inset-x-0 top-0 z-50">
           <div
@@ -81,6 +87,13 @@ export default function App() {
         'pt-24 md:pt-28'
       }>
         <Routes>
+          {/* ── Admin ── */}
+          <Route path="/admin/login"      element={<AdminLoginPage />} />
+          <Route path="/admin"            element={<AdminOrdersPage />} />
+          <Route path="/admin/productos"  element={<AdminProductsPage />} />
+          <Route path="/admin/resenas"    element={<AdminReviewsPage />} />
+
+          {/* ── Storefront ── */}
           <Route path="/"                              element={<Home />} />
           <Route path="/collections"                   element={<Navigate to="/collections/nueva-coleccion" replace />} />
           <Route path="/collections/nueva-coleccion"   element={<CollectionPage category="nueva-coleccion" />} />
@@ -89,7 +102,7 @@ export default function App() {
           <Route path="/collections/basicas"           element={<CollectionPage category="blusas" />} />
           <Route path="/collections/jeans"             element={<CollectionPage category="jeans" />} />
           <Route path="/collections/pantalones"        element={<CollectionPage category="jeans" />} />
-          <Route path="/collections/rebajas"            element={<CollectionPage category="rebajas" />} />
+          <Route path="/collections/rebajas"           element={<CollectionPage category="rebajas" />} />
           <Route path="/collections/accesorios"        element={<CollectionPage category="accesorios" />} />
           <Route path="/collections/basicos-esenciales" element={<CollectionPage category="basicos-esenciales" />} />
           <Route path="/collections/temporada-calida"  element={<CollectionPage category="temporada-calida" />} />
