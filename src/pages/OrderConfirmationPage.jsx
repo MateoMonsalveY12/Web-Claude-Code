@@ -104,14 +104,24 @@ function OrderItems({ items }) {
 
 function OrderTotals({ order }) {
   if (!order) return null
-  const shippingCost = order.shippingCost ?? 0
-  const total        = order.total ?? (order.subtotal + shippingCost)
+  const shippingCost    = order.shippingCost    ?? 0
+  const discountAmount  = order.discountAmount  ?? 0
+  const discountCode    = order.discountCode    ?? null
+  const total           = order.total ?? (order.subtotal + shippingCost - discountAmount)
   return (
     <div className="space-y-2.5 pt-2 border-t border-brand-border">
       <div className="flex justify-between">
         <span className="font-sans text-sm text-brand-black/60">Subtotal</span>
         <span className="font-sans text-sm">{fmt(order.subtotal)}</span>
       </div>
+      {discountAmount > 0 && (
+        <div className="flex justify-between text-green-700">
+          <span className="font-sans text-sm">
+            Descuento{discountCode ? ` (${discountCode})` : ''}
+          </span>
+          <span className="font-sans text-sm font-semibold">−{fmt(discountAmount)}</span>
+        </div>
+      )}
       <div className="flex justify-between">
         <span className="font-sans text-sm text-brand-black/60">Envío</span>
         <span className={`font-sans text-sm font-semibold ${shippingCost === 0 ? 'text-green-700' : ''}`}>
@@ -133,7 +143,7 @@ function OrderTotals({ order }) {
 
 export default function OrderConfirmationPage() {
   const [searchParams] = useSearchParams()
-  const { clearCart }  = useCart()
+  const { clearCart, removeDiscount } = useCart()
 
   // ?id= is the Wompi transaction ID — Wompi appends it on redirect back
   // We only read 'id'. Any extra params Wompi adds (env, etc.) are ignored.
@@ -157,9 +167,9 @@ export default function OrderConfirmationPage() {
 
     try {
       const body = {
-        wompi_transaction_id: tx?.id       ?? transactionId,
+        wompi_transaction_id: tx?.id        ?? transactionId,
         wompi_reference:      tx?.reference ?? localOrder?.reference ?? '',
-        status:               tx?.status   ?? 'APPROVED',
+        status:               tx?.status    ?? 'APPROVED',
         total_amount:         tx?.amount_in_cents
                                 ? tx.amount_in_cents / 100
                                 : localOrder?.total ?? 0,
@@ -172,8 +182,11 @@ export default function OrderConfirmationPage() {
           city:    localOrder?.city    ?? '',
           state:   localOrder?.state   ?? '',
         },
-        shipping_option: localOrder?.shippingLabel ?? localOrder?.shipping ?? '',
-        shipping_cost:   localOrder?.shippingCost ?? 0,
+        shipping_option:  localOrder?.shippingLabel   ?? localOrder?.shipping ?? '',
+        shipping_cost:    localOrder?.shippingCost    ?? 0,
+        // ── Discount — stored as discountCode/discountAmount in bialy-pending-order
+        discount_code:    localOrder?.discountCode    || null,
+        discount_amount:  localOrder?.discountAmount  || 0,
         ...(localOrder?.customerId ? { customer_id: localOrder.customerId } : {}),
         items: (localOrder?.items ?? []).map(i => ({
           name:       i.name,
@@ -211,6 +224,7 @@ export default function OrderConfirmationPage() {
     if (!transactionId) {
       if (order) {
         clearCart()
+        removeDiscount() // ← always clear coupon after purchase
         setStatus('APPROVED')
         persistOrder(null, order)
       } else {
@@ -236,9 +250,10 @@ export default function OrderConfirmationPage() {
         const txStatus = tx?.status ?? 'ERROR'
         setStatus(txStatus)
 
-        // Clear cart and persist to Supabase on confirmed payments
+        // Clear cart + coupon and persist to Supabase on confirmed payments
         if (txStatus === 'APPROVED' || txStatus === 'PENDING') {
           clearCart()
+          removeDiscount() // ← clear coupon so it can't be reused from the cart
           persistOrder(tx, order)
         }
       } catch (err) {
@@ -246,6 +261,7 @@ export default function OrderConfirmationPage() {
         // Graceful fallback: if we have local order data, show approved
         if (order) {
           clearCart()
+          removeDiscount()
           setStatus('APPROVED')
           persistOrder(null, order)
         } else {
