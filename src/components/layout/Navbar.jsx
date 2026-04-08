@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
 import { useAuth } from '../../context/AuthContext'
+import BialyLogo from '../shared/BialyLogo.jsx'
 
 const COLLECTIONS_MENU = {
   cols: [
@@ -149,10 +150,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link
             to="/"
-            className={`font-sans text-sm md:text-base tracking-[0.18em] font-semibold uppercase transition-colors duration-300 z-10 ${textColor}`}
+            className={`transition-colors duration-300 z-10 ${textColor}`}
             aria-label="Ir al inicio"
           >
-            TU MARCA
+            <BialyLogo className="h-8 md:h-9 w-auto" />
           </Link>
 
           {/* Desktop nav */}
@@ -313,7 +314,9 @@ export default function Navbar() {
         aria-label="Menú de navegación"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-brand-border">
-          <Link to="/" className="font-sans text-sm tracking-[0.18em] font-semibold uppercase">TU MARCA</Link>
+          <Link to="/" aria-label="Ir al inicio">
+            <BialyLogo className="h-8 w-auto" />
+          </Link>
           <button onClick={() => setMobileOpen(false)} aria-label="Cerrar menú">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>

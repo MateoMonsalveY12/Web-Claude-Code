@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import BialyLogo from '../components/shared/BialyLogo.jsx'
 
 // ─── Wompi environment ─────────────────────────────────────────────────────
 // VITE_WOMPI_ENV controls which environment is active: "sandbox" | "production"
@@ -55,10 +56,10 @@ const DEPARTMENTS = [
 ]
 
 const SHIPPING_OPTIONS = [
-  { id: 'fabrica',      label: 'Recoge en TU MARCA Punto de Fábrica',  price: 0 },
-  { id: 'laureles',     label: 'Recoge en Tienda TU MARCA Laureles',   price: 0 },
-  { id: 'oviedo',       label: 'Recoge en Tienda TU MARCA Oviedo',     price: 0 },
-  { id: 'sandiego',     label: 'Recoge en Tienda TU MARCA Sandiego',   price: 0 },
+  { id: 'fabrica',      label: 'Recoge en Bialy Punto de Fábrica',    price: 0 },
+  { id: 'laureles',     label: 'Recoge en Tienda Bialy Laureles',      price: 0 },
+  { id: 'oviedo',       label: 'Recoge en Tienda Bialy Oviedo',        price: 0 },
+  { id: 'sandiego',     label: 'Recoge en Tienda Bialy Sandiego',      price: 0 },
   { id: 'coordinadora', label: 'Coordinadora',                         price: 15000, sublabel: '3 a 7 días hábiles' },
 ]
 
@@ -255,11 +256,8 @@ export default function CheckoutPage() {
       <header className="border-b border-brand-border">
         <div className="max-w-[1100px] mx-auto px-5 py-4 flex items-center">
           <div className="flex-1" />
-          <Link
-            to="/"
-            className="font-display tracking-[0.22em] text-[1.75rem] md:text-[2rem] uppercase text-brand-black"
-          >
-            TU MARCA
+          <Link to="/" aria-label="Bialy Colombia — Ir al inicio">
+            <BialyLogo className="h-10 md:h-12 w-auto text-brand-black" />
           </Link>
           <div className="flex-1 flex justify-end">
             <Link to="/cart" className="relative p-1.5 text-brand-black hover:opacity-60 transition-opacity">
