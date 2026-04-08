@@ -6,7 +6,7 @@ import EditorialSplit from '../components/home/EditorialSplit.jsx'
 import PromoEditorial from '../components/home/PromoEditorial.jsx'
 import FeaturedProducts from '../components/home/FeaturedProducts.jsx'
 import TestimonialsCarousel from '../components/home/TestimonialsCarousel.jsx'
-import InstagramGrid from '../components/home/InstagramGrid.jsx'
+import InstagramFeed from '../components/home/InstagramFeed.jsx'
 
 export default function Home() {
   useEffect(() => { document.title = 'Bialy | Moda Femenina Colombiana' }, [])
@@ -19,7 +19,7 @@ export default function Home() {
       <PromoEditorial />
       <FeaturedProducts />
       <TestimonialsCarousel />
-      <InstagramGrid />
+      <InstagramFeed />
     </>
   )
 }
