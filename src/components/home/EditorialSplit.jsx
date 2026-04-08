@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
+import { useHomeSections } from '../../hooks/useHomeSections.js'
 
 export default function EditorialSplit() {
+  const { sections } = useHomeSections()
+
   return (
     <section className="bg-brand-white overflow-hidden">
       <div className="editorial-split-grid">
@@ -8,14 +11,14 @@ export default function EditorialSplit() {
         <div className="editorial-images-wrapper" data-aos="fade-right">
           <div className="editorial-img-main-wrap">
             <img
-              src="/images/vestido-eleccion-1.jpg"
+              src={sections.vestido_eleccion_1}
               alt="Colección vestidos"
               loading="lazy"
             />
           </div>
           <div className="editorial-img-accent-wrap" data-aos="zoom-in" data-aos-delay="350">
             <img
-              src="/images/vestido-eleccion-2.jpg"
+              src={sections.vestido_eleccion_2}
               alt="Detalle editorial"
               loading="lazy"
             />

@@ -1,6 +1,9 @@
 import { Link } from 'react-router-dom'
+import { useHomeSections } from '../../hooks/useHomeSections.js'
 
 export default function PromoEditorial() {
+  const { sections } = useHomeSections()
+
   return (
     <section className="bg-brand-gray overflow-hidden" aria-labelledby="promo-title">
       <div className="grid grid-cols-1 md:grid-cols-2">
@@ -13,7 +16,7 @@ export default function PromoEditorial() {
           data-aos-duration="900"
         >
           <img
-            src="/images/detalle-tela.jpg"
+            src={sections.detalle_tela}
             alt="Colección especial"
             className="absolute inset-0 w-full h-full object-cover object-center"
             loading="lazy"

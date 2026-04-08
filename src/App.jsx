@@ -25,6 +25,7 @@ import AdminLoginPage    from './pages/admin/AdminLoginPage.jsx'
 import AdminOrdersPage   from './pages/admin/AdminOrdersPage.jsx'
 import AdminProductsPage from './pages/admin/AdminProductsPage.jsx'
 import AdminReviewsPage  from './pages/admin/AdminReviewsPage.jsx'
+import AdminHomePage     from './pages/admin/AdminHomePage.jsx'
 
 export const HEADER_H = { mobile: 96, desktop: 112 }
 
@@ -91,6 +92,7 @@ export default function App() {
           <Route path="/admin/login"      element={<AdminLoginPage />} />
           <Route path="/admin"            element={<AdminOrdersPage />} />
           <Route path="/admin/productos"  element={<AdminProductsPage />} />
+          <Route path="/admin/home"       element={<AdminHomePage />} />
           <Route path="/admin/resenas"    element={<AdminReviewsPage />} />
 
           {/* ── Storefront ── */}

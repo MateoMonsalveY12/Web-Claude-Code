@@ -1,27 +1,15 @@
 import { Link } from 'react-router-dom'
+import { useHomeSections } from '../../hooks/useHomeSections.js'
 
-const COLLECTIONS = [
-  {
-    title: 'Vestidos',
-    subtitle: 'Para cada ocasión',
-    href: '/collections/vestidos',
-    image: '/images/estilo-casual.jpg',
-  },
-  {
-    title: 'Blusas',
-    subtitle: 'Elegancia versátil',
-    href: '/collections/blusas',
-    image: '/images/estilo-elegante.jpg',
-  },
-  {
-    title: 'Tallas Grandes',
-    subtitle: 'Moda para todas',
-    href: '/collections/tallas-grandes',
-    image: '/images/estilo-romantico.jpg',
-  },
+const COLLECTIONS_META = [
+  { title: 'Vestidos',      subtitle: 'Para cada ocasión', href: '/collections/vestidos',        sectionKey: 'estilo_casual' },
+  { title: 'Blusas',        subtitle: 'Elegancia versátil', href: '/collections/blusas',          sectionKey: 'estilo_elegante' },
+  { title: 'Tallas Grandes', subtitle: 'Moda para todas',  href: '/collections/tallas-grandes',  sectionKey: 'estilo_romantico' },
 ]
 
 export default function FeaturedCollections() {
+  const { sections } = useHomeSections()
+
   return (
     <section id="collections" className="py-10 md:py-16 bg-brand-white">
       <div className="container-brand">
@@ -45,7 +33,7 @@ export default function FeaturedCollections() {
 
         {/* Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
-          {COLLECTIONS.map((col, i) => (
+          {COLLECTIONS_META.map((col, i) => (
             <Link
               key={col.title}
               to={col.href}
@@ -55,7 +43,7 @@ export default function FeaturedCollections() {
             >
               <div className="aspect-[3/4] overflow-hidden">
                 <img
-                  src={col.image}
+                  src={sections[col.sectionKey]}
                   alt={col.title}
                   loading="lazy"
                   className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"

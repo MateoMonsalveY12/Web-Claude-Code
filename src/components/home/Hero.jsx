@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useHomeSections } from '../../hooks/useHomeSections.js'
 
-const SLIDES = [
-  { id: 'slide-1', src: '/images/hero-bialy-1.jpg', kenBurns: 'hero-ken-burns-a', origin: '55% 50%' },
-  { id: 'slide-2', src: '/images/hero-bialy-2.jpg', kenBurns: 'hero-ken-burns-b', origin: '45% 55%' },
+const SLIDE_META = [
+  { id: 'slide-1', sectionKey: 'hero_1', kenBurns: 'hero-ken-burns-a', origin: '55% 50%' },
+  { id: 'slide-2', sectionKey: 'hero_2', kenBurns: 'hero-ken-burns-b', origin: '45% 55%' },
 ]
 
 export default function Hero() {
   const [active, setActive] = useState(0)
+  const { sections } = useHomeSections()
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setActive(a => (a + 1) % SLIDES.length)
+      setActive(a => (a + 1) % SLIDE_META.length)
     }, 7000)
     return () => clearInterval(timer)
   }, [])
@@ -26,14 +28,14 @@ export default function Hero() {
       aria-label="Hero principal"
     >
       {/* ── Background slides ─────────────────────────────────── */}
-      {SLIDES.map((slide, i) => (
+      {SLIDE_META.map((slide, i) => (
         <div
           key={slide.id}
           className="hero-slide absolute inset-0 overflow-hidden"
           style={{ opacity: active === i ? 1 : 0 }}
         >
           <img
-            src={slide.src}
+            src={sections[slide.sectionKey]}
             alt=""
             aria-hidden="true"
             className="hero-slide-img w-full h-full object-cover object-center"
@@ -91,7 +93,7 @@ export default function Hero() {
 
       {/* Slide dots */}
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2">
-        {SLIDES.map((_, i) => (
+        {SLIDE_META.map((_, i) => (
           <button
             key={i}
             onClick={() => setActive(i)}
