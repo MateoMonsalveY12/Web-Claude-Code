@@ -105,7 +105,7 @@ export default async function handler(req, res) {
   const {
     wompi_transaction_id, wompi_reference, status, total_amount,
     customer_name, customer_email, customer_phone, customer_id,
-    shipping_address, shipping_option, items = [],
+    shipping_address, shipping_option, shipping_cost, items = [],
   } = body
 
   if (!wompi_transaction_id || !status) {
@@ -135,6 +135,7 @@ export default async function handler(req, res) {
       customer_phone,
       shipping_address: shipping_address ?? {},
       shipping_option,
+      shipping_cost:    shipping_cost ?? 0,
       ...(customer_id ? { customer_id } : {}),
     }
     const orderRes = await supabaseRequest('POST', '/orders', orderPayload, serviceKey, supabaseUrl)
@@ -169,19 +170,24 @@ export default async function handler(req, res) {
       await decrementStock(items, orderId, serviceKey, supabaseUrl)
     }
 
-    // ── Send confirmation email (non-blocking) ───────────────────────────────
+    // ── Send confirmation email (awaited so Vercel doesn't terminate early) ────
     if (status === 'APPROVED') {
-      sendOrderConfirmedEmail({
-        customerName:    customer_name,
-        customerEmail:   customer_email,
-        wompiReference:  wompi_reference,
-        orderId,
-        items,
-        subtotal:        items.reduce((s, i) => s + (i.price ?? 0) * (i.quantity ?? 1), 0),
-        totalAmount:     total_amount,
-        shippingAddress: shipping_address ?? {},
-        shippingOption:  shipping_option,
-      }).catch(e => console.warn('[save-order] Email warning:', e.message))
+      try {
+        await sendOrderConfirmedEmail({
+          customerName:    customer_name,
+          customerEmail:   customer_email,
+          wompiReference:  wompi_reference,
+          orderId,
+          items,
+          subtotal:        items.reduce((s, i) => s + (i.price ?? 0) * (i.quantity ?? 1), 0),
+          shippingCost:    shipping_cost ?? 0,
+          totalAmount:     total_amount,
+          shippingAddress: shipping_address ?? {},
+          shippingOption:  shipping_option,
+        })
+      } catch (emailErr) {
+        console.warn('[save-order] Email warning (non-fatal):', emailErr.message)
+      }
     }
 
     console.log(`[save-order] Saved order ${orderId} | tx: ${wompi_transaction_id}`)

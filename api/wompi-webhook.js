@@ -171,16 +171,21 @@ export default async function handler(req, res) {
           `/order_items?order_id=eq.${orderId}&select=*`, null, serviceKey, supabaseUrl)
         const orderItems2 = Array.isArray(itemsRes2.data) ? itemsRes2.data : []
         if (orderData) {
-          sendOrderConfirmedEmail({
-            customerName:    orderData.customer_name,
-            customerEmail:   orderData.customer_email,
-            wompiReference:  orderData.wompi_reference,
-            orderId,
-            items:           orderItems2,
-            totalAmount:     orderData.total_amount,
-            shippingAddress: orderData.shipping_address ?? {},
-            shippingOption:  orderData.shipping_option,
-          }).catch(e => console.warn('[wompi-webhook] Email warning:', e.message))
+          try {
+            await sendOrderConfirmedEmail({
+              customerName:    orderData.customer_name,
+              customerEmail:   orderData.customer_email,
+              wompiReference:  orderData.wompi_reference,
+              orderId,
+              items:           orderItems2,
+              shippingCost:    orderData.shipping_cost ?? 0,
+              totalAmount:     orderData.total_amount,
+              shippingAddress: orderData.shipping_address ?? {},
+              shippingOption:  orderData.shipping_option,
+            })
+          } catch (emailErr) {
+            console.warn('[wompi-webhook] Email warning (non-fatal):', emailErr.message)
+          }
         }
       }
     } else {

@@ -173,6 +173,7 @@ export default function OrderConfirmationPage() {
           state:   localOrder?.state   ?? '',
         },
         shipping_option: localOrder?.shippingLabel ?? localOrder?.shipping ?? '',
+        shipping_cost:   localOrder?.shippingCost ?? 0,
         ...(localOrder?.customerId ? { customer_id: localOrder.customerId } : {}),
         items: (localOrder?.items ?? []).map(i => ({
           name:       i.name,
