@@ -383,7 +383,56 @@ export async function sendOrderDeliveredEmail(data) {
   })
 }
 
-// ── HTTP handler — POST /api/emails?type=confirmed|shipped|delivered ────────
+// ── Contact form email ─────────────────────────────────────────────────────
+
+const SUBJECT_LABELS = {
+  'consulta-producto': 'Consulta sobre un producto',
+  'estado-pedido':     'Estado de mi pedido',
+  'cambio-devolucion': 'Cambio o devolución',
+  'otro':              'Otro',
+}
+
+function buildContactHtml({ name, email, subject, message }) {
+  const subjectLabel = SUBJECT_LABELS[subject] || subject
+  const ts = new Date().toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'full', timeStyle: 'short' })
+  return wrap(`
+  <tr>
+    <td style="padding:32px 40px 8px;">
+      <h2 style="margin:0 0 4px; font-family:Georgia,'Times New Roman',serif; font-size:20px; font-weight:400; color:#111111;">
+        Nuevo mensaje de contacto
+      </h2>
+      <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#666666;">${ts}</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:20px 40px 0;">
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+        <tr style="border-bottom:1px solid #eeeeee;">
+          <td style="padding:10px 0; width:120px; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#999999; vertical-align:top;">De</td>
+          <td style="padding:10px 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#111111;">${name} &lt;<a href="mailto:${email}" style="color:#111111;">${email}</a>&gt;</td>
+        </tr>
+        <tr style="border-bottom:1px solid #eeeeee;">
+          <td style="padding:10px 0; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#999999; vertical-align:top;">Asunto</td>
+          <td style="padding:10px 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#111111;">${subjectLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding:16px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:#999999; vertical-align:top;">Mensaje</td>
+          <td style="padding:16px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#111111; line-height:1.7; white-space:pre-wrap;">${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:28px 40px 8px;">
+      <a href="mailto:${email}?subject=Re: [Bialy Contacto] ${subjectLabel}"
+         style="display:inline-block; background:#000000; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; padding:12px 28px;">
+        Responder a ${name.split(' ')[0]}
+      </a>
+    </td>
+  </tr>`)
+}
+
+// ── HTTP handler — POST /api/emails?type=confirmed|shipped|delivered|contact ─
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
@@ -400,8 +449,19 @@ export default async function handler(req, res) {
       await sendOrderShippedEmail(body)
     } else if (type === 'delivered') {
       await sendOrderDeliveredEmail(body)
+    } else if (type === 'contact') {
+      const { name, email, subject, message } = body
+      if (!name || !email || !subject || !message)
+        return res.status(400).json({ error: 'name, email, subject y message son requeridos' })
+      const subjectLabel = SUBJECT_LABELS[subject] || subject
+      await sendEmail({
+        to:      'bialycomercial@gmail.com',
+        subject: `[Bialy Contacto] ${subjectLabel} — ${name}`,
+        html:    buildContactHtml({ name, email, subject, message }),
+        tag:     'contact',
+      })
     } else {
-      return res.status(400).json({ error: 'type must be confirmed|shipped|delivered' })
+      return res.status(400).json({ error: 'type must be confirmed|shipped|delivered|contact' })
     }
     return res.status(200).json({ ok: true })
   } catch (err) {

@@ -21,6 +21,13 @@ import AccountLoginPage           from './pages/AccountLoginPage.jsx'
 import AccountCallbackPage        from './pages/AccountCallbackPage.jsx'
 import AccountCompleteProfilePage from './pages/AccountCompleteProfilePage.jsx'
 
+import NotFoundPage      from './pages/NotFoundPage.jsx'
+import ContactPage       from './pages/ContactPage.jsx'
+import FaqPage           from './pages/FaqPage.jsx'
+import SizeGuidePage     from './pages/SizeGuidePage.jsx'
+import PrivacyPage       from './pages/PrivacyPage.jsx'
+import TermsPage         from './pages/TermsPage.jsx'
+
 import AdminLoginPage    from './pages/admin/AdminLoginPage.jsx'
 import AdminOrdersPage   from './pages/admin/AdminOrdersPage.jsx'
 import AdminProductsPage from './pages/admin/AdminProductsPage.jsx'
@@ -119,6 +126,16 @@ export default function App() {
           <Route path="/cuenta/login"                  element={<AccountLoginPage />} />
           <Route path="/cuenta/callback"               element={<AccountCallbackPage />} />
           <Route path="/cuenta/completar-perfil"       element={<AccountCompleteProfilePage />} />
+
+          {/* ── Info pages ── */}
+          <Route path="/contacto"       element={<ContactPage />} />
+          <Route path="/faq"            element={<FaqPage />} />
+          <Route path="/guia-tallas"    element={<SizeGuidePage />} />
+          <Route path="/privacidad"     element={<PrivacyPage />} />
+          <Route path="/terminos"       element={<TermsPage />} />
+
+          {/* ── 404 catch-all ── */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
 

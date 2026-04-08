@@ -186,13 +186,13 @@ export default function Navbar() {
             >
               Tallas Grandes
             </Link>
-            <a
-              href="#footer-contact"
+            <Link
+              to="/contacto"
               className={`nav-link transition-colors duration-300 ${textColor}`}
               onMouseEnter={closeSubmenu}
             >
               Contacto
-            </a>
+            </Link>
           </nav>
 
           {/* Icons */}
@@ -362,9 +362,9 @@ export default function Navbar() {
           <Link to="/collections/tallas-grandes" className="flex items-center py-4 border-b border-brand-border nav-link text-brand-black">
             Tallas Grandes
           </Link>
-          <a href="#footer-contact" className="flex items-center py-4 border-b border-brand-border nav-link text-brand-black" onClick={() => setMobileOpen(false)}>
+          <Link to="/contacto" className="flex items-center py-4 border-b border-brand-border nav-link text-brand-black" onClick={() => setMobileOpen(false)}>
             Contacto
-          </a>
+          </Link>
         </div>
 
         <div className="px-5 pb-8 pt-4 border-t border-brand-border space-y-3">
