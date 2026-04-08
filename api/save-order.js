@@ -106,6 +106,7 @@ export default async function handler(req, res) {
     wompi_transaction_id, wompi_reference, status, total_amount,
     customer_name, customer_email, customer_phone, customer_id,
     shipping_address, shipping_option, shipping_cost, items = [],
+    discount_code, discount_amount,
   } = body
 
   if (!wompi_transaction_id || !status) {
@@ -133,9 +134,11 @@ export default async function handler(req, res) {
       customer_name,
       customer_email,
       customer_phone,
-      shipping_address: shipping_address ?? {},
+      shipping_address:  shipping_address ?? {},
       shipping_option,
-      shipping_cost:    shipping_cost ?? 0,
+      shipping_cost:     shipping_cost    ?? 0,
+      discount_code:     discount_code    || null,
+      discount_amount:   discount_amount  || 0,
       ...(customer_id ? { customer_id } : {}),
     }
     const orderRes = await supabaseRequest('POST', '/orders', orderPayload, serviceKey, supabaseUrl)
@@ -168,6 +171,32 @@ export default async function handler(req, res) {
     // ── Decrement stock + increment total_sold on APPROVED orders ───────────────
     if (status === 'APPROVED' && items.length > 0) {
       await decrementStock(items, orderId, serviceKey, supabaseUrl)
+    }
+
+    // ── Mark discount code as used ───────────────────────────────────────────
+    if (status === 'APPROVED' && discount_code) {
+      try {
+        // Get current code to read assigned_email and usage_count
+        const dcRes = await supabaseRequest('GET',
+          `/discount_codes?code=eq.${encodeURIComponent(discount_code)}&select=usage_count,assigned_email`,
+          null, serviceKey, supabaseUrl)
+        const dc = Array.isArray(dcRes.data) ? dcRes.data[0] : null
+        if (dc) {
+          await supabaseRequest('PATCH',
+            `/discount_codes?code=eq.${encodeURIComponent(discount_code)}`,
+            { usage_count: (dc.usage_count || 0) + 1, used_at: new Date().toISOString(), used_by_order_id: orderId },
+            serviceKey, supabaseUrl)
+          if (dc.assigned_email) {
+            await supabaseRequest('PATCH',
+              `/newsletter_subscribers?email=eq.${encodeURIComponent(dc.assigned_email)}`,
+              { first_order_discount_used: true },
+              serviceKey, supabaseUrl)
+          }
+        }
+        console.log(`[save-order] Discount code ${discount_code} marked used for order ${orderId}`)
+      } catch (discountErr) {
+        console.warn('[save-order] Discount mark warning (non-fatal):', discountErr.message)
+      }
     }
 
     // ── Send confirmation email (awaited so Vercel doesn't terminate early) ────

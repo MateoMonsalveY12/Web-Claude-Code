@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import BialyLogo from '../components/shared/BialyLogo.jsx'
@@ -70,7 +70,8 @@ function fmt(n) {
 export default function CheckoutPage() {
   const { items, subtotal, cartCount } = useCart()
   const { user, getCustomer } = useAuth()
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
+  const location  = useLocation()
 
   useEffect(() => { document.title = 'Checkout | Bialy' }, [])
 
@@ -110,15 +111,75 @@ export default function CheckoutPage() {
   const [billing,    setBilling]    = useState(true)
 
   const [shipping,   setShipping]   = useState('fabrica')
-  const [discount,    setDiscount]    = useState('')
   const [processing,  setProcessing]  = useState(false)
+
+  // Discount state
+  const [discountInput,  setDiscountInput]  = useState(location.state?.discountCode || '')
+  const [discountStatus, setDiscountStatus] = useState('idle') // idle | validating | applied | error
+  const [discountData,   setDiscountData]   = useState(null)   // { code, amount, message }
+  const [discountMsg,    setDiscountMsg]    = useState('')
+  const prevEmailRef = useRef('')
+
+  async function applyDiscount(codeArg, emailArg) {
+    const code = (codeArg ?? discountInput).trim().toUpperCase()
+    const em   = (emailArg ?? email).trim()
+    if (!code) return
+    setDiscountStatus('validating')
+    setDiscountMsg('')
+    try {
+      const res  = await fetch('/api/admin?action=validate-discount', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ code, email: em || undefined, subtotal }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error')
+      if (data.valid) {
+        setDiscountData({ code, amount: data.discount_amount, message: data.message })
+        setDiscountStatus('applied')
+        setDiscountMsg(data.message)
+      } else {
+        setDiscountData(null)
+        setDiscountStatus('error')
+        setDiscountMsg(data.message || 'Código no válido')
+      }
+    } catch {
+      setDiscountStatus('error')
+      setDiscountMsg('Error al validar el código')
+    }
+  }
+
+  function removeDiscount() {
+    setDiscountData(null)
+    setDiscountStatus('idle')
+    setDiscountInput('')
+    setDiscountMsg('')
+  }
+
+  // Auto-validate if code came from cart page
+  useEffect(() => {
+    if (location.state?.discountCode) applyDiscount(location.state.discountCode, '')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Re-validate when email changes and a code is applied
+  useEffect(() => {
+    const trimmed = email.trim()
+    if (discountStatus === 'applied' && discountData?.code && trimmed && trimmed !== prevEmailRef.current) {
+      prevEmailRef.current = trimmed
+      applyDiscount(discountData.code, trimmed)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [email])
+
+  const discountAmount = discountData?.amount ?? 0
 
   /* ── Inline field validation errors ── */
   const [errors, setErrors] = useState({})
   const clearErr = key => setErrors(prev => ({ ...prev, [key]: '' }))
 
   const shippingCost = SHIPPING_OPTIONS.find(o => o.id === shipping)?.price ?? 0
-  const total = subtotal + shippingCost
+  const total = subtotal + shippingCost - discountAmount
 
   async function handlePayment(e) {
     e.preventDefault()
@@ -196,6 +257,8 @@ export default function CheckoutPage() {
       items: items.map(i => ({ ...i })),
       subtotal,
       shippingCost,
+      discountCode:   discountData?.code   || null,
+      discountAmount: discountData?.amount || 0,
       total,
       shipping,
       shippingLabel: SHIPPING_OPTIONS.find(o => o.id === shipping)?.label,
@@ -627,16 +690,38 @@ export default function CheckoutPage() {
             </div>
 
             {/* Discount */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Código de descuento"
-                value={discount}
-                onChange={e => setDiscount(e.target.value)}
-                className="input-brand flex-1"
-              />
-              <button className="btn-ghost whitespace-nowrap">Aplicar</button>
-            </div>
+            {discountStatus === 'applied' ? (
+              <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-3">
+                <div>
+                  <p className="font-sans text-xs font-semibold text-green-800 uppercase tracking-button">{discountData.code}</p>
+                  <p className="font-sans text-xs text-green-700">{discountMsg}</p>
+                </div>
+                <button onClick={removeDiscount} className="font-sans text-xs text-green-700 underline hover:text-green-900">Quitar</button>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Código de descuento"
+                    value={discountInput}
+                    onChange={e => { setDiscountInput(e.target.value.toUpperCase()); if (discountStatus === 'error') setDiscountStatus('idle') }}
+                    onKeyDown={e => e.key === 'Enter' && applyDiscount()}
+                    className="input-brand flex-1 uppercase"
+                  />
+                  <button
+                    onClick={() => applyDiscount()}
+                    disabled={discountStatus === 'validating'}
+                    className="btn-ghost whitespace-nowrap disabled:opacity-60"
+                  >
+                    {discountStatus === 'validating' ? '…' : 'Aplicar'}
+                  </button>
+                </div>
+                {discountStatus === 'error' && (
+                  <p className="font-sans text-xs text-red-500">{discountMsg}</p>
+                )}
+              </div>
+            )}
 
             {/* Summary */}
             <div className="space-y-2.5 pt-4 border-t border-brand-border">
@@ -644,6 +729,12 @@ export default function CheckoutPage() {
                 <span className="font-sans text-sm text-brand-black/60">Subtotal</span>
                 <span className="font-sans text-sm">{fmt(subtotal)}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between items-center text-green-700">
+                  <span className="font-sans text-sm">Descuento</span>
+                  <span className="font-sans text-sm font-semibold">−{fmt(discountAmount)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="font-sans text-sm text-brand-black/60 flex items-center gap-1">
                   Envío

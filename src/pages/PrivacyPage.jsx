@@ -14,8 +14,8 @@ export default function PrivacyPage() {
 
   return (
     <div className="bg-brand-white min-h-screen">
-      <section className="bg-brand-gray border-b border-brand-border">
-        <div className="container-brand py-12 md:py-16">
+      <section className="bg-brand-gray border-b border-brand-border -mt-24 md:-mt-28">
+        <div className="container-brand pt-28 md:pt-36 pb-10 md:pb-14">
           <p className="eyebrow mb-3">Legal</p>
           <h1 className="section-title mb-2">Política de Privacidad</h1>
           <p className="font-sans text-sm text-brand-black/40">Última actualización: Abril de 2026</p>

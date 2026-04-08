@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useProduct } from '../hooks/useProduct.js'
 import { useProducts } from '../hooks/useProducts.js'
@@ -40,6 +40,15 @@ const TRUST = [
   },
 ]
 
+const SIZE_GUIDE_ROWS = [
+  { size: 'XS',  busto: '80–83',  cintura: '60–63',  cadera: '87–90',  largo: '95–98' },
+  { size: 'S',   busto: '84–87',  cintura: '64–67',  cadera: '91–94',  largo: '96–99' },
+  { size: 'M',   busto: '88–92',  cintura: '68–72',  cadera: '95–99',  largo: '97–100' },
+  { size: 'L',   busto: '93–97',  cintura: '73–77',  cadera: '100–104', largo: '98–101' },
+  { size: 'XL',  busto: '98–103', cintura: '78–83',  cadera: '105–110', largo: '99–102' },
+  { size: 'XXL', busto: '104–110', cintura: '84–90', cadera: '111–117', largo: '100–103' },
+]
+
 const ACCORDION_ITEMS = [
   { id: 'size',     title: 'Guía de tallas',    content: 'XS = talla 6 · S = talla 8 · M = talla 10 · L = talla 12 · XL = talla 14. Si estás entre dos tallas, elige la más grande para mayor comodidad.' },
   { id: 'material', title: 'Materiales y cuidados', content: 'Lavar a mano o ciclo delicado. No usar blanqueador. Planchar a temperatura baja. Ver etiqueta interior.' },
@@ -57,6 +66,15 @@ export default function ProductPage() {
   const [openAccordion, setAccordion] = useState(null)
   const [added, setAdded]           = useState(false)
   const [sizeError, setSizeError]   = useState(false)
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false)
+  const sizeGuideRef = useRef(null)
+
+  useEffect(() => {
+    if (!sizeGuideOpen) return
+    function onKey(e) { if (e.key === 'Escape') setSizeGuideOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [sizeGuideOpen])
 
   const { products: related } = useProducts({ category: product?.category, limit: 5 })
 
@@ -216,7 +234,10 @@ export default function ProductPage() {
                     )}
                     {sizeError ? 'Elige una talla' : 'Talla'}
                   </p>
-                  <button className="font-sans text-xs text-brand-black/40 underline underline-offset-2 hover:text-brand-black transition-colors">
+                  <button
+                    onClick={() => setSizeGuideOpen(true)}
+                    className="font-sans text-xs text-brand-black/40 underline underline-offset-2 hover:text-brand-black transition-colors"
+                  >
                     Guía de tallas
                   </button>
                 </div>
@@ -259,7 +280,7 @@ export default function ProductPage() {
               </button>
               )}
               <a
-                href="https://wa.me/573001234567"
+                href="https://wa.me/573102232188"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 font-sans text-xs font-semibold uppercase tracking-button text-brand-black/50 hover:text-brand-black transition-colors py-2"
@@ -354,7 +375,7 @@ export default function ProductPage() {
           </button>
         )}
         <a
-          href="https://wa.me/573001234567"
+          href="https://wa.me/573102232188"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-center w-12 h-12 bg-[#25D366] text-white"
@@ -365,6 +386,65 @@ export default function ProductPage() {
       </div>
       {/* Bottom padding to clear sticky CTA on mobile */}
       <div className="h-20 md:hidden" />
+
+      {/* Size guide modal */}
+      {sizeGuideOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+          onClick={e => { if (e.target === e.currentTarget) setSizeGuideOpen(false) }}
+        >
+          <div className="absolute inset-0 bg-black/40" aria-hidden="true" />
+          <div
+            ref={sizeGuideRef}
+            className="relative bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border sticky top-0 bg-white z-10">
+              <h2 className="font-sans text-sm font-semibold uppercase tracking-button">Guía de tallas</h2>
+              <button
+                onClick={() => setSizeGuideOpen(false)}
+                className="w-8 h-8 flex items-center justify-center text-brand-black/50 hover:text-brand-black transition-colors"
+                aria-label="Cerrar"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            {/* Table */}
+            <div className="p-6">
+              <p className="font-sans text-xs text-brand-black/50 mb-4">Medidas en centímetros (cm). Si estás entre dos tallas, elige la más grande.</p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-brand-black">
+                      {['Talla','Busto','Cintura','Cadera','Largo'].map(h => (
+                        <th key={h} className="pb-2 pr-4 font-sans text-[0.65rem] font-semibold uppercase tracking-button text-brand-black/50 whitespace-nowrap">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {SIZE_GUIDE_ROWS.map(row => (
+                      <tr key={row.size} className="border-b border-brand-border">
+                        <td className="py-3 pr-4 font-sans text-sm font-semibold text-brand-black">{row.size}</td>
+                        <td className="py-3 pr-4 font-sans text-sm text-brand-black/70">{row.busto}</td>
+                        <td className="py-3 pr-4 font-sans text-sm text-brand-black/70">{row.cintura}</td>
+                        <td className="py-3 pr-4 font-sans text-sm text-brand-black/70">{row.cadera}</td>
+                        <td className="py-3 pr-4 font-sans text-sm text-brand-black/70">{row.largo}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="font-sans text-xs text-brand-black/40 mt-5 leading-relaxed">
+                ¿Dudas? Escríbenos por{' '}
+                <a href="https://wa.me/573102232188" target="_blank" rel="noopener noreferrer" className="underline hover:text-brand-black">WhatsApp</a>{' '}
+                y te ayudamos a encontrar tu talla ideal.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

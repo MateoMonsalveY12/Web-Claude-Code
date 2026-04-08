@@ -20,8 +20,9 @@
  */
 
 import https from 'node:https'
+import crypto from 'node:crypto'
 import { verifyAdminSession, buildSessionCookie, clearSessionCookie } from './_admin-auth.js'
-import { sendOrderShippedEmail, sendOrderDeliveredEmail } from './emails.js'
+import { sendOrderShippedEmail, sendOrderDeliveredEmail, sendWelcomeDiscountEmail } from './emails.js'
 
 const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://sxkvwebjctxjixjitpuk.supabase.co'
 const VALID_STATUSES = ['PAGO_APROBADO', 'EMPACANDO', 'EN_CAMINO', 'ENTREGADO']
@@ -469,6 +470,162 @@ async function actionHomeUpdateImage(req, res, serviceKey) {
   }
 }
 
+// ── Public (unauthenticated) action helpers ───────────────────────────────────
+
+function generateCouponCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+  let suffix = ''
+  for (let i = 0; i < 6; i++) suffix += chars[Math.floor(Math.random() * chars.length)]
+  return `BIALY10-${suffix}`
+}
+
+async function actionNewsletterSubscribe(req, res, serviceKey) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' })
+  const { email, source = 'website' } = parseBody(req)
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return res.status(400).json({ error: 'Email inválido' })
+
+  if (!serviceKey) return res.status(500).json({ error: 'Server not configured' })
+
+  try {
+    // Check if already subscribed
+    const existing = await sb('GET', `/newsletter_subscribers?email=eq.${encodeURIComponent(email)}&select=email,welcome_coupon_code,active`, null, serviceKey)
+    if (existing.status === 200 && Array.isArray(existing.data) && existing.data.length > 0) {
+      const sub = existing.data[0]
+      return res.status(200).json({ success: true, status: 'already_subscribed', coupon_code: sub.welcome_coupon_code || null })
+    }
+
+    // Generate coupon code and ensure uniqueness (retry on collision)
+    let code
+    for (let attempt = 0; attempt < 5; attempt++) {
+      code = generateCouponCode()
+      const check = await sb('GET', `/discount_codes?code=eq.${encodeURIComponent(code)}&select=code`, null, serviceKey)
+      if (!Array.isArray(check.data) || check.data.length === 0) break
+    }
+
+    const now = new Date().toISOString()
+
+    // Insert discount_code
+    await sb('POST', '/discount_codes', {
+      code,
+      type:             'percentage',
+      value:            10,
+      active:           true,
+      usage_limit:      1,
+      usage_count:      0,
+      valid_for:        'first_order',
+      min_order_amount: 0,
+      assigned_email:   email,
+      created_at:       now,
+    }, serviceKey)
+
+    // Insert newsletter_subscriber
+    await sb('POST', '/newsletter_subscribers', {
+      email,
+      subscribed_at:          now,
+      active:                 true,
+      source,
+      welcome_coupon_code:    code,
+      welcome_coupon_sent_at: now,
+      first_order_discount_used: false,
+    }, serviceKey)
+
+    // Send welcome email (non-fatal)
+    try { await sendWelcomeDiscountEmail({ email, code }) } catch (e) {
+      console.warn('[admin:newsletter-subscribe] Email warning:', e.message)
+    }
+
+    console.log(`[admin:newsletter-subscribe] ${email} → ${code}`)
+    return res.status(200).json({ success: true, status: 'subscribed', coupon_code: code })
+  } catch (err) {
+    console.error('[admin:newsletter-subscribe]', err.message)
+    return res.status(500).json({ error: err.message })
+  }
+}
+
+async function actionValidateDiscount(req, res, serviceKey) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' })
+  const { code, email, subtotal = 0 } = parseBody(req)
+  if (!code) return res.status(400).json({ valid: false, message: 'Código requerido' })
+  if (!serviceKey) return res.status(500).json({ error: 'Server not configured' })
+
+  try {
+    const r = await sb('GET', `/discount_codes?code=eq.${encodeURIComponent(code.trim().toUpperCase())}&select=*`, null, serviceKey)
+    if (r.status !== 200 || !Array.isArray(r.data) || r.data.length === 0)
+      return res.status(200).json({ valid: false, message: 'Código no válido' })
+
+    const dc = r.data[0]
+    if (!dc.active)                         return res.status(200).json({ valid: false, message: 'Este código no está activo' })
+    if (dc.usage_count >= dc.usage_limit)   return res.status(200).json({ valid: false, message: 'Este código ya fue utilizado' })
+    if (subtotal < (dc.min_order_amount || 0))
+      return res.status(200).json({ valid: false, message: `Pedido mínimo ${dc.min_order_amount.toLocaleString('es-CO')} COP` })
+
+    // Email match check (only when email provided and code has assigned_email)
+    if (email && dc.assigned_email && dc.assigned_email.toLowerCase() !== email.trim().toLowerCase())
+      return res.status(200).json({ valid: false, message: 'Este código no pertenece a este correo' })
+
+    // first_order check
+    if (dc.valid_for === 'first_order' && dc.assigned_email) {
+      const subR = await sb('GET', `/newsletter_subscribers?email=eq.${encodeURIComponent(dc.assigned_email)}&select=first_order_discount_used`, null, serviceKey)
+      const sub = Array.isArray(subR.data) ? subR.data[0] : null
+      if (sub?.first_order_discount_used)
+        return res.status(200).json({ valid: false, message: 'Este código ya fue aplicado en un pedido anterior' })
+    }
+
+    const discount_amount = dc.type === 'percentage'
+      ? Math.round(subtotal * dc.value / 100)
+      : Math.min(dc.value, subtotal)
+
+    return res.status(200).json({
+      valid:          true,
+      discount_type:  dc.type,
+      discount_value: dc.value,
+      discount_amount,
+      message:        `${dc.type === 'percentage' ? dc.value + '%' : '$ ' + dc.value.toLocaleString('es-CO')} de descuento aplicado`,
+    })
+  } catch (err) {
+    console.error('[admin:validate-discount]', err.message)
+    return res.status(500).json({ error: err.message })
+  }
+}
+
+async function actionMarkDiscountUsed(req, res, serviceKey) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' })
+  const { code, order_id } = parseBody(req)
+  if (!code || !order_id) return res.status(400).json({ error: 'code and order_id required' })
+  if (!serviceKey) return res.status(500).json({ error: 'Server not configured' })
+
+  try {
+    // Get current code data
+    const r = await sb('GET', `/discount_codes?code=eq.${encodeURIComponent(code)}&select=*`, null, serviceKey)
+    if (r.status !== 200 || !Array.isArray(r.data) || r.data.length === 0)
+      return res.status(404).json({ error: 'Code not found' })
+
+    const dc = r.data[0]
+    const now = new Date().toISOString()
+
+    // Increment usage_count and record usage
+    await sb('PATCH', `/discount_codes?code=eq.${encodeURIComponent(code)}`, {
+      usage_count:      (dc.usage_count || 0) + 1,
+      used_at:          now,
+      used_by_order_id: order_id,
+    }, serviceKey)
+
+    // Mark first_order_discount_used on subscriber
+    if (dc.assigned_email) {
+      await sb('PATCH', `/newsletter_subscribers?email=eq.${encodeURIComponent(dc.assigned_email)}`, {
+        first_order_discount_used: true,
+      }, serviceKey)
+    }
+
+    console.log(`[admin:mark-discount-used] ${code} → order ${order_id}`)
+    return res.status(200).json({ ok: true })
+  } catch (err) {
+    console.error('[admin:mark-discount-used]', err.message)
+    return res.status(500).json({ error: err.message })
+  }
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export default async function handler(req, res) {
@@ -478,16 +635,18 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end()
 
   const { action } = req.query
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   // ── Unauthenticated actions ──────────────────────────────────────────────────
-  if (action === 'check')  return actionCheck(req, res)
-  if (action === 'login')  return actionLogin(req, res)
-  if (action === 'logout') return actionLogout(req, res)
+  if (action === 'check')              return actionCheck(req, res)
+  if (action === 'login')              return actionLogin(req, res)
+  if (action === 'logout')             return actionLogout(req, res)
+  if (action === 'newsletter-subscribe') return actionNewsletterSubscribe(req, res, serviceKey)
+  if (action === 'validate-discount')    return actionValidateDiscount(req, res, serviceKey)
+  if (action === 'mark-discount-used')   return actionMarkDiscountUsed(req, res, serviceKey)
 
   // ── Auth gate ────────────────────────────────────────────────────────────────
   if (!verifyAdminSession(req)) return res.status(401).json({ error: 'Unauthorized' })
-
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!serviceKey) return res.status(500).json({ error: 'Server not configured' })
 
   // ── Authenticated actions ────────────────────────────────────────────────────

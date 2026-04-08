@@ -24,9 +24,50 @@ export default function CartPage() {
   } = useCart()
   const navigate = useNavigate()
 
-  const [note, setNote]           = useState('')
-  const [discount, setDiscount]   = useState('')
-  const [province, setProvince]   = useState('')
+  const [note,          setNote]          = useState('')
+  const [discountInput, setDiscountInput] = useState('')
+  const [province,      setProvince]      = useState('')
+  const [discountStatus,  setDiscountStatus]  = useState('idle') // idle | validating | applied | error
+  const [discountData,    setDiscountData]    = useState(null)   // { code, amount, message }
+  const [discountMsg,     setDiscountMsg]     = useState('')
+
+  async function applyDiscount() {
+    const code = discountInput.trim().toUpperCase()
+    if (!code) return
+    setDiscountStatus('validating')
+    setDiscountMsg('')
+    try {
+      const res  = await fetch('/api/admin?action=validate-discount', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ code, subtotal }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error')
+      if (data.valid) {
+        setDiscountData({ code, amount: data.discount_amount, message: data.message })
+        setDiscountStatus('applied')
+        setDiscountMsg(data.message)
+      } else {
+        setDiscountData(null)
+        setDiscountStatus('error')
+        setDiscountMsg(data.message || 'Código no válido')
+      }
+    } catch {
+      setDiscountStatus('error')
+      setDiscountMsg('Error al validar el código')
+    }
+  }
+
+  function removeDiscount() {
+    setDiscountData(null)
+    setDiscountStatus('idle')
+    setDiscountInput('')
+    setDiscountMsg('')
+  }
+
+  const discountAmount = discountData?.amount ?? 0
+  const cartTotal      = subtotal - discountAmount
 
   const { products: recommended } = useProducts({ limit: 4 })
   const shippingFree = subtotal >= 180000
@@ -189,16 +230,38 @@ export default function CartPage() {
         <div className="lg:sticky lg:top-28 space-y-4">
 
           {/* Discount code */}
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Código de descuento"
-              value={discount}
-              onChange={e => setDiscount(e.target.value)}
-              className="input-brand flex-1"
-            />
-            <button className="btn-ghost whitespace-nowrap">Aplicar</button>
-          </div>
+          {discountStatus === 'applied' ? (
+            <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-3">
+              <div>
+                <p className="font-sans text-xs font-semibold text-green-800 uppercase tracking-button">{discountData.code}</p>
+                <p className="font-sans text-xs text-green-700">{discountMsg}</p>
+              </div>
+              <button onClick={removeDiscount} className="font-sans text-xs text-green-700 underline hover:text-green-900">Quitar</button>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Código de descuento"
+                  value={discountInput}
+                  onChange={e => { setDiscountInput(e.target.value.toUpperCase()); if (discountStatus === 'error') setDiscountStatus('idle') }}
+                  onKeyDown={e => e.key === 'Enter' && applyDiscount()}
+                  className="input-brand flex-1 uppercase"
+                />
+                <button
+                  onClick={applyDiscount}
+                  disabled={discountStatus === 'validating'}
+                  className="btn-ghost whitespace-nowrap disabled:opacity-60"
+                >
+                  {discountStatus === 'validating' ? '…' : 'Aplicar'}
+                </button>
+              </div>
+              {discountStatus === 'error' && (
+                <p className="font-sans text-xs text-red-500">{discountMsg}</p>
+              )}
+            </div>
+          )}
 
           {/* Order summary */}
           <div className="border border-brand-border p-5 space-y-3">
@@ -206,6 +269,12 @@ export default function CartPage() {
               <span className="font-sans text-sm text-brand-black/60">Subtotal</span>
               <span className="font-sans text-sm font-semibold">{fmt(subtotal)}</span>
             </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between items-center text-green-700">
+                <span className="font-sans text-sm">Descuento ({discountData.code})</span>
+                <span className="font-sans text-sm font-semibold">−{fmt(discountAmount)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
               <span className="font-sans text-sm text-brand-black/60">Envío</span>
               <span className={`font-sans text-sm font-semibold ${shippingFree ? 'text-green-700' : ''}`}>
@@ -216,13 +285,13 @@ export default function CartPage() {
               <span className="font-sans text-base font-bold">Total</span>
               <span className="font-sans text-xl font-bold">
                 <span className="text-xs font-normal text-brand-black/50 mr-1">COP</span>
-                {fmt(subtotal)}
+                {fmt(cartTotal)}
               </span>
             </div>
           </div>
 
           <button
-            onClick={() => navigate('/checkout')}
+            onClick={() => navigate('/checkout', { state: discountData ? { discountCode: discountData.code } : undefined })}
             className="btn-primary w-full text-center"
           >
             Finalizar compra

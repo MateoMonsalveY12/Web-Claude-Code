@@ -70,8 +70,8 @@ export default function ContactPage() {
   return (
     <div className="bg-brand-white min-h-screen">
       {/* Hero */}
-      <section className="bg-brand-gray border-b border-brand-border">
-        <div className="container-brand py-12 md:py-16">
+      <section className="bg-brand-gray border-b border-brand-border -mt-24 md:-mt-28">
+        <div className="container-brand pt-28 md:pt-36 pb-10 md:pb-14">
           <p className="eyebrow mb-3">Contacto</p>
           <h1 className="section-title">Hablemos.</h1>
           <p className="font-sans text-brand-black/55 mt-2 max-w-sm leading-relaxed">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext.jsx'
 
 function fmt(n) {
@@ -13,9 +13,16 @@ export default function ProductCard({ product, aosDelay = 0 }) {
   const img2 = images?.[1] || null
 
   const { addToCart } = useCart()
+  const navigate = useNavigate()
   const [hoverSize,      setHoverSize]      = useState(null)
   const [imgHovered,     setImgHovered]     = useState(false)
   const [hasSecondImage, setHasSecondImage] = useState(false)
+  const [selectedColor,  setSelectedColor]  = useState(colors?.[0] || null)
+
+  // Sync default color when product data loads
+  useEffect(() => {
+    setSelectedColor(colors?.[0] || null)
+  }, [colors])
 
   // Preload second image to confirm it actually exists before activating crossfade
   useEffect(() => {
@@ -30,13 +37,24 @@ export default function ProductCard({ product, aosDelay = 0 }) {
     e.preventDefault()
     e.stopPropagation()
     if (soldOut) return
-    addToCart(product, hoverSize || sizes?.[0] || null, colors?.[0] || null)
+    // If product has sizes but none selected, navigate to product page
+    if (sizes?.length > 0 && !hoverSize) {
+      navigate(`/products/${slug}`)
+      return
+    }
+    addToCart(product, hoverSize || null, selectedColor)
   }
 
   function handleSizeClick(e, s) {
     e.preventDefault()
     e.stopPropagation()
     setHoverSize(s)
+  }
+
+  function handleColorClick(e, c) {
+    e.preventDefault()
+    e.stopPropagation()
+    setSelectedColor(c)
   }
 
   return (
@@ -143,15 +161,22 @@ export default function ProductCard({ product, aosDelay = 0 }) {
         </div>
       </Link>
 
-      {/* Color swatches */}
+      {/* Color swatches — clickable */}
       {colors?.length > 0 && (
         <div className="mt-2 flex items-center gap-1.5">
           {colors.map((c, i) => (
-            <span
+            <button
               key={i}
-              className="w-3.5 h-3.5 rounded-full border border-brand-border/60 inline-block"
+              onClick={e => handleColorClick(e, c)}
+              className={`w-3.5 h-3.5 rounded-full border transition-all duration-150 ${
+                selectedColor === c
+                  ? 'border-brand-black scale-125'
+                  : 'border-brand-border/60 hover:border-brand-black/40'
+              }`}
               style={{ background: c }}
               title={c}
+              aria-label={c}
+              aria-pressed={selectedColor === c}
             />
           ))}
         </div>

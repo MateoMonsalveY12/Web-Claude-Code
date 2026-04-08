@@ -383,6 +383,56 @@ export async function sendOrderDeliveredEmail(data) {
   })
 }
 
+// ── Welcome discount email ─────────────────────────────────────────────────
+
+function buildWelcomeDiscountHtml({ email, code }) {
+  return wrap(`
+  <tr>
+    <td style="padding:40px 40px 8px; text-align:center;">
+      <div style="display:inline-block; background:#f9f9f9; border:1px solid #eeeeee; padding:6px 16px; margin-bottom:28px;">
+        <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:10px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:#999999;">Bienvenida a Bialy Colombia</p>
+      </div>
+      <h2 style="margin:0 0 12px; font-family:Georgia,'Times New Roman',serif; font-size:26px; font-weight:400; color:#111111; line-height:1.3;">
+        Aquí tienes tu<br>10% OFF
+      </h2>
+      <p style="margin:0; font-family:Arial,Helvetica,sans-serif; font-size:14px; color:#666666; line-height:1.7;">
+        Gracias por unirte a nuestra comunidad.<br>
+        Este código es exclusivo para tu primera compra.
+      </p>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:32px 40px;">
+      <div style="border:2px dashed #dddddd; padding:20px; text-align:center; background:#fafafa;">
+        <p style="margin:0 0 8px; font-family:Arial,Helvetica,sans-serif; font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:#999999;">Tu código de descuento</p>
+        <p style="margin:0; font-family:Georgia,'Times New Roman',serif; font-size:28px; letter-spacing:4px; color:#111111; font-weight:700;">${code}</p>
+        <p style="margin:8px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#999999;">Válido para un solo uso · Solo primera compra</p>
+      </div>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:0 40px 40px; text-align:center;">
+      <a href="https://bialycol.shop/collections/nueva-coleccion"
+         style="display:inline-block; background:#000000; color:#ffffff; font-family:Arial,Helvetica,sans-serif; font-size:13px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; padding:16px 40px;">
+        Ir a la tienda
+      </a>
+      <p style="margin:20px 0 0; font-family:Arial,Helvetica,sans-serif; font-size:12px; color:#aaaaaa; line-height:1.6;">
+        Ingresa el código al momento de pagar.<br>
+        No es acumulable con otras promociones.
+      </p>
+    </td>
+  </tr>`)
+}
+
+export async function sendWelcomeDiscountEmail({ email, code }) {
+  await sendEmail({
+    to:      email,
+    subject: 'Bienvenida a Bialy Colombia — aquí tienes tu 10% OFF',
+    html:    buildWelcomeDiscountHtml({ email, code }),
+    tag:     'welcome-discount',
+  })
+}
+
 // ── Contact form email ─────────────────────────────────────────────────────
 
 const SUBJECT_LABELS = {
@@ -460,8 +510,12 @@ export default async function handler(req, res) {
         html:    buildContactHtml({ name, email, subject, message }),
         tag:     'contact',
       })
+    } else if (type === 'welcome-discount') {
+      const { email, code } = body
+      if (!email || !code) return res.status(400).json({ error: 'email y code son requeridos' })
+      await sendWelcomeDiscountEmail({ email, code })
     } else {
-      return res.status(400).json({ error: 'type must be confirmed|shipped|delivered|contact' })
+      return res.status(400).json({ error: 'type must be confirmed|shipped|delivered|contact|welcome-discount' })
     }
     return res.status(200).json({ ok: true })
   } catch (err) {

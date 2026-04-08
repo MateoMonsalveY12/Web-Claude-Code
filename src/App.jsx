@@ -2,8 +2,9 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import AOS from 'aos'
 
-import ScrollToTop          from './components/shared/ScrollToTop.jsx'
-import AnnouncementBar      from './components/layout/AnnouncementBar.jsx'
+import ScrollToTop                from './components/shared/ScrollToTop.jsx'
+import DiscountNewsletterPopup   from './components/shared/DiscountNewsletterPopup.jsx'
+import AnnouncementBar           from './components/layout/AnnouncementBar.jsx'
 import Navbar               from './components/layout/Navbar.jsx'
 import Footer               from './components/layout/Footer.jsx'
 import WhatsAppButton       from './components/shared/WhatsAppButton.jsx'
@@ -141,6 +142,7 @@ export default function App() {
 
       {!isMinimalHeader && <Footer />}
       {!isMinimalHeader && <WhatsAppButton />}
+      {!isAdmin && <DiscountNewsletterPopup />}
     </>
   )
 }

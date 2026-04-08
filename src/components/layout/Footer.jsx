@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import BialyLogo from '../shared/BialyLogo.jsx'
 
@@ -39,6 +40,64 @@ const TRUST_BADGES = [
     ),
   },
 ]
+
+function FooterNewsletter() {
+  const [email,  setEmail]  = useState('')
+  const [status, setStatus] = useState('idle') // idle | subscribing | success | already | error
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return
+    setStatus('subscribing')
+    try {
+      const res  = await fetch('/api/admin?action=newsletter-subscribe', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: email.trim(), source: 'footer' }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Error')
+      setStatus(data.status === 'already_subscribed' ? 'already' : 'success')
+      setEmail('')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'success') return (
+    <p className="font-sans text-xs text-green-400 leading-relaxed">
+      ¡Listo! Revisa tu correo — tu código 10% OFF está en camino.
+    </p>
+  )
+  if (status === 'already') return (
+    <p className="font-sans text-xs text-white/50 leading-relaxed">
+      Ya estás suscrita. Revisa tu correo para encontrar tu código.
+    </p>
+  )
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+      <input
+        type="email"
+        placeholder="tu@correo.com"
+        value={email}
+        onChange={e => { setEmail(e.target.value); if (status === 'error') setStatus('idle') }}
+        className="input-brand-dark"
+        aria-label="Email"
+      />
+      {status === 'error' && (
+        <p className="font-sans text-[0.65rem] text-red-400">Error al suscribirse. Inténtalo de nuevo.</p>
+      )}
+      <button
+        type="submit"
+        disabled={status === 'subscribing'}
+        className="btn-ghost border-white/25 text-white hover:bg-white hover:text-brand-black text-[0.75rem] py-3 disabled:opacity-60"
+      >
+        {status === 'subscribing' ? 'Un momento…' : 'Suscribirme y obtener 10% OFF'}
+      </button>
+    </form>
+  )
+}
 
 export default function Footer() {
   return (
@@ -138,13 +197,9 @@ export default function Footer() {
               </a>
             </div>
 
-            <p className="eyebrow text-white/35 mb-3">Newsletter</p>
-            <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-2">
-              <input type="email" placeholder="tu@correo.com" className="input-brand-dark" aria-label="Email" />
-              <button type="submit" className="btn-ghost border-white/25 text-white hover:bg-white hover:text-brand-black text-[0.75rem] py-3">
-                Suscribirme
-              </button>
-            </form>
+            <p className="eyebrow text-white/35 mb-1">Newsletter</p>
+            <p className="font-sans text-xs text-white/40 mb-3 leading-relaxed">Suscríbete y recibe 10% OFF en tu primera compra.</p>
+            <FooterNewsletter />
           </div>
         </div>
       </div>

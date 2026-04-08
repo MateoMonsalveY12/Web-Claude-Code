@@ -145,8 +145,8 @@ export default function FaqPage() {
   return (
     <div className="bg-brand-white min-h-screen">
       {/* Hero */}
-      <section className="bg-brand-gray border-b border-brand-border">
-        <div className="container-brand py-14 md:py-20 text-center">
+      <section className="bg-brand-gray border-b border-brand-border -mt-24 md:-mt-28">
+        <div className="container-brand pt-32 md:pt-40 pb-12 md:pb-18 text-center">
           <p className="eyebrow mb-4" data-aos="fade-up">Ayuda</p>
           <h1 className="section-title max-w-xl mx-auto" data-aos="fade-up" data-aos-delay="60">
             Preguntas frecuentes
