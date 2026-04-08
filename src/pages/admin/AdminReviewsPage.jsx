@@ -41,7 +41,7 @@ export default function AdminReviewsPage() {
   useEffect(() => {
     if (!authenticated) return
     setLoading(true)
-    fetch('/api/admin/reviews', { credentials: 'include' })
+    fetch('/api/admin?action=reviews', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { setReviews(d.reviews ?? []); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
@@ -74,7 +74,7 @@ export default function AdminReviewsPage() {
   async function toggleVisible(review) {
     setToggling(review.id)
     try {
-      const res = await fetch(`/api/admin/reviews?id=${review.id}`, {
+      const res = await fetch(`/api/admin?action=reviews&id=${review.id}`, {
         method:      'PATCH',
         credentials: 'include',
         headers:     { 'Content-Type': 'application/json' },

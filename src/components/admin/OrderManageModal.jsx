@@ -49,7 +49,7 @@ export default function OrderManageModal({ order, onClose, onUpdated }) {
     setSaving(true)
     setError('')
     try {
-      const res = await fetch('/api/admin/update-status', {
+      const res = await fetch('/api/admin?action=update-status', {
         method:      'POST',
         credentials: 'include',
         headers:     { 'Content-Type': 'application/json' },

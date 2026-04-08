@@ -9,7 +9,7 @@ export default function AdminLoginPage() {
 
   // If already authenticated, redirect
   useEffect(() => {
-    fetch('/api/admin/check', { credentials: 'include' })
+    fetch('/api/admin?action=check', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { if (d.authenticated) navigate('/admin', { replace: true }) })
       .catch(() => {})
@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     setError('')
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/login', {
+      const res = await fetch('/api/admin?action=login', {
         method:      'POST',
         credentials: 'include',
         headers:     { 'Content-Type': 'application/json' },

@@ -22,8 +22,7 @@
  */
 
 import https from 'node:https'
-import { sendOrderShippedEmail   } from './emails/order-shipped.js'
-import { sendOrderDeliveredEmail } from './emails/order-delivered.js'
+import { sendOrderShippedEmail, sendOrderDeliveredEmail } from './emails.js'
 
 const VALID_STATUSES = ['PAGO_APROBADO', 'EMPACANDO', 'EN_CAMINO', 'ENTREGADO']
 

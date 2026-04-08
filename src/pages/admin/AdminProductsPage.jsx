@@ -42,7 +42,7 @@ export default function AdminProductsPage() {
   useEffect(() => {
     if (!authenticated) return
     setLoading(true)
-    fetch('/api/admin/products', { credentials: 'include' })
+    fetch('/api/admin?action=products', { credentials: 'include' })
       .then(r => r.json())
       .then(d => { setProducts(d.products ?? []); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })

@@ -39,7 +39,7 @@ export default function AdminLayout({ children }) {
   const navigate = useNavigate()
 
   async function handleLogout() {
-    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+    await fetch('/api/admin?action=logout', { method: 'POST', credentials: 'include' })
     navigate('/admin/login', { replace: true })
   }
 

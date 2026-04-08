@@ -48,7 +48,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     if (!authenticated) return
     setLoading(true)
-    fetch('/api/admin/orders', { credentials: 'include' })
+    fetch('/api/admin?action=orders', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         setOrders(d.orders ?? [])

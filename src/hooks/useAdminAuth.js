@@ -7,7 +7,7 @@ export function useAdminAuth() {
   const location = useLocation()
 
   useEffect(() => {
-    fetch('/api/admin/check', { credentials: 'include' })
+    fetch('/api/admin?action=check', { credentials: 'include' })
       .then(r => r.json())
       .then(data => {
         if (data.authenticated) {

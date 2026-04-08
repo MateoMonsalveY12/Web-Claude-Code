@@ -23,7 +23,7 @@
  */
 
 import https from 'node:https'
-import { sendOrderConfirmedEmail } from './emails/order-confirmed.js'
+import { sendOrderConfirmedEmail } from './emails.js'
 
 function supabaseRequest(method, path, body, serviceKey, supabaseUrl) {
   return new Promise((resolve, reject) => {

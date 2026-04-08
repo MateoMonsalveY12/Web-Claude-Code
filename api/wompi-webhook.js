@@ -18,7 +18,7 @@
 
 import crypto from 'node:crypto'
 import https  from 'node:https'
-import { sendOrderConfirmedEmail } from './emails/order-confirmed.js'
+import { sendOrderConfirmedEmail } from './emails.js'
 
 // Disable Vercel's automatic body parsing so we can read the raw body
 // for checksum validation (crypto requires the exact bytes Wompi sent)
