@@ -139,7 +139,7 @@ async function actionOrders(req, res, serviceKey) {
   try {
     const [ordersRes, itemsRes] = await Promise.all([
       sb('GET',
-        '/orders?select=id,wompi_reference,status,order_status,total_amount,shipping_cost,customer_name,customer_email,customer_phone,shipping_address,shipping_option,created_at,tracking_number,tracking_url,delivered_at&order=created_at.desc',
+        '/orders?select=id,wompi_reference,status,order_status,total_amount,shipping_cost,discount_code,discount_amount,customer_name,customer_email,customer_phone,shipping_address,shipping_option,created_at,tracking_number,tracking_url,delivered_at&order=created_at.desc',
         null, serviceKey),
       sb('GET',
         '/order_items?select=id,order_id,product_name,product_slug,size,color,quantity,unit_price,subtotal',
@@ -601,15 +601,19 @@ async function actionMarkDiscountUsed(req, res, serviceKey) {
     if (r.status !== 200 || !Array.isArray(r.data) || r.data.length === 0)
       return res.status(404).json({ error: 'Code not found' })
 
-    const dc = r.data[0]
+    const dc  = r.data[0]
     const now = new Date().toISOString()
+    const newUsageCount = (dc.usage_count || 0) + 1
+    const maxedOut      = newUsageCount >= (dc.usage_limit || 1)
 
-    // Increment usage_count and record usage
+    // Increment usage_count and deactivate if limit reached
     await sb('PATCH', `/discount_codes?code=eq.${encodeURIComponent(code)}`, {
-      usage_count:      (dc.usage_count || 0) + 1,
+      usage_count:      newUsageCount,
       used_at:          now,
       used_by_order_id: order_id,
+      ...(maxedOut ? { active: false } : {}),
     }, serviceKey)
+    console.log(`[admin:mark-discount-used] ${code} usage: ${newUsageCount}/${dc.usage_limit}${maxedOut ? ' → desactivado' : ''}`)
 
     // Mark first_order_discount_used on subscriber
     if (dc.assigned_email) {
@@ -618,7 +622,7 @@ async function actionMarkDiscountUsed(req, res, serviceKey) {
       }, serviceKey)
     }
 
-    console.log(`[admin:mark-discount-used] ${code} → order ${order_id}`)
+    console.log(`[admin:mark-discount-used] ${code} → order ${order_id} ✓`)
     return res.status(200).json({ ok: true })
   } catch (err) {
     console.error('[admin:mark-discount-used]', err.message)

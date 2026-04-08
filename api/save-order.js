@@ -182,9 +182,11 @@ export default async function handler(req, res) {
           null, serviceKey, supabaseUrl)
         const dc = Array.isArray(dcRes.data) ? dcRes.data[0] : null
         if (dc) {
+          const newUsageCount = (dc.usage_count || 0) + 1
+          const maxedOut      = newUsageCount >= (dc.usage_limit || 1)
           await supabaseRequest('PATCH',
             `/discount_codes?code=eq.${encodeURIComponent(discount_code)}`,
-            { usage_count: (dc.usage_count || 0) + 1, used_at: new Date().toISOString(), used_by_order_id: orderId },
+            { usage_count: newUsageCount, used_at: new Date().toISOString(), used_by_order_id: orderId, ...(maxedOut ? { active: false } : {}) },
             serviceKey, supabaseUrl)
           if (dc.assigned_email) {
             await supabaseRequest('PATCH',
@@ -209,7 +211,9 @@ export default async function handler(req, res) {
           orderId,
           items,
           subtotal:        items.reduce((s, i) => s + (i.price ?? 0) * (i.quantity ?? 1), 0),
-          shippingCost:    shipping_cost ?? 0,
+          shippingCost:    shipping_cost   ?? 0,
+          discountCode:    discount_code   || null,
+          discountAmount:  discount_amount || 0,
           totalAmount:     total_amount,
           shippingAddress: shipping_address ?? {},
           shippingOption:  shipping_option,

@@ -91,7 +91,7 @@ function FooterNewsletter() {
       <button
         type="submit"
         disabled={status === 'subscribing'}
-        className="btn-ghost border-white/25 text-white hover:bg-white hover:text-brand-black text-[0.75rem] py-3 disabled:opacity-60"
+        className="btn-ghost w-full border-white/25 text-white hover:bg-white hover:text-brand-black text-[0.75rem] py-3 text-center disabled:opacity-60"
       >
         {status === 'subscribing' ? 'Un momento…' : 'Suscribirme y obtener 10% OFF'}
       </button>

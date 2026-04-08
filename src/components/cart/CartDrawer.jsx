@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../context/CartContext'
+import CouponInput from './CouponInput.jsx'
 
 function fmt(n) {
   if (n == null) return ''
@@ -11,6 +12,7 @@ export default function CartDrawer() {
     items, isCartOpen, closeCart,
     removeFromCart, updateQuantity,
     subtotal, progressPercent, freeShippingRemaining, cartCount,
+    discountAmount, couponData,
   } = useCart()
 
   const navigate = useNavigate()
@@ -185,21 +187,20 @@ export default function CartDrawer() {
         {items.length > 0 && (
           <div className="border-t border-brand-border px-5 py-4 space-y-3 flex-shrink-0">
             {/* Discount code */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Código de descuento"
-                className="input-brand flex-1 py-2.5 text-sm"
-              />
-              <button className="btn-ghost btn-sm whitespace-nowrap">
-                Aplicar
-              </button>
-            </div>
+            <CouponInput compact />
 
-            {/* Subtotal */}
-            <div className="flex items-center justify-between pt-1">
-              <span className="font-sans text-sm text-brand-black/60">Subtotal</span>
-              <span className="font-sans text-sm font-semibold">{fmt(subtotal)}</span>
+            {/* Subtotal / discount */}
+            <div className="space-y-1 pt-1">
+              <div className="flex items-center justify-between">
+                <span className="font-sans text-sm text-brand-black/60">Subtotal</span>
+                <span className="font-sans text-sm font-semibold">{fmt(subtotal)}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex items-center justify-between text-green-700">
+                  <span className="font-sans text-sm">Descuento ({couponData?.code})</span>
+                  <span className="font-sans text-sm font-semibold">−{fmt(discountAmount)}</span>
+                </div>
+              )}
             </div>
 
             {/* CTA */}

@@ -175,8 +175,14 @@ function OrderDetail({ order, customerId, customerName, onReviewSubmitted }) {
       <div className="bg-brand-gray px-4 py-3 space-y-1.5">
         <div className="flex justify-between font-sans text-sm">
           <span className="text-brand-black/60">Subtotal</span>
-          <span>{fmt((order.total_amount ?? 0) - (order.shipping_cost ?? 0))}</span>
+          <span>{fmt((order.total_amount ?? 0) + (order.discount_amount ?? 0) - (order.shipping_cost ?? 0))}</span>
         </div>
+        {order.discount_amount > 0 && (
+          <div className="flex justify-between font-sans text-sm text-green-700">
+            <span>Descuento {order.discount_code ? `(${order.discount_code})` : ''}</span>
+            <span>−{fmt(order.discount_amount)}</span>
+          </div>
+        )}
         {order.shipping_cost != null && (
           <div className="flex justify-between font-sans text-sm">
             <span className="text-brand-black/60">Envío</span>
@@ -246,7 +252,7 @@ export default function AccountOrdersPage() {
       .from('orders')
       .select(`
         id, wompi_reference, status, order_status,
-        total_amount, shipping_cost, created_at,
+        total_amount, shipping_cost, discount_code, discount_amount, created_at,
         shipping_option, shipping_address, customer_name,
         tracking_number, tracking_url, delivered_at
       `)

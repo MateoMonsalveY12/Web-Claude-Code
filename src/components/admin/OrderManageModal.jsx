@@ -160,6 +160,14 @@ export default function OrderManageModal({ order, onClose, onUpdated }) {
                   </div>
                 ))}
               </div>
+              {order.discount_amount > 0 && (
+                <div className="flex justify-between pt-1">
+                  <span className="font-sans text-sm text-green-400">
+                    Descuento {order.discount_code ? `(${order.discount_code})` : ''}
+                  </span>
+                  <span className="font-sans text-sm text-green-400">−{fmt(order.discount_amount)}</span>
+                </div>
+              )}
               <div className="flex justify-between pt-2 border-t border-slate-700/50 mt-2">
                 <span className="font-sans text-sm font-semibold text-white">Total pagado</span>
                 <span className="font-sans text-sm font-semibold text-white">{fmt(order.total_amount)}</span>

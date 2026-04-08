@@ -95,6 +95,8 @@ function buildConfirmedHtml(data) {
     subtotal, shippingCost, totalAmount,
     shippingAddress = {},
     shippingOption = '',
+    discountCode  = null,
+    discountAmount = 0,
   } = data
 
   const addr = [shippingAddress.address, shippingAddress.apt, shippingAddress.city, shippingAddress.state]
@@ -111,6 +113,12 @@ function buildConfirmedHtml(data) {
       <td style="padding:10px 12px; border-bottom:1px solid #eeeeee; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#111111; text-align:right;">${fmtCOP(item.unit_price ?? item.price)}</td>
       <td style="padding:10px 12px; border-bottom:1px solid #eeeeee; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#111111; text-align:right; font-weight:600;">${fmtCOP(item.subtotal ?? (item.unit_price ?? item.price) * (item.quantity ?? 1))}</td>
     </tr>`).join('')
+
+  const discountRow = (discountCode && discountAmount > 0) ? `
+    <tr>
+      <td colspan="3" style="padding:8px 12px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#2d6a2d; text-align:right;">Descuento (${discountCode})</td>
+      <td style="padding:8px 12px; font-family:Arial,Helvetica,sans-serif; font-size:13px; color:#2d6a2d; text-align:right; font-weight:600;">−${fmtCOP(discountAmount)}</td>
+    </tr>` : ''
 
   const shippingRow = shippingCost != null ? `
     <tr>
@@ -158,6 +166,7 @@ function buildConfirmedHtml(data) {
         </thead>
         <tbody>${itemsRows}</tbody>
         <tfoot>
+          ${discountRow}
           ${shippingRow}
           <tr style="border-top:2px solid #111111;">
             <td colspan="3" style="padding:12px 12px; font-family:Arial,Helvetica,sans-serif; font-size:14px; font-weight:600; color:#111111; text-align:right;">Total pagado</td>
