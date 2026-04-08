@@ -146,20 +146,36 @@ function buildHtml(data) {
 }
 
 export async function sendOrderDeliveredEmail(data) {
+  console.log('[email:delivered] Iniciando envío — destinatario:', data.customerEmail ?? 'NO EMAIL')
+  console.log('[email:delivered] RESEND_API_KEY presente:', !!process.env.RESEND_API_KEY)
+
   const apiKey = process.env.RESEND_API_KEY
-  if (!apiKey) { console.warn('[order-delivered] RESEND_API_KEY not set'); return }
-  if (!data.customerEmail) { console.warn('[order-delivered] No customer email'); return }
+  if (!apiKey) {
+    console.error('[email:delivered] ERROR: RESEND_API_KEY no está configurada')
+    return
+  }
+  if (!data.customerEmail) {
+    console.error('[email:delivered] ERROR: customerEmail vacío')
+    return
+  }
   try {
+    console.log('[email:delivered] Llamando a resend.emails.send()...')
     const resend = new Resend(apiKey)
     const result = await resend.emails.send({
-      from:    'Bialy <onboarding@resend.dev>',
+      from:    'Bialy <no-reply@bialycol.shop>',
       to:      data.customerEmail,
       subject: 'Tu pedido de Bialy ha sido entregado',
       html:    buildHtml(data),
     })
-    console.log('[order-delivered] Sent to', data.customerEmail, result?.id ?? '')
+    console.log('[email:delivered] Respuesta de Resend:', JSON.stringify(result))
+    if (result?.error) {
+      console.error('[email:delivered] Resend devolvió error:', JSON.stringify(result.error))
+    } else {
+      console.log('[email:delivered] Email enviado. ID:', result?.id ?? result?.data?.id)
+    }
   } catch (err) {
-    console.error('[order-delivered] Error:', err.message)
+    console.error('[email:delivered] Excepción:', err.message)
+    throw err
   }
 }
 

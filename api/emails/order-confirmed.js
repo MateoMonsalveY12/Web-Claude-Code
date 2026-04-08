@@ -201,26 +201,40 @@ function buildHtml(data) {
 
 /* ── Named export — for internal use ─────────────────────────── */
 export async function sendOrderConfirmedEmail(data) {
+  console.log('[email:confirmed] Iniciando envío — destinatario:', data.customerEmail ?? 'NO EMAIL')
+  console.log('[email:confirmed] RESEND_API_KEY presente:', !!process.env.RESEND_API_KEY)
+
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) {
-    console.warn('[order-confirmed] RESEND_API_KEY not set — skipping email')
+    console.error('[email:confirmed] ERROR: RESEND_API_KEY no está configurada — email no enviado')
     return
   }
   if (!data.customerEmail) {
-    console.warn('[order-confirmed] No customer email — skipping')
+    console.error('[email:confirmed] ERROR: customerEmail vacío — email no enviado')
     return
   }
+
+  let result, sendError
   try {
+    console.log('[email:confirmed] Llamando a resend.emails.send()...')
     const resend = new Resend(apiKey)
-    const result = await resend.emails.send({
-      from:    'Bialy <onboarding@resend.dev>',
+    result = await resend.emails.send({
+      from:    'Bialy <no-reply@bialycol.shop>',
       to:      data.customerEmail,
       subject: 'Tu pedido en Bialy ha sido confirmado',
       html:    buildHtml(data),
     })
-    console.log('[order-confirmed] Sent to', data.customerEmail, result?.id ?? '')
+    console.log('[email:confirmed] Respuesta de Resend:', JSON.stringify(result))
+    if (result?.error) {
+      console.error('[email:confirmed] Resend devolvió error:', JSON.stringify(result.error))
+    } else {
+      console.log('[email:confirmed] Email enviado exitosamente. ID:', result?.id ?? result?.data?.id)
+    }
   } catch (err) {
-    console.error('[order-confirmed] Error sending email:', err.message)
+    sendError = err
+    console.error('[email:confirmed] Excepción al enviar:', err.message)
+    console.error('[email:confirmed] Stack:', err.stack)
+    throw err  // re-throw so caller can handle
   }
 }
 

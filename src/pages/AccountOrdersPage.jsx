@@ -332,12 +332,10 @@ export default function AccountOrdersPage() {
                       </div>
 
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* Lifecycle badge (primary) */}
+                        {/* Lifecycle badge — único badge visible */}
                         <span className={`font-sans text-xs font-semibold px-2 py-1 border ${orderStatusBadge.color}`}>
                           {orderStatusBadge.text}
                         </span>
-                        {/* Payment status (secondary) */}
-                        <StatusBadge status={order.status} map={PAYMENT_STATUS} />
                         <span className="font-sans text-xs text-brand-black/40">
                           {new Date(order.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </span>
