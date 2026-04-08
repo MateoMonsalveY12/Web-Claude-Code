@@ -256,8 +256,12 @@ function VariantsTable({ variants, onChange }) {
 
 const EMPTY_PRODUCT = {
   name: '', slug: '', description: '', category: 'vestidos',
+  subcategory: '', fabric: '',
   price: '', compare_price: '',
-  tags: '', is_available: true, is_featured: false,
+  badge: '',
+  tags: '',
+  is_available: true, is_featured: false,
+  is_new: false, is_on_sale: false, is_basics: false, is_warm_season: false,
   images: [], variants: [],
 }
 
@@ -266,7 +270,14 @@ function ProductModal({ product, onClose, onSaved }) {
     ...product,
     price:         product.price ?? '',
     compare_price: product.compare_price ?? '',
+    subcategory:   product.subcategory ?? '',
+    fabric:        product.fabric ?? '',
+    badge:         product.badge ?? '',
     tags:          Array.isArray(product.tags) ? product.tags.join(', ') : (product.tags ?? ''),
+    is_new:        Boolean(product.is_new),
+    is_on_sale:    Boolean(product.is_on_sale),
+    is_basics:     Boolean(product.is_basics),
+    is_warm_season: Boolean(product.is_warm_season),
     images:        Array.isArray(product.images) ? [...product.images] : [],
     variants:      Array.isArray(product.variants) ? [...product.variants] : [],
   } : { ...EMPTY_PRODUCT })
@@ -340,16 +351,35 @@ function ProductModal({ product, onClose, onSaved }) {
 
     setSaving(true)
     try {
+      const cpNum   = form.compare_price ? Number(form.compare_price) : null
+      const prNum   = Number(form.price)
+      const discPct = cpNum && cpNum > prNum
+        ? Math.round((cpNum - prNum) / cpNum * 100)
+        : null
+
+      // Auto-badge when on sale and compare_price set, unless user typed a custom one
+      let badgeVal = form.badge?.trim() || null
+      if (!badgeVal && form.is_on_sale && discPct) {
+        badgeVal = `REBAJAS -${discPct}%`
+      }
+
       const payload = {
         name:          form.name.trim(),
         slug:          form.slug.trim(),
         description:   form.description?.trim() || null,
         category:      form.category,
-        price:         Number(form.price),
-        compare_price: form.compare_price ? Number(form.compare_price) : null,
+        subcategory:   form.subcategory?.trim() || null,
+        fabric:        form.fabric?.trim() || null,
+        price:         prNum,
+        compare_price: cpNum,
+        badge:         badgeVal,
         tags:          form.tags ? form.tags.split(',').map(t => t.trim()).filter(Boolean) : [],
         is_available:  form.is_available,
         is_featured:   form.is_featured,
+        is_new:        form.is_new,
+        is_on_sale:    form.is_on_sale,
+        is_basics:     form.is_basics,
+        is_warm_season: form.is_warm_season,
         images:        form.images,
         variants:      form.variants,
       }
@@ -468,8 +498,8 @@ function ProductModal({ product, onClose, onSaved }) {
                   />
                 </div>
 
-                {/* Category + Price + Compare */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Category + Subcategory */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
                       Categoría <span className="text-red-400">*</span>
@@ -482,6 +512,19 @@ function ProductModal({ product, onClose, onSaved }) {
                       {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </div>
+                  <div>
+                    <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Subcategoría</label>
+                    <input
+                      type="text" value={form.subcategory}
+                      onChange={e => setField('subcategory', e.target.value)}
+                      placeholder="midi, maxi, corto, skinny, wide-leg…"
+                      className="w-full bg-slate-800 border border-slate-700 text-white font-sans text-sm px-3 py-2 rounded outline-none focus:border-slate-400 placeholder-slate-600"
+                    />
+                  </div>
+                </div>
+
+                {/* Price + Compare + Fabric */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
                       Precio COP <span className="text-red-400">*</span>
@@ -502,6 +545,24 @@ function ProductModal({ product, onClose, onSaved }) {
                       placeholder="120000"
                       className="w-full bg-slate-800 border border-slate-700 text-white font-sans text-sm px-3 py-2 rounded outline-none focus:border-slate-400"
                     />
+                    {(() => {
+                      const cp = Number(form.compare_price)
+                      const pr = Number(form.price)
+                      if (cp > pr && pr > 0) {
+                        const pct = Math.round((cp - pr) / cp * 100)
+                        return <p className="font-sans text-xs text-green-400 mt-1">Descuento: {pct}% off</p>
+                      }
+                      return null
+                    })()}
+                  </div>
+                  <div>
+                    <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Material / Tela</label>
+                    <input
+                      type="text" value={form.fabric}
+                      onChange={e => setField('fabric', e.target.value)}
+                      placeholder="Algodón 100%, lino, viscosa…"
+                      className="w-full bg-slate-800 border border-slate-700 text-white font-sans text-sm px-3 py-2 rounded outline-none focus:border-slate-400 placeholder-slate-600"
+                    />
                   </div>
                 </div>
 
@@ -516,10 +577,51 @@ function ProductModal({ product, onClose, onSaved }) {
                   />
                 </div>
 
-                {/* Toggles */}
-                <div className="flex flex-wrap gap-6 pt-1">
-                  <Toggle checked={form.is_available} onChange={v => setField('is_available', v)} label="Producto activo" />
-                  <Toggle checked={form.is_featured}  onChange={v => setField('is_featured', v)}  label="Destacado en home" />
+                {/* Badge */}
+                <div>
+                  <label className="block font-sans text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Badge personalizado
+                    <span className="ml-2 font-normal normal-case text-slate-600">(vacío = ninguno; si "En rebaja" está activo se calcula automáticamente)</span>
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="text" value={form.badge}
+                      onChange={e => setField('badge', e.target.value)}
+                      placeholder='REBAJAS -21% · NUEVO · EXCLUSIVO…'
+                      className="flex-1 bg-slate-800 border border-slate-700 text-white font-sans text-sm px-3 py-2 rounded outline-none focus:border-slate-400 placeholder-slate-600"
+                    />
+                    {(form.badge?.trim() || (form.is_on_sale && (() => {
+                      const cp = Number(form.compare_price); const pr = Number(form.price)
+                      return cp > pr && pr > 0
+                    })())) && (
+                      <span className="shrink-0 font-sans text-xs font-semibold bg-slate-700 text-white px-2.5 py-1 rounded border border-slate-600">
+                        {form.badge?.trim() || (() => {
+                          const cp = Number(form.compare_price); const pr = Number(form.price)
+                          return `REBAJAS -${Math.round((cp - pr) / cp * 100)}%`
+                        })()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── Estado y visibilidad ── */}
+                <div className="pt-1 space-y-3">
+                  <p className="font-sans text-xs font-semibold uppercase tracking-wider text-slate-500">Estado y visibilidad</p>
+                  <div className="flex flex-wrap gap-x-6 gap-y-3">
+                    <Toggle checked={form.is_available}   onChange={v => setField('is_available', v)}   label="Producto activo" />
+                    <Toggle checked={form.is_featured}    onChange={v => setField('is_featured', v)}    label="Destacado en home" />
+                  </div>
+                </div>
+
+                {/* ── Badges y colecciones especiales ── */}
+                <div className="space-y-3">
+                  <p className="font-sans text-xs font-semibold uppercase tracking-wider text-slate-500">Colecciones especiales</p>
+                  <div className="flex flex-wrap gap-x-6 gap-y-3">
+                    <Toggle checked={form.is_new}         onChange={v => setField('is_new', v)}         label="Es nuevo" />
+                    <Toggle checked={form.is_on_sale}     onChange={v => setField('is_on_sale', v)}     label="En rebaja" />
+                    <Toggle checked={form.is_basics}      onChange={v => setField('is_basics', v)}      label="Básicos" />
+                    <Toggle checked={form.is_warm_season} onChange={v => setField('is_warm_season', v)} label="Temporada cálida" />
+                  </div>
                 </div>
               </div>
             )}

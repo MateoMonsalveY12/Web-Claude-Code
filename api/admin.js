@@ -234,7 +234,7 @@ async function actionUpdateStatus(req, res, serviceKey) {
 async function actionProducts(_req, res, serviceKey) {
   try {
     const result = await sb('GET',
-      '/products?select=id,name,slug,category,price,compare_price,stock,is_available,images,is_featured,total_sold,description,tags,variants&order=created_at.desc',
+      '/products?select=id,name,slug,category,subcategory,fabric,price,compare_price,badge,stock,is_available,images,is_featured,total_sold,description,tags,variants,is_new,is_on_sale,is_basics,is_warm_season&order=created_at.desc',
       null, serviceKey)
     return res.status(200).json({ products: Array.isArray(result.data) ? result.data : [] })
   } catch (err) {
@@ -245,8 +245,11 @@ async function actionProducts(_req, res, serviceKey) {
 
 async function actionProductCreate(req, res, serviceKey) {
   const body = parseBody(req)
-  const { name, slug: rawSlug, description, category, price, compare_price,
-          tags, is_available, is_featured, images, variants } = body
+  const { name, slug: rawSlug, description, category, subcategory, fabric,
+          price, compare_price, badge,
+          tags, is_available, is_featured,
+          is_new, is_on_sale, is_basics, is_warm_season,
+          images, variants } = body
 
   if (!name || !category || !price) {
     return res.status(400).json({ error: 'name, category y price son requeridos' })
@@ -255,18 +258,25 @@ async function actionProductCreate(req, res, serviceKey) {
   const slug = rawSlug?.trim() || slugify(name)
 
   const product = {
-    name:          name.trim(),
+    name:           name.trim(),
     slug,
-    description:   description?.trim() || null,
+    description:    description?.trim() || null,
     category,
-    price:         Number(price),
-    compare_price: compare_price ? Number(compare_price) : null,
-    tags:          Array.isArray(tags) ? tags : [],
-    is_available:  is_available !== false,
-    is_featured:   Boolean(is_featured),
-    images:        Array.isArray(images) ? images : [],
-    variants:      Array.isArray(variants) ? variants : [],
-    stock:         Array.isArray(variants)
+    subcategory:    subcategory?.trim() || null,
+    fabric:         fabric?.trim() || null,
+    price:          Number(price),
+    compare_price:  compare_price ? Number(compare_price) : null,
+    badge:          badge?.trim() || null,
+    tags:           Array.isArray(tags) ? tags : [],
+    is_available:   is_available !== false,
+    is_featured:    Boolean(is_featured),
+    is_new:         Boolean(is_new),
+    is_on_sale:     Boolean(is_on_sale),
+    is_basics:      Boolean(is_basics),
+    is_warm_season: Boolean(is_warm_season),
+    images:         Array.isArray(images) ? images : [],
+    variants:       Array.isArray(variants) ? variants : [],
+    stock:          Array.isArray(variants)
       ? variants.reduce((s, v) => s + (Number(v.stock) || 0), 0)
       : 0,
   }
@@ -290,19 +300,29 @@ async function actionProductUpdate(req, res, serviceKey) {
   if (!id) return res.status(400).json({ error: 'id requerido' })
 
   const body = parseBody(req)
-  const { name, slug: rawSlug, description, category, price, compare_price,
-          tags, is_available, is_featured, images, variants } = body
+  const { name, slug: rawSlug, description, category, subcategory, fabric,
+          price, compare_price, badge,
+          tags, is_available, is_featured,
+          is_new, is_on_sale, is_basics, is_warm_season,
+          images, variants } = body
 
   const patch = {}
   if (name          !== undefined) { patch.name         = name.trim(); patch.slug = rawSlug?.trim() || slugify(name) }
   if (rawSlug       !== undefined) patch.slug            = rawSlug.trim()
   if (description   !== undefined) patch.description     = description?.trim() || null
   if (category      !== undefined) patch.category        = category
+  if (subcategory   !== undefined) patch.subcategory     = subcategory?.trim() || null
+  if (fabric        !== undefined) patch.fabric          = fabric?.trim() || null
   if (price         !== undefined) patch.price           = Number(price)
   if (compare_price !== undefined) patch.compare_price   = compare_price ? Number(compare_price) : null
+  if (badge         !== undefined) patch.badge           = badge?.trim() || null
   if (tags          !== undefined) patch.tags            = Array.isArray(tags) ? tags : []
   if (is_available  !== undefined) patch.is_available    = Boolean(is_available)
   if (is_featured   !== undefined) patch.is_featured     = Boolean(is_featured)
+  if (is_new        !== undefined) patch.is_new          = Boolean(is_new)
+  if (is_on_sale    !== undefined) patch.is_on_sale      = Boolean(is_on_sale)
+  if (is_basics     !== undefined) patch.is_basics       = Boolean(is_basics)
+  if (is_warm_season !== undefined) patch.is_warm_season = Boolean(is_warm_season)
   if (images        !== undefined) patch.images          = Array.isArray(images) ? images : []
   if (variants      !== undefined) {
     patch.variants = Array.isArray(variants) ? variants : []
