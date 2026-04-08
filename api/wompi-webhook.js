@@ -18,6 +18,7 @@
 
 import crypto from 'node:crypto'
 import https  from 'node:https'
+import { sendOrderConfirmedEmail } from './emails/order-confirmed.js'
 
 // Disable Vercel's automatic body parsing so we can read the raw body
 // for checksum validation (crypto requires the exact bytes Wompi sent)
@@ -141,9 +142,8 @@ export default async function handler(req, res) {
         console.log(`[wompi-webhook] Updated order ${orderId}: ${prevStatus} → ${status}`)
       }
 
-      // Decrement stock if APPROVED and not already done by save-order
+      // Decrement stock + increment total_sold if APPROVED and not already done
       if (status === 'APPROVED' && !alreadyDecremented) {
-        // Fetch order_items to know what to decrement
         const itemsRes = await supabaseFetch(
           'GET',
           `/order_items?order_id=eq.${orderId}&select=product_slug,quantity`,
@@ -152,14 +152,36 @@ export default async function handler(req, res) {
         const orderItems = Array.isArray(itemsRes.data) ? itemsRes.data : []
         for (const item of orderItems) {
           if (!item.product_slug) continue
-          await supabaseFetch(
-            'POST', '/rpc/decrement_stock',
-            { p_product_slug: item.product_slug, p_quantity: item.quantity ?? 1 },
-            serviceKey, supabaseUrl
-          )
+          const qty = item.quantity ?? 1
+          await supabaseFetch('POST', '/rpc/decrement_stock',
+            { p_product_slug: item.product_slug, p_quantity: qty }, serviceKey, supabaseUrl)
+          await supabaseFetch('POST', '/rpc/increment_total_sold',
+            { p_product_slug: item.product_slug, p_quantity: qty }, serviceKey, supabaseUrl)
         }
         await supabaseFetch('PATCH', `/orders?id=eq.${orderId}`, { stock_decremented: true }, serviceKey, supabaseUrl)
-        console.log(`[wompi-webhook] Stock decremented for order ${orderId}`)
+        console.log(`[wompi-webhook] Stock decremented + total_sold updated for order ${orderId}`)
+      }
+
+      // Send confirmation email if just became APPROVED
+      if (status === 'APPROVED' && prevStatus !== 'APPROVED') {
+        const orderRes = await supabaseFetch('GET',
+          `/orders?id=eq.${orderId}&select=*`, null, serviceKey, supabaseUrl)
+        const orderData = Array.isArray(orderRes.data) ? orderRes.data[0] : null
+        const itemsRes2 = await supabaseFetch('GET',
+          `/order_items?order_id=eq.${orderId}&select=*`, null, serviceKey, supabaseUrl)
+        const orderItems2 = Array.isArray(itemsRes2.data) ? itemsRes2.data : []
+        if (orderData) {
+          sendOrderConfirmedEmail({
+            customerName:    orderData.customer_name,
+            customerEmail:   orderData.customer_email,
+            wompiReference:  orderData.wompi_reference,
+            orderId,
+            items:           orderItems2,
+            totalAmount:     orderData.total_amount,
+            shippingAddress: orderData.shipping_address ?? {},
+            shippingOption:  orderData.shipping_option,
+          }).catch(e => console.warn('[wompi-webhook] Email warning:', e.message))
+        }
       }
     } else {
       // No order found — create minimal record from event data

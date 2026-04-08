@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import { supabase } from '../../lib/supabase.js'
 
-const REVIEWS = [
+const FALLBACK_REVIEWS = [
   {
     id: 1,
     image: '/images/review-product-1.jpg',
@@ -55,10 +56,48 @@ function Stars({ count }) {
   )
 }
 
+function InitialAvatar({ name }) {
+  const letter = (name || 'A').charAt(0).toUpperCase()
+  return (
+    <div className="w-10 h-10 rounded-full bg-brand-black text-white flex items-center justify-center shrink-0">
+      <span className="font-sans text-sm font-semibold">{letter}</span>
+    </div>
+  )
+}
+
 export default function TestimonialsCarousel() {
   const trackRef   = useRef(null)
   const [active, setActive] = useState(0)
-  const total = REVIEWS.length
+  const [reviews, setReviews] = useState(null) // null = loading
+
+  // Fetch reviews from DB
+  useEffect(() => {
+    if (!supabase) { setReviews([]); return }
+    supabase
+      .from('reviews')
+      .select('id, rating, comment, photo_url, customer_name, product_name, created_at')
+      .order('created_at', { ascending: false })
+      .limit(6)
+      .then(({ data }) => {
+        setReviews(data ?? [])
+      })
+      .catch(() => setReviews([]))
+  }, [])
+
+  // Decide which data to show
+  const displayReviews = (reviews && reviews.length > 0)
+    ? reviews.map(r => ({
+        id: r.id,
+        image: r.photo_url || null,
+        text: `"${r.comment}"`,
+        author: r.customer_name || 'Cliente Bialy',
+        location: r.product_name || '',
+        stars: r.rating,
+        fromDB: true,
+      }))
+    : FALLBACK_REVIEWS
+
+  const total = displayReviews.length
 
   function getVisibleCount() {
     if (typeof window === 'undefined') return 3
@@ -93,6 +132,31 @@ export default function TestimonialsCarousel() {
 
   const maxIndex = Math.max(0, total - getVisibleCount())
 
+  if (reviews === null) {
+    // Still loading — show skeleton
+    return (
+      <section className="py-10 md:py-16 bg-brand-gray overflow-hidden">
+        <div className="container-brand">
+          <div className="flex items-end justify-between mb-8">
+            <div>
+              <p className="eyebrow mb-3">Reseñas</p>
+              <h2 className="section-title">Lo que dicen.</h2>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-white p-6 space-y-3">
+                <div className="aspect-square bg-brand-border/40" />
+                <div className="h-3 bg-brand-border/40 rounded w-3/4" />
+                <div className="h-3 bg-brand-border/40 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="py-10 md:py-16 bg-brand-gray overflow-hidden">
       <div className="container-brand">
@@ -123,30 +187,41 @@ export default function TestimonialsCarousel() {
         </div>
       </div>
 
-      {/* Track — full width with container padding */}
+      {/* Track */}
       <div className="container-brand">
-        <div
-          ref={trackRef}
-          className="carousel-track"
-          role="list"
-        >
-          {REVIEWS.map(r => (
+        <div ref={trackRef} className="carousel-track" role="list">
+          {displayReviews.map(r => (
             <article key={r.id} className="carousel-card" role="listitem">
-              <div className="aspect-square overflow-hidden">
-                <img
-                  src={r.image}
-                  alt={`Reseña de ${r.author}`}
-                  loading="lazy"
-                  className="w-full h-full object-cover object-top"
-                />
-              </div>
+              {/* Photo or avatar */}
+              {r.image ? (
+                <div className="aspect-square overflow-hidden">
+                  <img
+                    src={r.image}
+                    alt={`Reseña de ${r.author}`}
+                    loading="lazy"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+              ) : (
+                <div className="aspect-square bg-brand-border/20 flex items-center justify-center">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-brand-black/20">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                </div>
+              )}
               <div className="p-6">
                 <Stars count={r.stars} />
                 <p className="font-sans text-sm text-brand-black/70 leading-relaxed mb-4 italic">{r.text}</p>
-                <cite className="not-italic">
-                  <span className="font-sans text-[0.8125rem] font-semibold text-brand-black">{r.author}</span>
-                  <span className="font-sans text-xs text-brand-black/40 ml-2">{r.location}</span>
-                </cite>
+                <div className="flex items-center gap-3">
+                  {r.fromDB && <InitialAvatar name={r.author} />}
+                  <cite className="not-italic">
+                    <span className="font-sans text-[0.8125rem] font-semibold text-brand-black">{r.author}</span>
+                    {r.location && (
+                      <span className="font-sans text-xs text-brand-black/40 ml-2">{r.location}</span>
+                    )}
+                  </cite>
+                </div>
               </div>
             </article>
           ))}

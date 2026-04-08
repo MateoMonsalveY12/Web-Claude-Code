@@ -1,50 +1,24 @@
 import { useState, useMemo, useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useProducts } from '../hooks/useProducts.js'
 import ProductCard, { SkeletonCard } from '../components/shared/ProductCard.jsx'
 import Breadcrumb from '../components/shared/Breadcrumb.jsx'
+import {
+  FiltersPanel, GridButton,
+  PRICE_MIN, PRICE_MAX,
+} from '../components/filters/CollectionFilters.jsx'
 
 const CATEGORY_META = {
-  'vestidos':        { title: 'Vestidos',           banner: '/images/banner-vestidos.jpg' },
-  'blusas':          { title: 'Blusas',             banner: '/images/banner-blusas.jpg' },
-  'jeans':           { title: 'Jeans & Pantalones', banner: '/images/banner-jeans.jpg' },
-  'tallas-grandes':  { title: 'Tallas Grandes',     banner: '/images/banner-tallas-grandes.jpg' },
-  'nueva-coleccion': { title: 'Nueva Colección',    banner: '/images/banner-nueva-coleccion.jpg' },
-  'rebajas':         { title: 'Rebajas',            banner: '/images/banner-nueva-coleccion.jpg' },
-  'accesorios':      { title: 'Accesorios y Zapatos', banner: '/images/banner-nueva-coleccion.jpg' },
-  'uniformes':       { title: 'Uniformes',          banner: '/images/banner-nueva-coleccion.jpg' },
-  'bono-regalo':     { title: 'Bono Regalo',        banner: '/images/banner-nueva-coleccion.jpg' },
+  'vestidos':            { title: 'Vestidos',            banner: '/images/banner-vestidos.jpg' },
+  'blusas':              { title: 'Blusas',              banner: '/images/banner-blusas.jpg' },
+  'jeans':               { title: 'Jeans',               banner: '/images/banner-jeans.jpg' },
+  'tallas-grandes':      { title: 'Tallas Grandes',      banner: '/images/banner-tallas-grandes.jpg' },
+  'nueva-coleccion':     { title: 'Nueva Colección',     banner: '/images/banner-nueva-coleccion.jpg' },
+  'rebajas':             { title: 'Rebajas',             banner: '/images/banner-nueva-coleccion.jpg' },
+  'accesorios':          { title: 'Accesorios',          banner: '/images/banner-nueva-coleccion.jpg' },
+  'basicos-esenciales':  { title: 'Básicos Esenciales',  banner: '/images/banner-blusas.jpg' },
+  'temporada-calida':    { title: 'Temporada Cálida',    banner: '/images/banner-vestidos.jpg' },
 }
-
-const CATEGORY_LINKS = [
-  { label: 'Ropa',                 href: '/collections/vestidos' },
-  { label: 'Básicas',              href: '/collections/blusas' },
-  { label: 'Tallas Grandes',       href: '/collections/tallas-grandes' },
-  { label: 'Rebajas',              href: '/collections/nueva-coleccion' },
-  { label: 'Accesorios y Zapatos', href: '/collections/accesorios' },
-  { label: 'Uniformes',            href: '/collections/uniformes' },
-  { label: 'Bono Regalo',          href: '/collections/bono-regalo' },
-]
-
-const ALL_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
-
-const ALL_COLORS = [
-  { label: 'Celeste',      value: '#AED6F1' },
-  { label: 'Azul marino',  value: '#1F3A5F' },
-  { label: 'Azul',         value: '#2471A3' },
-  { label: 'Marino',       value: '#1A252F' },
-  { label: 'Café',         value: '#6E2C00' },
-  { label: 'Dorado',       value: '#D4AC0D' },
-  { label: 'Crema',        value: '#FDEBD0' },
-  { label: 'Gris',         value: '#717D7E' },
-  { label: 'Marfil',       value: '#F0EAD6' },
-  { label: 'Negro',        value: '#000000' },
-]
-
-const ALL_TELAS = ['Algodón', 'Elastano', 'Índigo', 'Licra', 'Poliéster', 'Tencel', 'Viscosa']
-
-const PRICE_MIN = 0
-const PRICE_MAX = 500000
 
 // Grid configurations: cols on mobile / cols on desktop / gap
 const GRID_CONFIGS = {
@@ -78,13 +52,23 @@ export default function CollectionPage({ category: propCategory }) {
   // Grid view: '3' | '4' | '6'
   const [gridView, setGridView] = useState('3')
 
+  // Reset filters when category changes
+  useEffect(() => {
+    setSelectedSizes([])
+    setSelectedColors([])
+    setMinPrice(PRICE_MIN)
+    setMaxPrice(PRICE_MAX)
+    setSelectedTelas([])
+  }, [category])
+
   const filters = useMemo(() => ({
-    category: category === 'nueva-coleccion' ? undefined : category,
+    category,
     sizes:    selectedSizes.length  ? selectedSizes  : undefined,
     colors:   selectedColors.length ? selectedColors : undefined,
     minPrice: minPrice > PRICE_MIN  ? minPrice       : undefined,
     maxPrice: maxPrice < PRICE_MAX  ? maxPrice       : undefined,
-  }), [category, selectedSizes, selectedColors, minPrice, maxPrice])
+    fabric:   selectedTelas.length  ? selectedTelas  : undefined,
+  }), [category, selectedSizes, selectedColors, minPrice, maxPrice, selectedTelas])
 
   const { products, loading } = useProducts(filters)
 
@@ -251,7 +235,6 @@ export default function CollectionPage({ category: propCategory }) {
               <div className={gridClass(gridView)}>
                 {[...products]
                   .sort((a, b) => {
-                    // Available products first, sold-out last
                     const aOut = a.is_available === false
                     const bOut = b.is_available === false
                     if (aOut === bOut) return 0
@@ -291,215 +274,5 @@ export default function CollectionPage({ category: propCategory }) {
         </div>
       )}
     </>
-  )
-}
-
-/* ── Grid toggle button ──────────────────────────────────────── */
-function GridButton({ active, onClick, children }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`p-1.5 transition-opacity duration-150 ${active ? 'opacity-100' : 'opacity-25 hover:opacity-60'}`}
-      aria-pressed={active}
-    >
-      {children}
-    </button>
-  )
-}
-
-/* ── Filter section accordion ────────────────────────────────── */
-function FilterSection({ title, open, onToggle, children, maxH = '400px' }) {
-  return (
-    <div className="border-b border-brand-border py-5">
-      <button
-        className="flex items-center justify-between w-full font-sans text-xs font-semibold uppercase tracking-button text-brand-black"
-        onClick={onToggle}
-        aria-expanded={open}
-      >
-        {title}
-        <svg
-          width="14" height="14" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" strokeWidth="2"
-          style={{ transform: open ? 'rotate(180deg)' : 'rotate(0)', transition: 'transform 200ms', flexShrink: 0 }}
-        >
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </button>
-      <div style={{ maxHeight: open ? maxH : '0', overflow: 'hidden', transition: 'max-height 300ms ease-out' }}>
-        <div className="pt-4">{children}</div>
-      </div>
-    </div>
-  )
-}
-
-/* ── Dual range price slider ─────────────────────────────────── */
-function PriceRangeSlider({ minVal, maxVal, onMinChange, onMaxChange }) {
-  const minPercent = Math.round(((minVal - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100)
-  const maxPercent = Math.round(((maxVal - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100)
-
-  return (
-    <div>
-      {/* Track */}
-      <div className="relative h-px bg-brand-border rounded-full mb-5 mx-1.5" style={{ marginTop: '10px' }}>
-        <div
-          className="absolute h-px bg-brand-black"
-          style={{ left: `${minPercent}%`, right: `${100 - maxPercent}%` }}
-        />
-        <input
-          type="range"
-          min={PRICE_MIN} max={PRICE_MAX} value={minVal} step={5000}
-          onChange={e => onMinChange(Math.min(Number(e.target.value), maxVal - 10000))}
-          className="filter-range-input"
-        />
-        <input
-          type="range"
-          min={PRICE_MIN} max={PRICE_MAX} value={maxVal} step={5000}
-          onChange={e => onMaxChange(Math.max(Number(e.target.value), minVal + 10000))}
-          className="filter-range-input"
-        />
-      </div>
-      {/* Number inputs */}
-      <div className="flex items-center gap-2 mt-1">
-        <div className="flex-1 border border-brand-border flex items-center px-2.5 py-1.5 gap-1 min-w-0">
-          <span className="font-sans text-xs text-brand-black/50">$</span>
-          <input
-            type="number"
-            min={PRICE_MIN} max={maxVal - 10000} value={minVal} step={5000}
-            onChange={e => onMinChange(Math.max(PRICE_MIN, Math.min(Number(e.target.value), maxVal - 10000)))}
-            className="w-full font-sans text-xs text-brand-black bg-transparent outline-none min-w-0"
-          />
-        </div>
-        <span className="font-sans text-xs text-brand-black/50 shrink-0">a</span>
-        <div className="flex-1 border border-brand-border flex items-center px-2.5 py-1.5 gap-1 min-w-0">
-          <span className="font-sans text-xs text-brand-black/50">$</span>
-          <input
-            type="number"
-            min={minVal + 10000} max={PRICE_MAX} value={maxVal} step={5000}
-            onChange={e => onMaxChange(Math.min(PRICE_MAX, Math.max(Number(e.target.value), minVal + 10000)))}
-            className="w-full font-sans text-xs text-brand-black bg-transparent outline-none min-w-0"
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ── Filters panel ───────────────────────────────────────────── */
-function FiltersPanel({
-  openSection, setOpenSection,
-  selectedSizes, toggleSize,
-  selectedColors, setSelectedColors,
-  minPrice, setMinPrice,
-  maxPrice, setMaxPrice,
-  selectedTelas, toggleTela,
-  hasFilters, clearFilters,
-  category,
-}) {
-  function toggle(key) { setOpenSection(s => ({ ...s, [key]: !s[key] })) }
-  function toggleColor(v) {
-    setSelectedColors(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v])
-  }
-
-  return (
-    <div>
-      {hasFilters && (
-        <button
-          onClick={clearFilters}
-          className="font-sans text-xs uppercase tracking-button text-brand-black/40 hover:text-brand-black transition-colors mb-3"
-        >
-          Limpiar filtros ✕
-        </button>
-      )}
-
-      {/* Category navigation */}
-      <FilterSection title="Ropa para mujer" open={openSection.category} onToggle={() => toggle('category')} maxH="500px">
-        <ul>
-          {CATEGORY_LINKS.map(l => (
-            <li key={l.href}>
-              <Link
-                to={l.href}
-                className={`block font-sans text-sm py-1.5 transition-colors duration-150 ${
-                  l.href.includes(category)
-                    ? 'text-brand-black font-medium'
-                    : 'text-brand-black/60 hover:text-brand-black'
-                }`}
-              >
-                {l.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </FilterSection>
-
-      {/* Sizes */}
-      <FilterSection title="Talla" open={openSection.sizes} onToggle={() => toggle('sizes')}>
-        <div className="flex flex-wrap gap-2">
-          {ALL_SIZES.map(s => (
-            <button
-              key={s}
-              onClick={() => toggleSize(s)}
-              className={`font-sans text-sm w-10 h-10 border transition-colors duration-150 ${
-                selectedSizes.includes(s)
-                  ? 'bg-brand-black text-white border-brand-black'
-                  : 'border-brand-border text-brand-black hover:border-brand-black'
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </FilterSection>
-
-      {/* Colors */}
-      <FilterSection title="Color" open={openSection.color} onToggle={() => toggle('color')}>
-        <div className="flex flex-wrap gap-3">
-          {ALL_COLORS.map(c => (
-            <button
-              key={c.value}
-              onClick={() => toggleColor(c.value)}
-              title={c.label}
-              aria-label={c.label}
-              aria-pressed={selectedColors.includes(c.value)}
-              className={`w-9 h-9 rounded-full transition-all duration-150 ${
-                selectedColors.includes(c.value)
-                  ? 'ring-2 ring-offset-2 ring-brand-black'
-                  : 'ring-1 ring-black/10 hover:ring-brand-black/40'
-              }`}
-              style={{ background: c.value }}
-            />
-          ))}
-        </div>
-      </FilterSection>
-
-      {/* Price range slider */}
-      <FilterSection title="Precio" open={openSection.price} onToggle={() => toggle('price')} maxH="160px">
-        <PriceRangeSlider
-          minVal={minPrice}
-          maxVal={maxPrice}
-          onMinChange={setMinPrice}
-          onMaxChange={setMaxPrice}
-        />
-      </FilterSection>
-
-      {/* Fabric */}
-      <FilterSection title="Tela" open={openSection.tela} onToggle={() => toggle('tela')} maxH="500px">
-        <ul>
-          {ALL_TELAS.map(t => (
-            <li key={t}>
-              <button
-                onClick={() => toggleTela(t)}
-                className={`block w-full text-left font-sans text-sm py-1.5 transition-colors duration-150 ${
-                  selectedTelas.includes(t)
-                    ? 'text-brand-black font-medium'
-                    : 'text-brand-black/60 hover:text-brand-black'
-                }`}
-              >
-                {t}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </FilterSection>
-    </div>
   )
 }

@@ -23,6 +23,7 @@
  */
 
 import https from 'node:https'
+import { sendOrderConfirmedEmail } from './emails/order-confirmed.js'
 
 function supabaseRequest(method, path, body, serviceKey, supabaseUrl) {
   return new Promise((resolve, reject) => {
@@ -53,10 +54,9 @@ function supabaseRequest(method, path, body, serviceKey, supabaseUrl) {
   })
 }
 
-// ── Atomically decrement stock for each item via RPC, then mark order ────────
+// ── Atomically decrement stock + increment total_sold ────────────────────────
 async function decrementStock(items, orderId, serviceKey, supabaseUrl) {
   try {
-    // Call decrement_stock RPC for each unique product slug
     for (const item of items) {
       if (!item.slug) continue
       const qty = item.quantity ?? 1
@@ -65,16 +65,20 @@ async function decrementStock(items, orderId, serviceKey, supabaseUrl) {
         { p_product_slug: item.slug, p_quantity: qty },
         serviceKey, supabaseUrl
       )
+      await supabaseRequest(
+        'POST', '/rpc/increment_total_sold',
+        { p_product_slug: item.slug, p_quantity: qty },
+        serviceKey, supabaseUrl
+      )
     }
-    // Mark order as stock-decremented to prevent double decrement from webhook
     await supabaseRequest(
       'PATCH', `/orders?id=eq.${orderId}`,
       { stock_decremented: true },
       serviceKey, supabaseUrl
     )
-    console.log(`[save-order] Stock decremented for order ${orderId}`)
+    console.log(`[save-order] Stock decremented + total_sold updated for order ${orderId}`)
   } catch (err) {
-    console.warn('[save-order] Stock decrement warning (non-fatal):', err.message)
+    console.warn('[save-order] Stock/sold warning (non-fatal):', err.message)
   }
 }
 
@@ -160,9 +164,24 @@ export default async function handler(req, res) {
       }
     }
 
-    // ── Decrement stock on APPROVED orders (idempotent via stock_decremented flag) ──
+    // ── Decrement stock + increment total_sold on APPROVED orders ───────────────
     if (status === 'APPROVED' && items.length > 0) {
       await decrementStock(items, orderId, serviceKey, supabaseUrl)
+    }
+
+    // ── Send confirmation email (non-blocking) ───────────────────────────────
+    if (status === 'APPROVED') {
+      sendOrderConfirmedEmail({
+        customerName:    customer_name,
+        customerEmail:   customer_email,
+        wompiReference:  wompi_reference,
+        orderId,
+        items,
+        subtotal:        items.reduce((s, i) => s + (i.price ?? 0) * (i.quantity ?? 1), 0),
+        totalAmount:     total_amount,
+        shippingAddress: shipping_address ?? {},
+        shippingOption:  shipping_option,
+      }).catch(e => console.warn('[save-order] Email warning:', e.message))
     }
 
     console.log(`[save-order] Saved order ${orderId} | tx: ${wompi_transaction_id}`)

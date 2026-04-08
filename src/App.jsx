@@ -89,8 +89,10 @@ export default function App() {
           <Route path="/collections/basicas"           element={<CollectionPage category="blusas" />} />
           <Route path="/collections/jeans"             element={<CollectionPage category="jeans" />} />
           <Route path="/collections/pantalones"        element={<CollectionPage category="jeans" />} />
-          <Route path="/collections/rebajas"           element={<CollectionPage category="rebajas" />} />
+          <Route path="/collections/rebajas"            element={<CollectionPage category="rebajas" />} />
           <Route path="/collections/accesorios"        element={<CollectionPage category="accesorios" />} />
+          <Route path="/collections/basicos-esenciales" element={<CollectionPage category="basicos-esenciales" />} />
+          <Route path="/collections/temporada-calida"  element={<CollectionPage category="temporada-calida" />} />
           <Route path="/collections/uniformes"         element={<CollectionPage category="uniformes" />} />
           <Route path="/collections/bono-regalo"       element={<CollectionPage category="bono-regalo" />} />
           <Route path="/collections/tallas-grandes"    element={<TallasGrandesPage />} />
