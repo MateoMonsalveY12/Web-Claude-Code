@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 
 const SLIDES = [
-  { id: 'slide-1', src: '/images/hero-bg-1.jpg', kenBurns: 'hero-ken-burns-a', origin: '55% 50%' },
-  { id: 'slide-2', src: '/images/hero-bg-2.jpg', kenBurns: 'hero-ken-burns-b', origin: '45% 55%' },
+  { id: 'slide-1', src: '/images/hero-bialy-1.jpg', kenBurns: 'hero-ken-burns-a', origin: '55% 50%' },
+  { id: 'slide-2', src: '/images/hero-bialy-2.jpg', kenBurns: 'hero-ken-burns-b', origin: '45% 55%' },
 ]
 
 export default function Hero() {

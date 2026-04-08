@@ -13,7 +13,7 @@ export default function PromoEditorial() {
           data-aos-duration="900"
         >
           <img
-            src="/images/promo-editorial.jpg"
+            src="/images/detalle-tela.jpg"
             alt="Colección especial"
             className="absolute inset-0 w-full h-full object-cover object-center"
             loading="lazy"
