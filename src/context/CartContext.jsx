@@ -6,6 +6,7 @@ const CartContext = createContext(null)
 const FREE_SHIPPING  = 180000
 const COUPON_KEY     = 'bialy-coupon'
 const SAVE_DEBOUNCE  = 800   // ms — debounce for Supabase cart UPSERT
+const STABLE_UID_KEY = 'bialy-stable-uid' // sessionStorage — survives Wompi/OAuth redirects
 
 // ── localStorage helpers ──────────────────────────────────────────────────────
 function loadCoupon() {
@@ -129,15 +130,21 @@ export function CartProvider({ children }) {
     if (!supabase) return
 
     let prevUserId   = null  // current session state
-    let stableUserId = null  // last confirmed userId — survives SIGNED_OUT
+    // stableUserId is seeded from sessionStorage so it survives external redirects
+    // (Wompi payment flow, Google OAuth) within the same browser tab.
+    // sessionStorage is cleared when the tab/window is closed — intentional.
+    let stableUserId = sessionStorage.getItem(STABLE_UID_KEY) ?? null
     let signOutTimer = null  // debounce handle for delayed cart clear
 
     // ── Seed tracking vars only (no cart loading — that belongs to INITIAL_SESSION)
     // This runs as a safety net in case TOKEN_REFRESHED fires before INITIAL_SESSION.
     supabase.auth.getSession().then(({ data: { session } }) => {
       const uid = session?.user?.id ?? null
-      if (!prevUserId) prevUserId               = uid
-      if (!stableUserId && uid) stableUserId    = uid
+      if (!prevUserId) prevUserId = uid
+      if (!stableUserId && uid) {
+        stableUserId = uid
+        sessionStorage.setItem(STABLE_UID_KEY, uid)
+      }
       if (!currentUserIdRef.current) currentUserIdRef.current = uid
     })
 
@@ -149,7 +156,10 @@ export function CartProvider({ children }) {
       if (event === 'TOKEN_REFRESHED') {
         prevUserId               = newUserId
         currentUserIdRef.current = newUserId
-        if (newUserId) stableUserId = newUserId
+        if (newUserId) {
+          stableUserId = newUserId
+          sessionStorage.setItem(STABLE_UID_KEY, newUserId)
+        }
         console.log('[cart] Token renovado — carrito intacto')
         return
       }
@@ -160,8 +170,9 @@ export function CartProvider({ children }) {
       // that was written during the previous session. Merging would double everything.
       if (event === 'INITIAL_SESSION') {
         prevUserId               = newUserId
-        stableUserId             = newUserId
+        stableUserId             = newUserId ?? stableUserId  // keep sessionStorage value if newUserId is null
         currentUserIdRef.current = newUserId
+        if (newUserId) sessionStorage.setItem(STABLE_UID_KEY, newUserId)
 
         if (newUserId) {
           dbLoadCart(newUserId).then(savedItems => {
@@ -193,6 +204,7 @@ export function CartProvider({ children }) {
             // No SIGNED_IN followed → confirmed real sign-out
             console.log('[cart] Sesión cerrada — limpiando carrito')
             stableUserId = null
+            sessionStorage.removeItem(STABLE_UID_KEY)
             setItems([])
             setCouponData(null)
             setCouponStatus('idle')
@@ -214,9 +226,10 @@ export function CartProvider({ children }) {
         prevUserId               = newUserId
         currentUserIdRef.current = newUserId
         stableUserId             = newUserId
+        sessionStorage.setItem(STABLE_UID_KEY, newUserId)
 
         if (isSameUser) {
-          // Same user re-authenticated (token refresh cycle) → cart untouched
+          // Same user re-authenticated (token refresh cycle / Wompi return) → cart untouched
           console.log('[cart] Misma sesión restaurada — carrito intacto')
           return
         }

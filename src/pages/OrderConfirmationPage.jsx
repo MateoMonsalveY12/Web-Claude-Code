@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCart } from '../context/CartContext.jsx'
+import { useAuth } from '../context/AuthContext.jsx'
 
 // ─── Wompi API base URL (determined from public key prefix — no VITE_WOMPI_ENV needed) ─
 const WOMPI_PUBLIC_KEY = import.meta.env.VITE_WOMPI_PUBLIC_KEY ?? ''
@@ -144,6 +145,7 @@ function OrderTotals({ order }) {
 export default function OrderConfirmationPage() {
   const [searchParams] = useSearchParams()
   const { clearCart, removeDiscount } = useCart()
+  const { user, saveShippingProfile } = useAuth()
 
   // ?id= is the Wompi transaction ID — Wompi appends it on redirect back
   // We only read 'id'. Any extra params Wompi adds (env, etc.) are ignored.
@@ -158,7 +160,8 @@ export default function OrderConfirmationPage() {
   // 'loading' | 'APPROVED' | 'DECLINED' | 'PENDING' | 'VOIDED' | 'ERROR' | 'no_id'
   const [status,  setStatus]  = useState('loading')
   const [txData,  setTxData]  = useState(null)
-  const savedRef = useRef(false) // prevents duplicate Supabase saves on re-render
+  const savedRef       = useRef(false) // prevents duplicate Supabase saves on re-render
+  const profileSavedRef = useRef(false) // prevents duplicate customer_profiles upserts
 
   // ── Save order to Supabase (fire-and-forget, never blocks UX) ─────────────
   async function persistOrder(tx, localOrder) {
@@ -272,6 +275,35 @@ export default function OrderConfirmationPage() {
 
     fetchTxStatus()
   }, [transactionId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Save customer profile when payment is confirmed ───────────────────────
+  // Runs here (not in CheckoutPage) because:
+  //   1. The session is guaranteed stable — no redirect is about to happen
+  //   2. user is resolved by the time APPROVED is set (auth ran before Wompi returned)
+  //   3. Waiting for `user` avoids the race where auth is still loading on mount
+  useEffect(() => {
+    if (status !== 'APPROVED') return
+    if (!order?.saveInfo) return
+    if (!user) return                      // auth still loading — effect re-runs when user arrives
+    if (profileSavedRef.current) return
+    profileSavedRef.current = true
+
+    console.log('[profile] Guardando perfil post-compra...')
+    saveShippingProfile({
+      first_name:      order.firstName ?? '',
+      last_name:       order.lastName  ?? '',
+      email:           order.email     ?? '',
+      phone:           order.phone     ?? '',
+      document_type:   order.docType   ?? 'CC',
+      document_number: order.docNumber ?? '',
+      address_line1:   order.address   ?? '',
+      address_line2:   order.apt       ?? '',
+      city:            order.city      ?? '',
+      state:           order.state     ?? '',
+      postal_code:     order.postal    ?? '',
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, user])
 
   // ── Per-status UI config ──────────────────────────────────────────────────
   const STATUS_UI = {

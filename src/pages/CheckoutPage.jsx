@@ -67,7 +67,7 @@ function fmt(n) {
 
 export default function CheckoutPage() {
   const { items, subtotal, cartCount, couponData, discountAmount, applyDiscount, revalidateCoupon } = useCart()
-  const { user, getShippingProfile, saveShippingProfile } = useAuth()
+  const { user, getShippingProfile } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
 
@@ -200,7 +200,9 @@ export default function CheckoutPage() {
 
     console.log(`[Wompi] env=${WOMPI_ENV} | key=${publicKey.slice(0, 20)}... | amount=${amountInCents} | ref=${reference}`)
 
-    // Persist order for confirmation page (before redirect — Wompi clears React state)
+    // Persist order for confirmation page (before redirect — Wompi clears React state).
+    // saveInfo + full profile fields are included so OrderConfirmationPage can
+    // save customer_profiles after payment is confirmed (session is stable there).
     localStorage.setItem('bialy-pending-order', JSON.stringify({
       reference,
       items: items.map(i => ({ ...i })),
@@ -218,41 +220,16 @@ export default function CheckoutPage() {
       city:      city.trim(),
       state,
       phone:     phone.trim(),
+      // Profile fields — used by OrderConfirmationPage to upsert customer_profiles
+      saveInfo:  saveInfo && !!user,
+      docType,
+      docNumber: docNumber.trim(),
+      postal:    postal.trim(),
       createdAt: new Date().toISOString(),
     }))
 
     try {
-      // Profile save runs in parallel with the signature fetch.
-      // Wrapped in a 4-second race so a slow/hanging Supabase call NEVER blocks the
-      // Wompi redirect. saveShippingProfile catches its own errors internally,
-      // so a DB failure never propagates here.
-      const profileData = saveInfo && user
-        ? {
-            first_name:      firstName.trim(),
-            last_name:       lastName.trim(),
-            email:           email.trim(),
-            phone:           phone.trim(),
-            document_type:   docType,
-            document_number: docNumber.trim(),
-            address_line1:   address.trim(),
-            address_line2:   apt.trim(),
-            city:            city.trim(),
-            state,
-            postal_code:     postal.trim(),
-          }
-        : null
-
-      const profileSave = profileData
-        ? Promise.race([
-            saveShippingProfile(profileData),
-            new Promise(resolve => setTimeout(resolve, 4000)), // 4s max — never block payment
-          ])
-        : Promise.resolve()
-
-      const [signature] = await Promise.all([
-        getWompiSignature(reference, amountInCents),
-        profileSave,
-      ])
+      const signature = await getWompiSignature(reference, amountInCents)
 
       const wompiBase  = 'https://checkout.wompi.co/p/'
       // redirectTo must be a clean URL with NO query params — Wompi appends ?id=... on return
