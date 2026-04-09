@@ -56,13 +56,10 @@ const DEPARTMENTS = [
   'Santander','Sucre','Tolima','Valle del Cauca','Vaupés','Vichada',
 ]
 
-const SHIPPING_OPTIONS = [
-  { id: 'fabrica',      label: 'Recoge en Bialy Punto de Fábrica',    price: 0 },
-  { id: 'laureles',     label: 'Recoge en Tienda Bialy Laureles',      price: 0 },
-  { id: 'oviedo',       label: 'Recoge en Tienda Bialy Oviedo',        price: 0 },
-  { id: 'sandiego',     label: 'Recoge en Tienda Bialy Sandiego',      price: 0 },
-  { id: 'coordinadora', label: 'Coordinadora',                         price: 15000, sublabel: '3 a 7 días hábiles' },
-]
+// Only carrier shipping — no pickup points
+const FREE_SHIPPING_THRESHOLD = 180000
+const CARRIER_COST            = 15000
+const CARRIER_LABEL           = 'Coordinadora — 3 a 7 días hábiles'
 
 function fmt(n) {
   return '$ ' + Math.round(n).toLocaleString('es-CO')
@@ -70,30 +67,11 @@ function fmt(n) {
 
 export default function CheckoutPage() {
   const { items, subtotal, cartCount, couponData, discountAmount, applyDiscount, revalidateCoupon } = useCart()
-  const { user, getCustomer } = useAuth()
+  const { user, getShippingProfile, saveShippingProfile } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
 
   useEffect(() => { document.title = 'Checkout | Bialy' }, [])
-
-  // Pre-fill form from customer profile when user is logged in
-  useEffect(() => {
-    if (!user) return
-    getCustomer().then(customer => {
-      if (!customer) return
-      if (customer.full_name) {
-        const parts = customer.full_name.trim().split(' ')
-        setFirstName(parts[0] ?? '')
-        setLastName(parts.slice(1).join(' ') || '')
-      }
-      if (customer.phone)           setPhone(customer.phone)
-      if (customer.document_type)   setDocType(customer.document_type)
-      if (customer.document_number) setDocNumber(customer.document_number)
-    })
-    // also pre-fill email from auth user
-    if (user.email) setEmail(user.email)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user])
 
   /* ── Form state ── */
   const [email,      setEmail]      = useState('')
@@ -110,10 +88,30 @@ export default function CheckoutPage() {
   const [phone,      setPhone]      = useState('')
   const [saveInfo,   setSaveInfo]   = useState(false)
   const [billing,    setBilling]    = useState(true)
-
-  const [shipping,   setShipping]   = useState('fabrica')
   const [processing,  setProcessing]  = useState(false)
   const prevEmailRef = useRef('')
+
+  // Pre-fill ALL fields from customer_profiles when user is logged in
+  useEffect(() => {
+    if (!user) return
+    // Always pre-fill email from auth
+    setEmail(user.email ?? '')
+    getShippingProfile().then(profile => {
+      if (!profile) return
+      if (profile.first_name)      setFirstName(profile.first_name)
+      if (profile.last_name)       setLastName(profile.last_name)
+      if (profile.phone)           setPhone(profile.phone)
+      if (profile.document_type)   setDocType(profile.document_type)
+      if (profile.document_number) setDocNumber(profile.document_number)
+      if (profile.address_line1)   setAddress(profile.address_line1)
+      if (profile.address_line2)   setApt(profile.address_line2)
+      if (profile.city)            setCity(profile.city)
+      if (profile.state)           setState(profile.state)
+      if (profile.postal_code)     setPostal(profile.postal_code)
+      setSaveInfo(true) // profile exists → default checkbox ON
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user])
 
   // Auto-apply if code arrived via location.state (legacy route from CartPage)
   useEffect(() => {
@@ -135,8 +133,9 @@ export default function CheckoutPage() {
   const [errors, setErrors] = useState({})
   const clearErr = key => setErrors(prev => ({ ...prev, [key]: '' }))
 
-  const shippingCost = SHIPPING_OPTIONS.find(o => o.id === shipping)?.price ?? 0
-  const total = subtotal + shippingCost - discountAmount
+  // Shipping: free above threshold, otherwise flat carrier cost
+  const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : CARRIER_COST
+  const total        = subtotal + shippingCost - discountAmount
 
   async function handlePayment(e) {
     e.preventDefault()
@@ -202,10 +201,21 @@ export default function CheckoutPage() {
 
     console.log(`[Wompi] env=${WOMPI_ENV} | key=${publicKey.slice(0, 20)}... | amount=${amountInCents} | ref=${reference}`)
 
-    // Fetch customer_id if logged in (best-effort — doesn't block payment)
-    let customerId = null
-    if (user) {
-      try { const c = await getCustomer(); customerId = c?.id ?? null } catch { /* ignore */ }
+    // Save shipping profile if checkbox is checked (fire-and-forget)
+    if (saveInfo && user) {
+      saveShippingProfile({
+        first_name:      firstName.trim(),
+        last_name:       lastName.trim(),
+        email:           email.trim(),
+        phone:           phone.trim(),
+        document_type:   docType,
+        document_number: docNumber.trim(),
+        address_line1:   address.trim(),
+        address_line2:   apt.trim(),
+        city:            city.trim(),
+        state,
+        postal_code:     postal.trim(),
+      })
     }
 
     // Persist order for confirmation page (before redirect — Wompi clears React state)
@@ -217,9 +227,8 @@ export default function CheckoutPage() {
       discountCode:   couponData?.code || null,
       discountAmount: discountAmount   || 0,
       total,
-      shipping,
-      shippingLabel: SHIPPING_OPTIONS.find(o => o.id === shipping)?.label,
-      email: email.trim(),
+      shippingLabel:  CARRIER_LABEL,
+      email:     email.trim(),
       firstName: firstName.trim(),
       lastName:  lastName.trim(),
       address:   address.trim(),
@@ -227,7 +236,6 @@ export default function CheckoutPage() {
       city:      city.trim(),
       state,
       phone:     phone.trim(),
-      customerId,
       createdAt: new Date().toISOString(),
     }))
 
@@ -472,57 +480,50 @@ export default function CheckoutPage() {
                   </div>
                   {errors.phone && <p className="font-sans text-xs text-red-500 mt-1">{errors.phone}</p>}
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={saveInfo}
-                    onChange={e => setSaveInfo(e.target.checked)}
-                    className="w-4 h-4 border-brand-border"
-                  />
-                  <span className="font-sans text-sm text-brand-black/70">
-                    Guardar mi información y consultar más rápidamente la próxima vez
-                  </span>
-                </label>
+                {user ? (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={saveInfo}
+                      onChange={e => setSaveInfo(e.target.checked)}
+                      className="w-4 h-4 border-brand-border"
+                    />
+                    <span className="font-sans text-sm text-brand-black/70">
+                      Guardar mi información para comprar más rápido la próxima vez
+                    </span>
+                  </label>
+                ) : (
+                  <p className="font-sans text-xs text-brand-black/40 leading-relaxed">
+                    ¿Quieres guardar tus datos?{' '}
+                    <button
+                      type="button"
+                      onClick={() => navigate('/cuenta/login', { state: { from: '/checkout' } })}
+                      className="underline text-brand-black/60 hover:text-brand-black transition-colors"
+                    >
+                      Inicia sesión o crea una cuenta
+                    </button>
+                  </p>
+                )}
               </div>
             </section>
 
-            {/* Shipping method */}
+            {/* Shipping method — single carrier, auto cost */}
             <section>
-              <h2 className="font-sans text-base font-bold mb-4">Métodos de envío</h2>
-              <div className="border border-brand-border divide-y divide-brand-border">
-                {SHIPPING_OPTIONS.map(opt => (
-                  <label
-                    key={opt.id}
-                    className={`flex items-center justify-between px-4 py-3.5 cursor-pointer transition-colors ${
-                      shipping === opt.id ? 'bg-brand-gray' : 'hover:bg-brand-gray/50'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      {/* Custom radio */}
-                      <div className="w-4 h-4 rounded-full border-2 border-brand-black flex items-center justify-center flex-shrink-0">
-                        {shipping === opt.id && (
-                          <div className="w-2 h-2 rounded-full bg-brand-black" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-sans text-sm text-brand-black">{opt.label}</p>
-                        {opt.sublabel && (
-                          <p className="font-sans text-xs text-brand-black/50">{opt.sublabel}</p>
-                        )}
-                      </div>
-                    </div>
-                    <span className="font-sans text-sm font-semibold ml-4 flex-shrink-0">
-                      {opt.price === 0 ? 'GRATIS' : fmt(opt.price)}
-                    </span>
-                    <input
-                      type="radio" name="shipping" value={opt.id}
-                      checked={shipping === opt.id}
-                      onChange={() => setShipping(opt.id)}
-                      className="sr-only"
-                    />
-                  </label>
-                ))}
+              <h2 className="font-sans text-base font-bold mb-4">Envío</h2>
+              <div className="border border-brand-border flex items-center justify-between px-4 py-3.5">
+                <div>
+                  <p className="font-sans text-sm text-brand-black">Coordinadora</p>
+                  <p className="font-sans text-xs text-brand-black/50">3 a 7 días hábiles</p>
+                </div>
+                <span className={`font-sans text-sm font-semibold ${shippingCost === 0 ? 'text-green-700' : ''}`}>
+                  {shippingCost === 0 ? 'GRATIS' : fmt(shippingCost)}
+                </span>
               </div>
+              {shippingCost === 0 && (
+                <p className="font-sans text-xs text-green-700 mt-1.5">
+                  ¡Tu pedido califica para envío gratis!
+                </p>
+              )}
             </section>
 
             {/* Payment */}

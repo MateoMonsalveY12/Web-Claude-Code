@@ -13,6 +13,9 @@ const DEPARTMENTS = [
   'Santander','Sucre','Tolima','Valle del Cauca','Vaupés','Vichada',
 ]
 
+const FREE_SHIPPING_THRESHOLD = 180000
+const CARRIER_COST            = 15000
+
 function fmt(n) {
   return '$ ' + Math.round(n).toLocaleString('es-CO')
 }
@@ -26,13 +29,30 @@ export default function CartPage() {
   } = useCart()
   const navigate = useNavigate()
 
-  const [note,     setNote]     = useState('')
-  const [province, setProvince] = useState('')
+  const [note,             setNote]             = useState('')
+  const [province,         setProvince]         = useState('')
+  const [shippingEstimate, setShippingEstimate] = useState(null)  // null | 0 | CARRIER_COST
+  const [shippingCalcErr,  setShippingCalcErr]  = useState('')
 
-  const cartTotal = subtotal - discountAmount
+  const cartTotal    = subtotal - discountAmount
+  const shippingFree = subtotal >= FREE_SHIPPING_THRESHOLD
 
   const { products: recommended } = useProducts({ limit: 4 })
-  const shippingFree = subtotal >= 180000
+
+  function handleCalcShipping() {
+    setShippingCalcErr('')
+    if (!province) {
+      setShippingCalcErr('Selecciona tu departamento para calcular el envío')
+      return
+    }
+    const cost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : CARRIER_COST
+    setShippingEstimate(cost)
+    if (cost === 0) {
+      console.log('[shipping:calc] Envío gratis aplicado (total > umbral)')
+    } else {
+      console.log(`[shipping:calc] Costo calculado para ${province}: ${fmt(cost)}`)
+    }
+  }
 
   if (items.length === 0) return <EmptyCart />
 
@@ -170,21 +190,41 @@ export default function CartPage() {
             <h3 className="font-sans text-sm font-semibold text-brand-black mb-4">
               Calcular gastos de envío
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-3">
-              <select className="input-brand">
-                <option value="CO">Colombia</option>
-              </select>
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
               <select
                 className="input-brand"
                 value={province}
-                onChange={e => setProvince(e.target.value)}
+                onChange={e => { setProvince(e.target.value); setShippingEstimate(null); setShippingCalcErr('') }}
               >
-                <option value="">Provincia</option>
+                <option value="">Selecciona tu departamento</option>
                 {DEPARTMENTS.map(d => <option key={d}>{d}</option>)}
               </select>
-              <input type="text" placeholder="Código postal" className="input-brand" />
-              <button className="btn-primary whitespace-nowrap">Calcular</button>
+              <button onClick={handleCalcShipping} className="btn-primary whitespace-nowrap">
+                Calcular
+              </button>
             </div>
+            {shippingCalcErr && (
+              <p className="font-sans text-xs text-red-500 mt-2">{shippingCalcErr}</p>
+            )}
+            {shippingEstimate !== null && (
+              <div className={`mt-3 px-4 py-3 border flex items-center justify-between ${
+                shippingEstimate === 0
+                  ? 'bg-green-50 border-green-200'
+                  : 'bg-brand-gray border-brand-border'
+              }`}>
+                <div>
+                  <p className={`font-sans text-sm font-semibold ${shippingEstimate === 0 ? 'text-green-800' : ''}`}>
+                    {shippingEstimate === 0 ? '¡Envío GRATIS!' : fmt(shippingEstimate)}
+                  </p>
+                  <p className="font-sans text-xs text-brand-black/50">Coordinadora — 3 a 7 días hábiles</p>
+                </div>
+                {shippingEstimate === 0 && (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -208,8 +248,14 @@ export default function CartPage() {
             )}
             <div className="flex justify-between items-center">
               <span className="font-sans text-sm text-brand-black/60">Envío</span>
-              <span className={`font-sans text-sm font-semibold ${shippingFree ? 'text-green-700' : ''}`}>
-                {shippingFree ? 'GRATIS' : 'Calculado al finalizar'}
+              <span className={`font-sans text-sm font-semibold ${
+                shippingFree || shippingEstimate === 0 ? 'text-green-700' : ''
+              }`}>
+                {shippingFree || shippingEstimate === 0
+                  ? 'GRATIS'
+                  : shippingEstimate != null
+                    ? fmt(shippingEstimate)
+                    : 'Calculado al finalizar'}
               </span>
             </div>
             <div className="border-t border-brand-border pt-3 flex justify-between items-baseline">

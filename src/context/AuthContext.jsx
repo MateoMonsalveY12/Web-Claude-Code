@@ -88,7 +88,7 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
-  // ── Get customer profile ─────────────────────────────────────────────────
+  // ── Get customer profile (legacy — customers table) ─────────────────────
   async function getCustomer() {
     if (!supabase || !user) return null
     const { data } = await supabase
@@ -99,10 +99,49 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  // ── Shipping profile (customer_profiles table — address + doc data) ───────
+  async function getShippingProfile() {
+    if (!supabase || !user) return null
+    console.log('[checkout:profile] Cargando perfil del usuario...')
+    try {
+      const { data, error } = await supabase
+        .from('customer_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+      if (error?.code === 'PGRST116') {
+        // No row found — this is normal for new users
+        console.log('[checkout:profile] No hay perfil guardado')
+        return null
+      }
+      if (error) { console.warn('[checkout:profile] Error:', error.message); return null }
+      console.log('[checkout:profile] Perfil encontrado, prellenando formulario...')
+      return data
+    } catch (err) {
+      console.warn('[checkout:profile] getShippingProfile error:', err.message)
+      return null
+    }
+  }
+
+  async function saveShippingProfile(profileData) {
+    if (!supabase || !user) return
+    console.log('[checkout:profile] Guardando perfil actualizado...')
+    try {
+      const { error } = await supabase
+        .from('customer_profiles')
+        .upsert({ id: user.id, ...profileData, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+      if (error) throw error
+      console.log('[checkout:profile] Perfil guardado exitosamente')
+    } catch (err) {
+      console.warn('[checkout:profile] saveShippingProfile error:', err.message)
+    }
+  }
+
   return (
     <AuthContext.Provider value={{
       user, session, loading,
-      signInWithMagicLink, signInWithGoogle, signUp, signOut, getCustomer,
+      signInWithMagicLink, signInWithGoogle, signUp, signOut,
+      getCustomer, getShippingProfile, saveShippingProfile,
     }}>
       {children}
     </AuthContext.Provider>

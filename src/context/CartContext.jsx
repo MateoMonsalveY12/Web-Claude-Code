@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
+import { supabase } from '../lib/supabase'
 
 const CartContext = createContext(null)
 
@@ -98,6 +99,27 @@ export function CartProvider({ children }) {
     setCouponMsg('')
     console.log('[discount] Cupón removido')
   }
+
+  // ── Clear cart + coupon on auth state change ────────────────────────────────
+  useEffect(() => {
+    if (!supabase) return
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        console.log('[cart] Usuario cerró sesión — limpiando carrito')
+        setItems([])
+        setCouponData(null)
+        setCouponStatus('idle')
+        setCouponMsg('')
+      } else if (event === 'SIGNED_IN') {
+        console.log('[cart] Usuario inició sesión — limpiando carrito previo')
+        setItems([])
+        setCouponData(null)
+        setCouponStatus('idle')
+        setCouponMsg('')
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   // ── Cart functions ──────────────────────────────────────────────────────────
   function addToCart(product, size, color, quantity = 1) {
