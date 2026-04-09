@@ -222,27 +222,36 @@ export default function CheckoutPage() {
     }))
 
     try {
-      // Run signature fetch + profile save in parallel.
-      // Both must complete before window.location.href fires — otherwise the
-      // browser cancels pending fetches on navigation and the profile is never saved.
-      // saveShippingProfile catches its own errors so a DB failure never blocks payment.
+      // Profile save runs in parallel with the signature fetch.
+      // Wrapped in a 4-second race so a slow/hanging Supabase call NEVER blocks the
+      // Wompi redirect. saveShippingProfile catches its own errors internally,
+      // so a DB failure never propagates here.
+      const profileData = saveInfo && user
+        ? {
+            first_name:      firstName.trim(),
+            last_name:       lastName.trim(),
+            email:           email.trim(),
+            phone:           phone.trim(),
+            document_type:   docType,
+            document_number: docNumber.trim(),
+            address_line1:   address.trim(),
+            address_line2:   apt.trim(),
+            city:            city.trim(),
+            state,
+            postal_code:     postal.trim(),
+          }
+        : null
+
+      const profileSave = profileData
+        ? Promise.race([
+            saveShippingProfile(profileData),
+            new Promise(resolve => setTimeout(resolve, 4000)), // 4s max — never block payment
+          ])
+        : Promise.resolve()
+
       const [signature] = await Promise.all([
         getWompiSignature(reference, amountInCents),
-        saveInfo && user
-          ? saveShippingProfile({
-              first_name:      firstName.trim(),
-              last_name:       lastName.trim(),
-              email:           email.trim(),
-              phone:           phone.trim(),
-              document_type:   docType,
-              document_number: docNumber.trim(),
-              address_line1:   address.trim(),
-              address_line2:   apt.trim(),
-              city:            city.trim(),
-              state,
-              postal_code:     postal.trim(),
-            })
-          : Promise.resolve(),
+        profileSave,
       ])
 
       const wompiBase  = 'https://checkout.wompi.co/p/'
