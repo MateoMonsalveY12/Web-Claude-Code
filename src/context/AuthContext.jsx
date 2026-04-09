@@ -11,17 +11,38 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!supabase) { setLoading(false); return }
 
-    // Get current session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    // Safety net: if Supabase hangs (e.g. token refresh fails on browser reopen),
+    // loading must still resolve so the UI never stays permanently blocked.
+    const loadingTimer = setTimeout(() => {
+      console.warn('[auth] Timeout esperando sesión — forzando loading=false')
       setLoading(false)
-    })
+    }, 5000)
+
+    // Get current session on mount (may be slow if token needs refreshing)
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+        clearTimeout(loadingTimer)
+      })
+      .catch((err) => {
+        console.warn('[auth] getSession error:', err?.message)
+        setLoading(false)
+        clearTimeout(loadingTimer)
+      })
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
+
+      // INITIAL_SESSION fires before getSession() resolves — resolve loading immediately
+      // so the UI unblocks as fast as possible on every page load
+      if (event === 'INITIAL_SESSION') {
+        setLoading(false)
+        clearTimeout(loadingTimer)
+      }
 
       // On first sign-in (Magic Link or OAuth), ensure customer record exists
       if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && session?.user) {
@@ -36,7 +57,10 @@ export function AuthProvider({ children }) {
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(loadingTimer)
+    }
   }, [])
 
   // ── Magic Link (passwordless) ────────────────────────────────────────────

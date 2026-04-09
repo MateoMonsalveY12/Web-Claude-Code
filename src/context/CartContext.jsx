@@ -154,10 +154,10 @@ export function CartProvider({ children }) {
         return
       }
 
-      // ── INITIAL_SESSION: fires once at app load with the current session state
-      // This is the ONLY path that hydrates the cart for an already-logged-in user.
-      // On a callback page (OAuth/magic-link), INITIAL_SESSION fires with null,
-      // so SIGNED_IN will handle the merge instead — never both.
+      // ── INITIAL_SESSION: fires once at app load with the current session state.
+      // This is the ONLY path that hydrates the cart for already-logged-in users.
+      // NEVER merge localStorage here: localStorage is a copy of the SAME data
+      // that was written during the previous session. Merging would double everything.
       if (event === 'INITIAL_SESSION') {
         prevUserId               = newUserId
         stableUserId             = newUserId
@@ -165,15 +165,14 @@ export function CartProvider({ children }) {
 
         if (newUserId) {
           dbLoadCart(newUserId).then(savedItems => {
-            const guestItems = itemsRef.current
-            if (guestItems.length > 0 && savedItems.length > 0) {
-              const merged = mergeItems(savedItems, guestItems)
-              setItems(merged)
-              dbSaveCart(newUserId, merged)
-            } else if (savedItems.length > 0) {
+            if (savedItems.length > 0) {
+              // Supabase is the canonical source. Replace state outright — no merge.
               setItems(savedItems)
+            } else if (itemsRef.current.length > 0) {
+              // Supabase empty (new user / first use of user_carts).
+              // Persist whatever is already in localStorage so it survives future logins.
+              dbSaveCart(newUserId, itemsRef.current)
             }
-            // savedItems empty → keep whatever is in localStorage
           })
         }
         return
@@ -222,16 +221,23 @@ export function CartProvider({ children }) {
           return
         }
 
-        // Different user (or first login with stableUserId=null) → load + merge
-        console.log('[cart] Nuevo usuario inició sesión — fusionando carrito de invitado')
+        // Different user (or first login with stableUserId=null) → load cart
+        console.log('[cart] Nuevo usuario inició sesión')
         const guestItems = itemsRef.current  // capture before any setState
         const savedItems = await dbLoadCart(newUserId)
-        const merged     = mergeItems(savedItems, guestItems)
-        setItems(merged)
-        await dbSaveCart(newUserId, merged)
 
-        // Show merge toast only when guest had items
-        if (guestItems.length > 0) {
+        // If the user already has a saved cart, it is the authoritative source.
+        // Do NOT merge with localStorage — the browser may have left the SPA before
+        // the 200ms sign-out debounce fired (e.g. Google OAuth redirect), leaving
+        // stale items from the previous session in localStorage. Merging them with
+        // savedItems would double everything.
+        // Only transfer guest items when there is no existing saved cart.
+        const finalItems = savedItems.length > 0 ? savedItems : guestItems
+        setItems(finalItems)
+        await dbSaveCart(newUserId, finalItems)
+
+        // Show toast only when guest items are actually transferred (empty saved cart)
+        if (savedItems.length === 0 && guestItems.length > 0) {
           setCouponData(null)
           setCouponStatus('idle')
           setCouponMsg('')
