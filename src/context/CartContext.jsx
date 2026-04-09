@@ -132,27 +132,13 @@ export function CartProvider({ children }) {
     let stableUserId = null  // last confirmed userId — survives SIGNED_OUT
     let signOutTimer = null  // debounce handle for delayed cart clear
 
-    // ── Seed from current session (must run before listener fires) ────────────
+    // ── Seed tracking vars only (no cart loading — that belongs to INITIAL_SESSION)
+    // This runs as a safety net in case TOKEN_REFRESHED fires before INITIAL_SESSION.
     supabase.auth.getSession().then(({ data: { session } }) => {
       const uid = session?.user?.id ?? null
-      prevUserId               = uid
-      stableUserId             = uid
-      currentUserIdRef.current = uid
-
-      if (uid) {
-        // Logged-in on page load → hydrate cart from Supabase
-        dbLoadCart(uid).then(savedItems => {
-          const guestItems = itemsRef.current
-          if (guestItems.length > 0 && savedItems.length > 0) {
-            const merged = mergeItems(savedItems, guestItems)
-            setItems(merged)
-            dbSaveCart(uid, merged)
-          } else if (savedItems.length > 0) {
-            setItems(savedItems)
-          }
-          // savedItems empty → keep whatever is already in localStorage
-        })
-      }
+      if (!prevUserId) prevUserId               = uid
+      if (!stableUserId && uid) stableUserId    = uid
+      if (!currentUserIdRef.current) currentUserIdRef.current = uid
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -168,13 +154,27 @@ export function CartProvider({ children }) {
         return
       }
 
-      // ── INITIAL_SESSION: app just loaded — getSession() already handled it ─
+      // ── INITIAL_SESSION: fires once at app load with the current session state
+      // This is the ONLY path that hydrates the cart for an already-logged-in user.
+      // On a callback page (OAuth/magic-link), INITIAL_SESSION fires with null,
+      // so SIGNED_IN will handle the merge instead — never both.
       if (event === 'INITIAL_SESSION') {
-        if (newUserId && !prevUserId) {
-          // INITIAL_SESSION fired before getSession().then() resolved — sync state
-          prevUserId               = newUserId
-          stableUserId             = newUserId
-          currentUserIdRef.current = newUserId
+        prevUserId               = newUserId
+        stableUserId             = newUserId
+        currentUserIdRef.current = newUserId
+
+        if (newUserId) {
+          dbLoadCart(newUserId).then(savedItems => {
+            const guestItems = itemsRef.current
+            if (guestItems.length > 0 && savedItems.length > 0) {
+              const merged = mergeItems(savedItems, guestItems)
+              setItems(merged)
+              dbSaveCart(newUserId, merged)
+            } else if (savedItems.length > 0) {
+              setItems(savedItems)
+            }
+            // savedItems empty → keep whatever is in localStorage
+          })
         }
         return
       }

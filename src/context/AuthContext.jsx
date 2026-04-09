@@ -54,7 +54,10 @@ export function AuthProvider({ children }) {
     if (!supabase) throw new Error('Supabase no está configurado')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/cuenta/callback` },
+      options: {
+        redirectTo:  `${window.location.origin}/cuenta/callback`,
+        queryParams: { prompt: 'select_account' },
+      },
     })
     if (error) throw error
   }
