@@ -647,11 +647,15 @@ export default async function handler(req, res) {
   if (action === 'logout')             return actionLogout(req, res)
   if (action === 'newsletter-subscribe') return actionNewsletterSubscribe(req, res, serviceKey)
   if (action === 'validate-discount')    return actionValidateDiscount(req, res, serviceKey)
-  if (action === 'mark-discount-used')   return actionMarkDiscountUsed(req, res, serviceKey)
 
   // ── Auth gate ────────────────────────────────────────────────────────────────
   if (!verifyAdminSession(req)) return res.status(401).json({ error: 'Unauthorized' })
   if (!serviceKey) return res.status(500).json({ error: 'Server not configured' })
+
+  // ── Authenticated-only actions (require admin session) ───────────────────────
+  // mark-discount-used is behind auth — discount marking is handled inline by
+  // save-order.js; this endpoint exists for manual admin use only.
+  if (action === 'mark-discount-used')   return actionMarkDiscountUsed(req, res, serviceKey)
 
   // ── Authenticated actions ────────────────────────────────────────────────────
   if (action === 'orders')               return actionOrders(req, res, serviceKey)

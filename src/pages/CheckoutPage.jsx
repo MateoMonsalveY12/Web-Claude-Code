@@ -87,7 +87,6 @@ export default function CheckoutPage() {
   const [postal,     setPostal]     = useState('')
   const [phone,      setPhone]      = useState('')
   const [saveInfo,   setSaveInfo]   = useState(false)
-  const [billing,    setBilling]    = useState(true)
   const [processing,  setProcessing]  = useState(false)
   const prevEmailRef = useRef('')
 
@@ -554,19 +553,6 @@ export default function CheckoutPage() {
               </div>
             </section>
 
-            {/* Billing checkbox */}
-            <label className="flex items-center gap-2 cursor-pointer -mt-2">
-              <input
-                type="checkbox"
-                checked={billing}
-                onChange={e => setBilling(e.target.checked)}
-                className="w-4 h-4 border-brand-border"
-              />
-              <span className="font-sans text-sm text-brand-black/70">
-                Usar la dirección de envío como dirección de facturación
-              </span>
-            </label>
-
             {/* Global error (e.g. Wompi config missing) */}
             {errors._global && (
               <div className="bg-red-50 border border-red-200 px-4 py-3">
@@ -586,15 +572,17 @@ export default function CheckoutPage() {
             {/* Footer links */}
             <nav className="flex flex-wrap gap-x-5 gap-y-2 pt-2 border-t border-brand-border">
               {[
-                'Política de reembolso','Envío','Política de privacidad',
-                'Términos del servicio','Contacto',
-              ].map(l => (
-                <a
-                  key={l} href="#"
+                { label: 'Política de reembolso', href: '/terminos' },
+                { label: 'Política de privacidad', href: '/privacidad' },
+                { label: 'Términos del servicio',  href: '/terminos' },
+                { label: 'Contacto',               href: '/contacto' },
+              ].map(({ label, href }) => (
+                <Link
+                  key={label} to={href}
                   className="font-sans text-xs text-brand-black/40 underline underline-offset-2 hover:text-brand-black transition-colors"
                 >
-                  {l}
-                </a>
+                  {label}
+                </Link>
               ))}
             </nav>
           </div>

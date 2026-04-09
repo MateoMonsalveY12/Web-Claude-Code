@@ -449,9 +449,9 @@ export default function OrderConfirmationPage() {
         {/* ── Footer note ── */}
         <p className="font-sans text-xs text-center text-brand-black/35 pb-4">
           ¿Tienes preguntas sobre tu pedido?{' '}
-          <a href="#" className="underline underline-offset-2 hover:text-brand-black transition-colors">
+          <Link to="/contacto" className="underline underline-offset-2 hover:text-brand-black transition-colors">
             Contáctanos
-          </a>
+          </Link>
         </p>
 
       </div>

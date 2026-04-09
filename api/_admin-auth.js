@@ -18,7 +18,7 @@ export function parseCookies(cookieHeader = '') {
 
 export function verifyAdminSession(req) {
   const secret = process.env.ADMIN_SECRET
-  if (!secret) return true // dev: no secret = open access
+  if (!secret) return false // fail closed — no secret = deny access (prevents open admin if env var is missing)
   const cookies = parseCookies(req.headers.cookie)
   return cookies['admin_session'] === secret
 }
