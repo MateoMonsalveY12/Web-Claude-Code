@@ -3,6 +3,37 @@ import { supabase } from '../lib/supabase'
 
 const AuthContext = createContext(null)
 
+// Remove all Supabase auth entries from localStorage.
+// Called on initialization timeout to break any stale refresh lock left by a crashed tab.
+function clearSupabaseStorage() {
+  try {
+    const keys = Object.keys(localStorage).filter(k => k.startsWith('sb-'))
+    keys.forEach(k => localStorage.removeItem(k))
+    if (keys.length) console.log(`[auth] Eliminadas ${keys.length} key(s) de Supabase del localStorage`)
+  } catch (e) {
+    console.warn('[auth] Error limpiando storage:', e)
+  }
+}
+
+// Before the Supabase client reads its stored token, discard any entry whose JSON is
+// unparseable (caused by an interrupted write during a rapid reload).
+function pruneCorruptedTokens() {
+  try {
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
+      .forEach(key => {
+        const raw = localStorage.getItem(key)
+        if (!raw) return
+        try { JSON.parse(raw) } catch {
+          console.warn(`[auth] Token corrupto eliminado: ${key}`)
+          localStorage.removeItem(key)
+        }
+      })
+  } catch (e) {
+    console.warn('[auth] Error validando tokens:', e)
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user,    setUser]    = useState(null)
   const [session, setSession] = useState(null)
@@ -11,10 +42,17 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!supabase) { setLoading(false); return }
 
-    // Safety net: if Supabase hangs (e.g. token refresh fails on browser reopen),
-    // loading must still resolve so the UI never stays permanently blocked.
+    // Discard corrupted tokens before Supabase tries to parse them.
+    pruneCorruptedTokens()
+
+    // Safety net: if Supabase hangs (stale refresh lock, expired token, network issue),
+    // clear ALL Supabase auth storage and reset every state variable so the app stays
+    // fully usable. The next page load will find an empty token slot and init cleanly.
     const loadingTimer = setTimeout(() => {
-      console.warn('[auth] Timeout esperando sesión — forzando loading=false')
+      console.warn('[auth] Timeout de inicialización — estado reseteado')
+      clearSupabaseStorage()
+      setUser(null)
+      setSession(null)
       setLoading(false)
     }, 5000)
 
@@ -37,9 +75,12 @@ export function AuthProvider({ children }) {
       setSession(session)
       setUser(session?.user ?? null)
 
-      // INITIAL_SESSION fires before getSession() resolves — resolve loading immediately
-      // so the UI unblocks as fast as possible on every page load
-      if (event === 'INITIAL_SESSION') {
+      // Resolve loading on any definitive auth event:
+      // - INITIAL_SESSION: normal fast path (no expired token)
+      // - SIGNED_IN: fallback when an expired token triggers a refresh first;
+      //   Supabase emits SIGNED_IN (not INITIAL_SESSION) after the refresh completes
+      // - SIGNED_OUT: also a definitive resolved state
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         setLoading(false)
         clearTimeout(loadingTimer)
       }
