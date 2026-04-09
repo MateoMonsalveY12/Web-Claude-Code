@@ -6,7 +6,7 @@ export default function AccountLoginPage() {
   const { user, loading, signInWithMagicLink, signInWithGoogle } = useAuth()
   const navigate  = useNavigate()
   const location  = useLocation()
-  const from      = location.state?.from ?? '/mi-cuenta/pedidos'
+  const from      = location.state?.from ?? '/'
 
   const [email,     setEmail]     = useState('')
   const [sent,      setSent]      = useState(false)
@@ -20,6 +20,16 @@ export default function AccountLoginPage() {
     if (!loading && user) navigate(from, { replace: true })
   }, [loading, user, navigate, from])
 
+  // Persist the intended destination so AccountCallbackPage can read it after
+  // the OAuth/magic-link redirect (which loses React Router location.state).
+  function saveRedirect() {
+    if (from && from !== '/') {
+      sessionStorage.setItem('bialy-login-redirect', from)
+    } else {
+      sessionStorage.removeItem('bialy-login-redirect')
+    }
+  }
+
   async function handleEmailSubmit(e) {
     e.preventDefault()
     setError('')
@@ -29,6 +39,7 @@ export default function AccountLoginPage() {
 
     setSubmitting(true)
     try {
+      saveRedirect()
       await signInWithMagicLink(email.trim())
       setSent(true)
     } catch (err) {
@@ -41,6 +52,7 @@ export default function AccountLoginPage() {
   async function handleGoogle() {
     setError('')
     try {
+      saveRedirect()
       await signInWithGoogle()
       // Redirect happens automatically via OAuth flow
     } catch (err) {

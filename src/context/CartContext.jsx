@@ -1,51 +1,264 @@
-import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const CartContext = createContext(null)
 
-const FREE_SHIPPING = 180000
-const COUPON_KEY    = 'bialy-coupon'
+const FREE_SHIPPING  = 180000
+const COUPON_KEY     = 'bialy-coupon'
+const SAVE_DEBOUNCE  = 800   // ms — debounce for Supabase cart UPSERT
 
-// Safely parse stored coupon
+// ── localStorage helpers ──────────────────────────────────────────────────────
 function loadCoupon() {
   try { return JSON.parse(localStorage.getItem(COUPON_KEY)) || null } catch { return null }
 }
 
+// ── Supabase cart helpers (called outside React render cycle) ─────────────────
+async function dbLoadCart(userId) {
+  if (!supabase || !userId) return []
+  try {
+    const { data, error } = await supabase
+      .from('user_carts')
+      .select('items')
+      .eq('user_id', userId)
+      .single()
+    if (error?.code === 'PGRST116') {
+      console.log('[cart:persist] No hay carrito guardado para este usuario')
+      return []
+    }
+    if (error) { console.warn('[cart:persist] dbLoadCart error:', error.message); return [] }
+    console.log(`[cart:persist] Carrito cargado — ${(data.items || []).length} ítem(s)`)
+    return Array.isArray(data.items) ? data.items : []
+  } catch (err) {
+    console.warn('[cart:persist] dbLoadCart exception:', err.message)
+    return []
+  }
+}
+
+async function dbSaveCart(userId, items) {
+  if (!supabase || !userId) return
+  try {
+    const { error } = await supabase
+      .from('user_carts')
+      .upsert(
+        { user_id: userId, items, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id' }
+      )
+    if (error) { console.warn('[cart:persist] dbSaveCart error:', error.message); return }
+    console.log(`[cart:persist] Carrito guardado — ${items.length} ítem(s)`)
+  } catch (err) {
+    console.warn('[cart:persist] dbSaveCart exception:', err.message)
+  }
+}
+
+// Merge two item arrays: saved is the base, guest items are added/summed on top
+function mergeItems(savedItems, guestItems) {
+  if (!guestItems?.length) return savedItems
+  if (!savedItems?.length) return guestItems
+
+  const result = [...savedItems]
+  for (const guest of guestItems) {
+    const key = `${guest.id}|${guest.size ?? ''}|${guest.color ?? ''}`
+    const idx = result.findIndex(
+      i => `${i.id}|${i.size ?? ''}|${i.color ?? ''}` === key
+    )
+    if (idx >= 0) {
+      result[idx] = { ...result[idx], quantity: result[idx].quantity + guest.quantity }
+    } else {
+      result.push(guest)
+    }
+  }
+  return result
+}
+
+// ── Provider ──────────────────────────────────────────────────────────────────
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try { return JSON.parse(localStorage.getItem('bialy-cart')) || [] } catch { return [] }
   })
   const [isCartOpen, setIsCartOpen] = useState(false)
+  const [mergeToast,  setMergeToast]  = useState(false)   // guest-merge notification
 
-  // ── Coupon state ────────────────────────────────────────────────────────────
-  // couponData = { code, type, value, amount, message } | null
+  // ── Coupon state ─────────────────────────────────────────────────────────────
   const [couponData,   setCouponData]   = useState(loadCoupon)
   const [couponStatus, setCouponStatus] = useState(() => loadCoupon() ? 'applied' : 'idle')
   const [couponMsg,    setCouponMsg]    = useState('')
 
-  // Persist coupon in localStorage
+  // ── Refs (sync-readable in async callbacks, no stale closure) ────────────────
+  const itemsRef          = useRef(items)
+  const currentUserIdRef  = useRef(null)
+  const saveTimerRef      = useRef(null)
+
+  useEffect(() => { itemsRef.current = items }, [items])
+
+  // ── Persist coupon ────────────────────────────────────────────────────────────
   useEffect(() => {
     if (couponData) localStorage.setItem(COUPON_KEY, JSON.stringify(couponData))
     else            localStorage.removeItem(COUPON_KEY)
   }, [couponData])
 
-  // Persist cart items
+  // ── Persist cart to localStorage (always) ────────────────────────────────────
   useEffect(() => {
     localStorage.setItem('bialy-cart', JSON.stringify(items))
   }, [items])
 
-  // Derived subtotal (needed for coupon calculation)
+  // ── Debounced Supabase cart save ──────────────────────────────────────────────
+  useEffect(() => {
+    const userId = currentUserIdRef.current
+    if (!userId) return                          // guest — localStorage only
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveTimerRef.current = setTimeout(() => {
+      dbSaveCart(userId, items)
+    }, SAVE_DEBOUNCE)
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    }
+  }, [items])
+
+  // ── Auth listener ─────────────────────────────────────────────────────────────
+  // Uses TWO userId trackers:
+  //   prevUserId   — follows the live session (null after SIGNED_OUT)
+  //   stableUserId — survives SIGNED_OUT so we can detect same-user re-auth
+  //
+  // Why: Supabase can emit SIGNED_OUT + SIGNED_IN for the SAME user during a
+  // silent token refresh (e.g. when the tab regains focus). The 200ms debounce
+  // on SIGNED_OUT lets us cancel the cart clear if SIGNED_IN for the same user
+  // arrives within that window.  TOKEN_REFRESHED is handled as an explicit no-op.
+  useEffect(() => {
+    if (!supabase) return
+
+    let prevUserId   = null  // current session state
+    let stableUserId = null  // last confirmed userId — survives SIGNED_OUT
+    let signOutTimer = null  // debounce handle for delayed cart clear
+
+    // ── Seed from current session (must run before listener fires) ────────────
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const uid = session?.user?.id ?? null
+      prevUserId               = uid
+      stableUserId             = uid
+      currentUserIdRef.current = uid
+
+      if (uid) {
+        // Logged-in on page load → hydrate cart from Supabase
+        dbLoadCart(uid).then(savedItems => {
+          const guestItems = itemsRef.current
+          if (guestItems.length > 0 && savedItems.length > 0) {
+            const merged = mergeItems(savedItems, guestItems)
+            setItems(merged)
+            dbSaveCart(uid, merged)
+          } else if (savedItems.length > 0) {
+            setItems(savedItems)
+          }
+          // savedItems empty → keep whatever is already in localStorage
+        })
+      }
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const newUserId = session?.user?.id ?? null
+      console.log(`[cart:auth] ${event} | prev=${prevUserId} stable=${stableUserId} new=${newUserId}`)
+
+      // ── TOKEN_REFRESHED: same user, always a no-op ────────────────────────
+      if (event === 'TOKEN_REFRESHED') {
+        prevUserId               = newUserId
+        currentUserIdRef.current = newUserId
+        if (newUserId) stableUserId = newUserId
+        console.log('[cart] Token renovado — carrito intacto')
+        return
+      }
+
+      // ── INITIAL_SESSION: app just loaded — getSession() already handled it ─
+      if (event === 'INITIAL_SESSION') {
+        if (newUserId && !prevUserId) {
+          // INITIAL_SESSION fired before getSession().then() resolved — sync state
+          prevUserId               = newUserId
+          stableUserId             = newUserId
+          currentUserIdRef.current = newUserId
+        }
+        return
+      }
+
+      // ── SIGNED_OUT: real sign-out OR token-refresh artifact ───────────────
+      // Debounce: wait 200ms before clearing. If SIGNED_IN for the same user
+      // arrives first, we cancel — it was just a background token refresh.
+      if (event === 'SIGNED_OUT') {
+        if (signOutTimer) clearTimeout(signOutTimer)
+        prevUserId               = null
+        currentUserIdRef.current = null
+        // stableUserId intentionally left unchanged — needed for same-user check below
+
+        signOutTimer = setTimeout(() => {
+          signOutTimer = null
+          if (!currentUserIdRef.current) {
+            // No SIGNED_IN followed → confirmed real sign-out
+            console.log('[cart] Sesión cerrada — limpiando carrito')
+            stableUserId = null
+            setItems([])
+            setCouponData(null)
+            setCouponStatus('idle')
+            setCouponMsg('')
+          }
+        }, 200)
+        return
+      }
+
+      // ── SIGNED_IN / USER_UPDATED: new session established ─────────────────
+      if ((event === 'SIGNED_IN' || event === 'USER_UPDATED') && newUserId) {
+        // Cancel any pending SIGNED_OUT clear
+        if (signOutTimer) {
+          clearTimeout(signOutTimer)
+          signOutTimer = null
+        }
+
+        const isSameUser = newUserId === stableUserId
+        prevUserId               = newUserId
+        currentUserIdRef.current = newUserId
+        stableUserId             = newUserId
+
+        if (isSameUser) {
+          // Same user re-authenticated (token refresh cycle) → cart untouched
+          console.log('[cart] Misma sesión restaurada — carrito intacto')
+          return
+        }
+
+        // Different user (or first login with stableUserId=null) → load + merge
+        console.log('[cart] Nuevo usuario inició sesión — fusionando carrito de invitado')
+        const guestItems = itemsRef.current  // capture before any setState
+        const savedItems = await dbLoadCart(newUserId)
+        const merged     = mergeItems(savedItems, guestItems)
+        setItems(merged)
+        await dbSaveCart(newUserId, merged)
+
+        // Show merge toast only when guest had items
+        if (guestItems.length > 0) {
+          setCouponData(null)
+          setCouponStatus('idle')
+          setCouponMsg('')
+          setMergeToast(true)
+          setTimeout(() => setMergeToast(false), 4000)
+        }
+      }
+    })
+
+    return () => {
+      subscription.unsubscribe()
+      if (signOutTimer) clearTimeout(signOutTimer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // ── Derived subtotal ──────────────────────────────────────────────────────────
   const subtotal = useMemo(() => items.reduce((s, i) => s + i.price * i.quantity, 0), [items])
 
-  // Discount amount — recalculates live when subtotal changes
+  // ── Discount amount ───────────────────────────────────────────────────────────
   const discountAmount = useMemo(() => {
     if (!couponData) return 0
     if (couponData.type === 'percentage') return Math.round(subtotal * couponData.value / 100)
     return Math.min(couponData.value, subtotal)
   }, [couponData, subtotal])
 
-  // Apply or re-validate a coupon code
-  // email is optional: required for assigned_email validation (checkout only)
+  // ── Coupon actions ────────────────────────────────────────────────────────────
   const applyDiscount = useCallback(async (code, email) => {
     const cleanCode = (code || '').trim().toUpperCase()
     if (!cleanCode) return
@@ -73,7 +286,6 @@ export function CartProvider({ children }) {
         setCouponMsg(data.message)
         console.log(`[discount] Código válido${email ? ` para email: ${email}` : ''}: ${cleanCode} → −${data.discount_amount}`)
       } else {
-        // If re-validating an already-applied code and it fails (e.g. email mismatch), clear it
         if (couponData?.code === cleanCode) setCouponData(null)
         setCouponStatus('error')
         setCouponMsg(data.message || 'Código no válido')
@@ -87,7 +299,6 @@ export function CartProvider({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtotal, couponData?.code])
 
-  // Re-validate currently applied code with a new email (called from CheckoutPage)
   const revalidateCoupon = useCallback(async (email) => {
     if (!couponData || couponStatus !== 'applied') return
     await applyDiscount(couponData.code, email)
@@ -100,28 +311,7 @@ export function CartProvider({ children }) {
     console.log('[discount] Cupón removido')
   }
 
-  // ── Clear cart + coupon on auth state change ────────────────────────────────
-  useEffect(() => {
-    if (!supabase) return
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_OUT') {
-        console.log('[cart] Usuario cerró sesión — limpiando carrito')
-        setItems([])
-        setCouponData(null)
-        setCouponStatus('idle')
-        setCouponMsg('')
-      } else if (event === 'SIGNED_IN') {
-        console.log('[cart] Usuario inició sesión — limpiando carrito previo')
-        setItems([])
-        setCouponData(null)
-        setCouponStatus('idle')
-        setCouponMsg('')
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // ── Cart functions ──────────────────────────────────────────────────────────
+  // ── Cart mutations ────────────────────────────────────────────────────────────
   function addToCart(product, size, color, quantity = 1) {
     setItems(prev => {
       const key = `${product.id}|${size ?? ''}|${color ?? ''}`
@@ -170,6 +360,7 @@ export function CartProvider({ children }) {
   function closeCart()  { setIsCartOpen(false) }
   function toggleCart() { setIsCartOpen(v => !v) }
 
+  // ── Derived values ────────────────────────────────────────────────────────────
   const cartCount             = useMemo(() => items.reduce((s, i) => s + i.quantity, 0), [items])
   const hasDiscount           = useMemo(() => items.some(i => i.compare_price), [items])
   const freeShippingRemaining = Math.max(0, FREE_SHIPPING - subtotal)
@@ -201,6 +392,9 @@ export function CartProvider({ children }) {
       applyDiscount,
       removeDiscount,
       revalidateCoupon,
+      // Merge toast
+      mergeToast,
+      clearMergeToast: () => setMergeToast(false),
     }}>
       {children}
     </CartContext.Provider>

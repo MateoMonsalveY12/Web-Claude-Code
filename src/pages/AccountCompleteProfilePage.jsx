@@ -3,6 +3,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 
+const AFTER_PROFILE_KEY = 'bialy-after-profile'
+
+function consumeAfterProfileRedirect() {
+  const dest = sessionStorage.getItem(AFTER_PROFILE_KEY) || '/'
+  sessionStorage.removeItem(AFTER_PROFILE_KEY)
+  return dest
+}
+
 export default function AccountCompleteProfilePage() {
   const { user, loading } = useAuth()
   const navigate = useNavigate()
@@ -36,7 +44,7 @@ export default function AccountCompleteProfilePage() {
       }, { onConflict: 'email', ignoreDuplicates: false })
 
       if (error) throw error
-      navigate('/mi-cuenta/pedidos', { replace: true })
+      navigate(consumeAfterProfileRedirect(), { replace: true })
     } catch (err) {
       setGlobalError('No se pudo guardar el perfil. Inténtalo de nuevo.')
     } finally {
@@ -107,7 +115,7 @@ export default function AccountCompleteProfilePage() {
           </form>
 
           <button
-            onClick={() => navigate('/mi-cuenta/pedidos', { replace: true })}
+            onClick={() => navigate(consumeAfterProfileRedirect(), { replace: true })}
             className="w-full mt-3 font-sans text-xs text-brand-black/40 hover:text-brand-black/70 transition-colors text-center"
           >
             Omitir por ahora
