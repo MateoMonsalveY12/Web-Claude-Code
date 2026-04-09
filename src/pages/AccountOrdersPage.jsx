@@ -237,7 +237,19 @@ export default function AccountOrdersPage() {
   }, [authLoading, user, navigate])
 
   useEffect(() => {
-    if (!user || !supabase) return
+    // Wait for AuthContext to finish restoring the session.
+    // Without this guard, arriving from an external link (e.g. confirmation email)
+    // causes user=null on first render — the fetch is skipped and loading stays true
+    // forever because the effect never runs again once auth resolves (user was null,
+    // not changed). By including authLoading in the deps, the effect re-fires the
+    // moment auth completes.
+    if (authLoading) return
+
+    if (!user || !supabase) {
+      // Auth done, no session → redirect effect will fire; stop the spinner now
+      setLoading(false)
+      return
+    }
 
     // Fetch customer id for review modal
     supabase
@@ -267,7 +279,7 @@ export default function AccountOrdersPage() {
         }
         setLoading(false)
       })
-  }, [user])
+  }, [authLoading, user])
 
   if (authLoading || (!user && !authLoading)) {
     return (
