@@ -200,23 +200,6 @@ export default function CheckoutPage() {
 
     console.log(`[Wompi] env=${WOMPI_ENV} | key=${publicKey.slice(0, 20)}... | amount=${amountInCents} | ref=${reference}`)
 
-    // Save shipping profile if checkbox is checked (fire-and-forget)
-    if (saveInfo && user) {
-      saveShippingProfile({
-        first_name:      firstName.trim(),
-        last_name:       lastName.trim(),
-        email:           email.trim(),
-        phone:           phone.trim(),
-        document_type:   docType,
-        document_number: docNumber.trim(),
-        address_line1:   address.trim(),
-        address_line2:   apt.trim(),
-        city:            city.trim(),
-        state,
-        postal_code:     postal.trim(),
-      })
-    }
-
     // Persist order for confirmation page (before redirect — Wompi clears React state)
     localStorage.setItem('bialy-pending-order', JSON.stringify({
       reference,
@@ -239,9 +222,28 @@ export default function CheckoutPage() {
     }))
 
     try {
-      // Signature: SHA256(reference + amountInCents + "COP" + secret)
-      // Computed server-side via /api/wompi-signature (fallback: client-side in dev)
-      const signature = await getWompiSignature(reference, amountInCents)
+      // Run signature fetch + profile save in parallel.
+      // Both must complete before window.location.href fires — otherwise the
+      // browser cancels pending fetches on navigation and the profile is never saved.
+      // saveShippingProfile catches its own errors so a DB failure never blocks payment.
+      const [signature] = await Promise.all([
+        getWompiSignature(reference, amountInCents),
+        saveInfo && user
+          ? saveShippingProfile({
+              first_name:      firstName.trim(),
+              last_name:       lastName.trim(),
+              email:           email.trim(),
+              phone:           phone.trim(),
+              document_type:   docType,
+              document_number: docNumber.trim(),
+              address_line1:   address.trim(),
+              address_line2:   apt.trim(),
+              city:            city.trim(),
+              state,
+              postal_code:     postal.trim(),
+            })
+          : Promise.resolve(),
+      ])
 
       const wompiBase  = 'https://checkout.wompi.co/p/'
       // redirectTo must be a clean URL with NO query params — Wompi appends ?id=... on return
