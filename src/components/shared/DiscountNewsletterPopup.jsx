@@ -22,13 +22,23 @@ export default function DiscountNewsletterPopup() {
     timerRef.current = setTimeout(() => setVisible(true), 2 * 60 * 1000)
 
     // Exit intent: mouse moves near top edge of viewport (desktop only).
-    // Guard: only activate after the cursor has moved into the page interior
-    // (clientY > 100) at least once, so navigating to the page from the
-    // browser chrome doesn't trigger the popup immediately.
+    // Two guards prevent false triggers:
+    //   1. hasEnteredPage — cursor must have moved past clientY > 100 at least once
+    //      (prevents triggering when user arrives on the page from the browser chrome)
+    //   2. 30-second minimum — exit intent cannot fire in the first 30s regardless
+    //      (prevents triggering when user briefly scrolls up or moves to the address bar
+    //      shortly after arriving on the page)
+    const activatedAt = Date.now()
+    const EXIT_INTENT_MIN_MS = 30 * 1000
     let hasEnteredPage = false
     function onMouseMove(e) {
       if (e.clientY > 100) hasEnteredPage = true
-      if (hasEnteredPage && e.clientY < 20 && !sessionStorage.getItem(SESSION_KEY)) {
+      if (
+        hasEnteredPage &&
+        e.clientY < 20 &&
+        Date.now() - activatedAt > EXIT_INTENT_MIN_MS &&
+        !sessionStorage.getItem(SESSION_KEY)
+      ) {
         clearTimeout(timerRef.current)
         setVisible(true)
       }
