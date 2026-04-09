@@ -75,9 +75,12 @@ export function AuthProvider({ children }) {
       setSession(session)
       setUser(session?.user ?? null)
 
-      // INITIAL_SESSION fires before getSession() resolves — resolve loading immediately
-      // so the UI unblocks as fast as possible on every page load
-      if (event === 'INITIAL_SESSION') {
+      // Resolve loading on any definitive auth event:
+      // - INITIAL_SESSION: normal fast path (no expired token)
+      // - SIGNED_IN: fallback when an expired token triggers a refresh first;
+      //   Supabase emits SIGNED_IN (not INITIAL_SESSION) after the refresh completes
+      // - SIGNED_OUT: also a definitive resolved state
+      if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         setLoading(false)
         clearTimeout(loadingTimer)
       }
